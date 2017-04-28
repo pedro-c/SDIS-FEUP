@@ -26,7 +26,6 @@ public class Server {
             System.out.println("Failed to create sslServerSocket");
             e.printStackTrace();
         }
-
         listen();
     }
 
