@@ -1,10 +1,12 @@
 package Server;
-
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
+import java.util.Hashtable;
 
 public class Server {
 
@@ -12,21 +14,47 @@ public class Server {
     private SSLServerSocket sslServerSocket;
     private SSLSocketFactory sslSocketFactory;
     private SSLServerSocketFactory sslServerSocketFactory;
-    private int port;
-    private String host;
+    private Hashtable<Integer,String[]> serverConfig;
+    private int serverId;
+    private int serverPort;
 
-    public Server(int port, String host){
-        this.port = port;
-        this.host = host;
+    public Server(int serverId){
+        this.serverId = serverId;
+        this.serverConfig = new Hashtable<>();
+
+        readFile();
+        serverPort =Integer.parseInt(serverConfig.get(this.serverId)[1]);
+
 
         sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         try {
-            sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(port);
+            sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(serverPort);
         } catch (IOException e) {
             System.out.println("Failed to create sslServerSocket");
             e.printStackTrace();
         }
+        //synchronize
         listen();
+    }
+
+    public void readFile(){
+
+        try(BufferedReader reader = new BufferedReader(new FileReader(".config"))) {
+            String line = reader.readLine();
+
+            int serverId = 0;
+
+            while (line != null) {
+
+                String[] serverInfo = line.split(":");
+                serverConfig.put(serverId,serverInfo);
+                line = reader.readLine();
+            }
+        }
+        catch (IOException e){
+
+        }
+
     }
 
     public void listen(){
@@ -44,7 +72,7 @@ public class Server {
         private SSLSocket sslSocket;
 
         public ConnectionHandler(SSLSocket socket){
-            sslSocket = socket;
+            this.sslSocket = socket;
         }
 
         public void run(){
@@ -54,14 +82,12 @@ public class Server {
 
 
     public static void main(String[] args) {
-        //For now lets receive a port
+        //For now lets receive a port and a hostname
         if(args.length != 1){
-            throw new IllegalArgumentException("\\nUsage: java server.ServerLauncher<port> <hostname>");
+            throw new IllegalArgumentException("\\nUsage: java server.ServerLauncher<id>");
         }
 
-        int port = Integer.parseInt(args[0]);
-        String hostname = args[1];
-
-        Server server= new Server(port,hostname);
+        int id = Integer.parseInt(args[0]);
+        Server server= new Server(id);
     }
 }
