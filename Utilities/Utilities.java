@@ -1,6 +1,7 @@
 package Utilities;
 
 import javax.xml.bind.DatatypeConverter;
+import java.math.BigInteger;
 import java.security.MessageDigest;
 
 public class Utilities{
@@ -11,16 +12,15 @@ public class Utilities{
      * @param data
      * @return string with Hash
      */
-    public static String createHash(String data) {
-        String result = null;
+    public static byte[] createHash(String data) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(data.getBytes("UTF-8"));
-            result = bytesToHex(hash); // make it printable
+            return hash;
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        return result;
+        return null;
     }
 
     /**
@@ -32,5 +32,9 @@ public class Utilities{
      */
     private static String bytesToHex(byte[] hash) {
         return DatatypeConverter.printHexBinary(hash);
+    }
+
+    public static BigInteger getBigInteger(byte[] hash){
+        return new BigInteger( hash );
     }
 }
