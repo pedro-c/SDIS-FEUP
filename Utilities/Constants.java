@@ -10,6 +10,6 @@ public class Constants {
     public static final String  CRLF = "\r\n";
     //public static final String BACKUP = "BACKUP";
 
-    public static final int MAX_NUMBER_OF_SERVERS = 100;
+    public static final int MAX_FINGER_TABLE_SIZE = 256;
 
 }
