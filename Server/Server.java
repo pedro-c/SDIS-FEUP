@@ -23,11 +23,13 @@ public class Server implements ServerInterface {
     private String serverIp;
     private int serverPort;
     private String serverIdentifier;
-    private Registry registry;
 
     public Server(String args[]) {
 
         registerServer();
+
+        this.serverIp = args[0];
+        this.serverPort = Integer.parseInt(args[1]);
 
         this.serverIdentifier = getServerIdentifier();
 
@@ -67,19 +69,23 @@ public class Server implements ServerInterface {
 
         try {
             Registry registry = LocateRegistry.getRegistry();
-            registry.lookup(Integer.toString(this.serverId));
-            registerServer();
-        } catch (NotBoundException e) {
-            try {
-                registry.bind(Integer.toString(serverId), this);
-            } catch (Exception e1) {
-                e1.printStackTrace();
-                System.out.println("Failed to bind peer to registry");
+            try{
+                registry.lookup(Integer.toString(this.serverId));
+                registerServer();
+            }
+            catch (NotBoundException e) {
+                try {
+                    registry.bind(Integer.toString(serverId), this);
+                } catch (Exception e1) {
+                    e1.printStackTrace();
+                    System.out.println("Failed to bind peer to registry");
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Failed to find registry");
         }
+
 
     }
 
