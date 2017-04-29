@@ -1,30 +1,35 @@
 package Server;
+
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.Hashtable;
+import java.rmi.NotBoundException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.util.Random;
 
-public class Server {
+import static Utilities.Constants.MAX_NUMBER_OF_SERVERS;
+import static Utilities.Utilities.createHash;
+
+public class Server implements ServerInterface {
 
     private SSLSocket sslSocket;
     private SSLServerSocket sslServerSocket;
     private SSLSocketFactory sslSocketFactory;
     private SSLServerSocketFactory sslServerSocketFactory;
-    private Hashtable<Integer,String[]> serverConfig;
     private int serverId;
+    private String serverIp;
     private int serverPort;
+    private String serverIdentifier;
+    private Registry registry;
 
-    public Server(int serverId){
-        this.serverId = serverId;
-        this.serverConfig = new Hashtable<>();
+    public Server(String args[]) {
 
-        readFile();
-        serverPort =Integer.parseInt(serverConfig.get(this.serverId)[1]);
+        registerServer();
 
+        this.serverIdentifier = getServerIdentifier();
 
         sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         try {
@@ -33,61 +38,65 @@ public class Server {
             System.out.println("Failed to create sslServerSocket");
             e.printStackTrace();
         }
-        //synchronize
-        listen();
     }
 
-    public void readFile(){
-
-        try(BufferedReader reader = new BufferedReader(new FileReader(".config"))) {
-            String line = reader.readLine();
-
-            int serverId = 0;
-
-            while (line != null) {
-
-                String[] serverInfo = line.split(":");
-                serverConfig.put(serverId,serverInfo);
-                line = reader.readLine();
-            }
+    public static void main(String[] args) {
+        //For now lets receive a port and a hostname
+        if (args.length != 1) {
+            throw new IllegalArgumentException("\\nUsage: java server.ServerLauncher<id>");
         }
-        catch (IOException e){
-
-        }
-
+        Server server = new Server(args);
+        server.listen();
     }
 
-    public void listen(){
-        while(true){
+    public void listen() {
+        while (true) {
             try {
-                new ConnectionHandler((SSLSocket)sslServerSocket.accept());
+                new ConnectionHandler((SSLSocket) sslServerSocket.accept());
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    public class ConnectionHandler implements Runnable{
+    public void registerServer() {
+
+        Random rn = new Random();
+        int range = MAX_NUMBER_OF_SERVERS + 1;
+        this.serverId = rn.nextInt(range);
+
+        try {
+            Registry registry = LocateRegistry.getRegistry();
+            registry.lookup(Integer.toString(this.serverId));
+            registerServer();
+        } catch (NotBoundException e) {
+            try {
+                registry.bind(Integer.toString(serverId), this);
+            } catch (Exception e1) {
+                e1.printStackTrace();
+                System.out.println("Failed to bind peer to registry");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Failed to find registry");
+        }
+
+    }
+
+    public String getServerIdentifier() {
+        return createHash(serverIp + serverPort);
+    }
+
+    public class ConnectionHandler implements Runnable {
 
         private SSLSocket sslSocket;
 
-        public ConnectionHandler(SSLSocket socket){
+        public ConnectionHandler(SSLSocket socket) {
             this.sslSocket = socket;
         }
 
-        public void run(){
+        public void run() {
 
         }
-    }
-
-
-    public static void main(String[] args) {
-        //For now lets receive a port and a hostname
-        if(args.length != 1){
-            throw new IllegalArgumentException("\\nUsage: java server.ServerLauncher<id>");
-        }
-
-        int id = Integer.parseInt(args[0]);
-        Server server= new Server(id);
     }
 }
