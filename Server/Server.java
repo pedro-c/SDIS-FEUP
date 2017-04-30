@@ -208,7 +208,7 @@ public class Server implements ServerInterface {
 
 
     public void analyseResponse(String response){
-        
+
         System.out.println(response);
     }
 
