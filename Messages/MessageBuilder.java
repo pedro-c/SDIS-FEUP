@@ -8,6 +8,6 @@ import static Utilities.Constants.CRLF;
 public class MessageBuilder {
 
     public static String createMessage(String... headerFields){
-        return (String.join(" ", headerFields) + " " + CRLF);
+        return (String.join(" ", headerFields) + " " + CRLF + CRLF);
     }
 }

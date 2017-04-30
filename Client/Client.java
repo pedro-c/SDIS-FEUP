@@ -27,10 +27,16 @@ public class Client {
         client.mainMenu();
     }
 
+    /**
+     * Client
+     */
     public Client(){
         scannerIn = new Scanner(System.in);
     }
 
+    /**
+     * Prints main menu
+     */
     public void mainMenu() {
         String menu = "\n Menu " + "\n 1. Sign in" + "\n 2. Sign up" + "\n 3. Exit" + "\n";
         System.out.println(menu);
@@ -45,17 +51,35 @@ public class Client {
             case 3:
                 System.exit(0);
         }
-
     }
 
+    /**
+     * Sends a sign in message throw a ssl socket
+     */
     public void signInUser(){
-        connectToServer();
+        String password = getCredentials();
+        sendMessage(createMessage(Constants.SIGNIN, getClientId(), email, password));
+    }
 
-        /*The class Console has a method readPassword() that hides input.*/
+    /**
+     * Sends a sign up message throw a ssl socket
+     */
+    public void signUpUser(){
+        String password = getCredentials();
+        sendMessage(createMessage(Constants.SIGNUP, getClientId(), email, password));
+    }
+
+    /**
+     * Asks user for email and password
+     * @return String password
+     */
+    public String getCredentials(){
+
+         /*The class Console has a method readPassword() that hides input.*/
         Console console = System.console();
         if (console == null) {
             System.err.println("No console.");
-            System.exit(1);
+            System.exit(-1);
         }
 
         System.out.print("Email: ");
@@ -65,21 +89,23 @@ public class Client {
         System.out.print("Password: ");
         char [] oldPassword = console.readPassword();
         String password = new String(oldPassword);
-        console.printf(password + "\n");
 
-
-      //  if (verify(login, oldPassword))
-
-        out.println(createMessage(Constants.SIGNIN, getClientId()));
-        closeSocket();
+        return password;
     }
 
-    public void signUpUser(){
+    /**
+     * Sends a message throw a ssl socket
+     * @param message message to send
+     */
+    public void sendMessage(String message){
         connectToServer();
-        out.println(createMessage(Constants.SIGNUP, getClientId()));
+        out.println(message);
         closeSocket();
     }
 
+    /**
+     * Connects to server
+     */
     public void connectToServer(){
 
         try {
@@ -94,6 +120,9 @@ public class Client {
         }
     }
 
+    /**
+     * Closes socket
+     */
     public void closeSocket(){
         try {
             sslSocket.close();
@@ -103,6 +132,10 @@ public class Client {
         }
     }
 
+    /**
+     * Gets Client id
+     * @return client id
+     */
     public String getClientId(){
         return createHash(email).toString();
     }
