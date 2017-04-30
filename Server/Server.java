@@ -1,6 +1,7 @@
 package Server;
 
 import Utilities.Utilities;
+import javafx.util.Pair;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -24,46 +25,35 @@ public class Server implements ServerInterface {
     private BufferedReader in;
     private PrintWriter out;
     /**
-     * Key is the user id (32-bit hash from e-mail) and value is the user password
+     * Key is the user id (32-bit hash from e-mail) and value is the 256-bit hashed user password
      */
     private Hashtable<byte[], byte[]> users;
     /**
-     * Key is the server identifier (256-bit hash from ip+port) and the value it's the server ip
+     * Key is an integer representing the m nodes and the value it's the server identifier (32-bit integer hash from ip+port)
      */
     private HashMap<Integer, String> fingerTable;
+    /**
+     * Key is the serverId and value is the Pair<Ip,Port>
+     */
+    private HashMap<String, Pair<String,String>> serversInfo;
     private int serverId;
     private String serverIp;
     private int serverPort;
+    private int minIndex;
+    private int maxIndex;
 
     public Server(String args[]) {
 
         this.serverIp = args[0];
         this.serverPort = Integer.parseInt(args[1]);
         this.fingerTable = new HashMap<>();
+        this.serversInfo = new HashMap<>();
         this.serverId = getServerIdentifier();
         initFingerTable();
-
         saveServerInfoToDisk();
         loadServersInfoFromDisk();
-
-
-        sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-        try {
-            sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(serverPort);
-            // TODO: Not working
-            // sslServerSocket.setNeedClientAuth(true);
-            sslServerSocket.setEnabledCipherSuites(sslServerSocket.getSupportedCipherSuites());
-
-        } catch (IOException e) {
-            System.out.println("Failed to create sslServerSocket");
-            e.printStackTrace();
-        }
-
-        for (Map.Entry<Integer, String> entry : fingerTable.entrySet()) {
-            if(entry.getValue() != null){
-                System.out.println("i: " + entry.getKey() + " NodeID: " + entry.getValue());
-            }
-        }
+        initServerSocket();
+        syncFingerTable();
 
     }
 
@@ -120,6 +110,23 @@ public class Server implements ServerInterface {
     }
 
     /**
+     * Initiates the server socket for incoming requests
+     */
+    public void initServerSocket(){
+        sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+        try {
+            sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(serverPort);
+            // TODO: Not working
+            // sslServerSocket.setNeedClientAuth(true);
+            sslServerSocket.setEnabledCipherSuites(sslServerSocket.getSupportedCipherSuites());
+
+        } catch (IOException e) {
+            System.out.println("Failed to create sslServerSocket");
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * Initializes the finger table with m values (max number of nodes = 2^m)
      */
     public void initFingerTable() {
@@ -129,13 +136,26 @@ public class Server implements ServerInterface {
     }
 
     /**
+     * Send finger table information to nodes in the finger table
+     */
+    public void syncFingerTable(){
+
+
+
+    }
+
+    /**
      * Looks up in the finger table which server has the closest smallest key comparing to the key we want to lookup
      *
      * @param key 256-bit identifier
      */
     public void serverLookUp(int key) {
 
+        for (Map.Entry<Integer, String> entry : fingerTable.entrySet()) {
+            if (Integer.parseInt(entry.getValue()) > key) {
 
+            }
+        }
 
     }
 
@@ -173,9 +193,12 @@ public class Server implements ServerInterface {
             String line = reader.readLine();
 
             while (line != null) {
-                String[] serverInfo = line.split(":");
-                if(!serverInfo[0].equals(serverIp)){
-                    int val = Integer.parseInt(serverInfo[2]);
+                String[] nodeInfo = line.split(":");
+                String nodeId = nodeInfo[2];
+                String nodeIp = nodeInfo[0];
+                String nodePort = nodeInfo[1];
+                if (!nodeIp.equals(serverIp)) {
+                    int id = Integer.parseInt(nodeId);
                     for (Map.Entry<Integer, String> entry : fingerTable.entrySet()) {
                         /**
                          * succeeder formula = succ(serverId+2^(i-1))
@@ -185,14 +208,14 @@ public class Server implements ServerInterface {
                          *
                          * serverId equals to this node position in the circle
                          */
-                        int succ = (int)(serverId+Math.pow(2,(entry.getKey()-1)));
+                        int succ = (int) (serverId + Math.pow(2, (entry.getKey() - 1)));
                         /**
                          * if succeder number is bigger than the circle size (max number of nodes)
                          * it starts counting from the beginning
                          * by removing this node position (serverId) from formula
                          */
-                        if(succ > Math.pow(2,MAX_FINGER_TABLE_SIZE)){
-                            succ = (int)(Math.pow(2,(entry.getKey()-1)));
+                        if (succ > Math.pow(2, MAX_FINGER_TABLE_SIZE)) {
+                            succ = (int) (Math.pow(2, (entry.getKey() - 1)));
                         }
                         /**
                          * if the succeder is smaller than the value of the node we are reading
@@ -203,12 +226,12 @@ public class Server implements ServerInterface {
                          * than the node that used to be responsible for this interval,
                          * than the node we are reading is now the node responsible
                          */
-                        if(succ < val){
-                            if(entry.getValue() == null){
-                                //TODO: change val to serverInfo[2]
-                                fingerTable.put(entry.getKey(), Integer.toString(val));
-                            }else if(val < Integer.parseInt(entry.getValue())){
-                                fingerTable.put(entry.getKey(), Integer.toString(val));
+                        if (succ < id) {
+                            if (entry.getValue() == null) {
+                                fingerTable.put(entry.getKey(), Integer.toString(id));
+                                serversInfo.put(nodeId,new Pair(nodeIp,nodePort));
+                            } else if (id < Integer.parseInt(entry.getValue())) {
+                                fingerTable.put(entry.getKey(), Integer.toString(id));
                             }
                         }
                     }
