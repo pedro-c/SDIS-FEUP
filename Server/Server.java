@@ -45,8 +45,9 @@ public class Server implements ServerInterface {
         this.nodeID = (int) (Math.log(serverId) / Math.log(2));
         initFingerTable();
 
-        loadServersInfoFromDisk();
         saveServerInfoToDisk();
+        loadServersInfoFromDisk();
+
 
         sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         try {
@@ -59,6 +60,14 @@ public class Server implements ServerInterface {
             System.out.println("Failed to create sslServerSocket");
             e.printStackTrace();
         }
+
+        System.out.println("Node ID: " + nodeID);
+        for (Map.Entry<Integer, String> entry : fingerTable.entrySet()) {
+            if(entry.getValue() != null){
+                System.out.println("i: " + entry.getKey() + " NodeID: " + entry.getValue());
+            }
+        }
+
     }
 
     public static void main(String[] args) {
@@ -127,6 +136,7 @@ public class Server implements ServerInterface {
     public void serverLookUp(int key) {
 
 
+
     }
 
     /**
@@ -138,8 +148,12 @@ public class Server implements ServerInterface {
             String line = reader.readLine();
             while (line != null) {
                 String[] serverInfo = line.split(":");
-                if (serverInfo[2].equals(serverId))
+                System.out.println(serverId);
+                System.out.println(serverInfo[2]);
+                if (serverInfo[2].equals(Integer.toString(serverId))) {
                     return;
+                }
+                line = reader.readLine();
             }
             PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(".config", true)));
             out.println(serverIp + ":" + serverPort + ":" + serverId);
@@ -160,24 +174,24 @@ public class Server implements ServerInterface {
 
             while (line != null) {
                 String[] serverInfo = line.split(":");
-
-                int val = (int) (Math.log(Integer.getInteger(serverInfo[2])) / Math.log(2));
-                System.out.println(val);
-
-                for (Map.Entry<Integer, String> entry : fingerTable.entrySet()) {
-                    if(nodeID+Math.pow(2,(entry.getKey()-1)) < val){
-                        if(entry.getValue() == null){
-                            //TODO: change val to serverInfo[2]
-                            fingerTable.put(entry.getKey(), Integer.toString(val));
-                        }else if(val < Integer.parseInt(entry.getValue())){
-                            fingerTable.put(entry.getKey(), Integer.toString(val));
-                        }
-                    }else{
-                        if(entry.getValue() == null){
-                            fingerTable.put(entry.getKey(), Integer.toString(val));
+                if(!serverInfo[0].equals(serverIp)){
+                    int val = (int) (Math.log(Integer.parseInt(serverInfo[2])) / Math.log(2));
+                    for (Map.Entry<Integer, String> entry : fingerTable.entrySet()) {
+                        if(nodeID+Math.pow(2,(entry.getKey()-1)) < val){
+                            if(entry.getValue() == null){
+                                //TODO: change val to serverInfo[2]
+                                fingerTable.put(entry.getKey(), Integer.toString(val));
+                            }else if(val < Integer.parseInt(entry.getValue())){
+                                fingerTable.put(entry.getKey(), Integer.toString(val));
+                            }
+                        }else{
+                            if(entry.getValue() == null){
+                                fingerTable.put(entry.getKey(), Integer.toString(val));
+                            }
                         }
                     }
                 }
+
                 line = reader.readLine();
             }
         } catch (IOException e) {
