@@ -9,18 +9,18 @@ public class ChatMessage {
     private Integer chatId;
     private String dateMessage;
     private String senderPublicKey;
-    private byte[] body;
+    private String body;
     private String bodyChecksum;
 
-    public ChatMessage(Integer senderId, Integer chatId, String senderPublicKey, byte[] body){
+    public ChatMessage(Integer senderId, Integer chatId, String senderPublicKey, String  body){
         this.senderId = senderId;
         this.chatId =  chatId;
         this.senderPublicKey = senderPublicKey;
         this.body = body;
     }
 
-    public byte[] createMessage(){
-        byte[] message = null;
+    public String createMessage(){
+        String message = null;
         //Create Message
         return message;
     }

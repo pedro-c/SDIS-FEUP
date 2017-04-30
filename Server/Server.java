@@ -1,5 +1,7 @@
 package Server;
 
+import Utilities.Utilities;
+
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
@@ -19,6 +21,10 @@ public class Server implements ServerInterface {
     private SSLServerSocket sslServerSocket;
     private SSLSocketFactory sslSocketFactory;
     private SSLServerSocketFactory sslServerSocketFactory;
+    private Hashtable<Integer,String[]> serverConfig;
+    private Hashtable<String,byte[]> users;
+    private BufferedReader in;
+    private PrintWriter out;
     private Hashtable<BigInteger, String> fingerTable;
     private BigInteger serverId;
     private String serverIp;
@@ -37,6 +43,10 @@ public class Server implements ServerInterface {
         sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         try {
             sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(serverPort);
+           // TODO: Not working
+            // sslServerSocket.setNeedClientAuth(true);
+            sslServerSocket.setEnabledCipherSuites(sslServerSocket.getSupportedCipherSuites());
+
         } catch (IOException e) {
             System.out.println("Failed to create sslServerSocket");
             e.printStackTrace();
@@ -58,7 +68,8 @@ public class Server implements ServerInterface {
     public void listen() {
         while (true) {
             try {
-                new ConnectionHandler((SSLSocket) sslServerSocket.accept());
+                System.out.println("Listening...");
+                new Thread(new ConnectionHandler((SSLSocket)sslServerSocket.accept())).start();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -158,6 +169,7 @@ public class Server implements ServerInterface {
      */
     public String getServerIp() {
         return this.serverIp;
+
     }
 
     /**
@@ -173,6 +185,7 @@ public class Server implements ServerInterface {
     public class ConnectionHandler implements Runnable {
 
         private SSLSocket sslSocket;
+        private BufferedReader in;
 
         public ConnectionHandler(SSLSocket socket) {
             this.sslSocket = socket;
@@ -180,6 +193,56 @@ public class Server implements ServerInterface {
 
         public void run() {
 
+            System.out.println("Entrei");
+            try {
+                in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
+                String response = in.readLine();
+                analyseResponse(response);
+
+            } catch (IOException e) {
+                System.out.println("Error creating buffered reader...");
+                e.printStackTrace();
+            }
         }
+    }
+
+
+    public void analyseResponse(String response){
+
+        System.out.println(response);
+    }
+
+    /**
+     * Regists user
+     * @param email user email
+     * @param password user password
+     */
+    public void registUser(String email, String password){
+        if(users.putIfAbsent(email, createHash(password))!=null)
+            System.out.println("Email already exists. Try to sign in instead of sign up...");
+        else System.out.println("Signed up with success!");
+    }
+
+    /**
+     * Authenticates user already registred
+     * @param email user email
+     * @param password user password
+     * @return true if user authentication wents well, false if don't
+     */
+    public boolean loginUser(String email, String password){
+
+        if(!users.containsKey(email)){
+            System.out.println("Try to create an account. Your email was not found on the database...");
+            return false;
+        }
+
+        if(!users.get(email).equals(Utilities.createHash(password))){
+            System.out.println("Impossible to sign in, wrong email or password...");
+            return false;
+        }
+
+        System.out.println("Logged in with success!");
+
+        return true;
     }
 }
