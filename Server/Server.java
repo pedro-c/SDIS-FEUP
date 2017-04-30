@@ -7,13 +7,13 @@ import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
-import java.math.BigInteger;
-import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
 
 import static Utilities.Constants.MAX_FINGER_TABLE_SIZE;
 import static Utilities.Utilities.createHash;
-import static Utilities.Utilities.getBigInteger;
+import static Utilities.Utilities.get32bitHashValue;
 
 public class Server implements ServerInterface {
 
@@ -21,12 +21,18 @@ public class Server implements ServerInterface {
     private SSLServerSocket sslServerSocket;
     private SSLSocketFactory sslSocketFactory;
     private SSLServerSocketFactory sslServerSocketFactory;
-    private Hashtable<Integer,String[]> serverConfig;
-    private Hashtable<String,byte[]> users;
     private BufferedReader in;
     private PrintWriter out;
-    private Hashtable<BigInteger, String> fingerTable;
-    private BigInteger serverId;
+    /**
+     * Key is the user id (32-bit hash from e-mail) and value is the user password
+     */
+    private Hashtable<byte[], byte[]> users;
+    /**
+     * Key is the server identifier (256-bit hash from ip+port) and the value it's the server ip
+     */
+    private HashMap<Integer, String> fingerTable;
+    private int serverId;
+    private int nodeID;
     private String serverIp;
     private int serverPort;
 
@@ -34,8 +40,10 @@ public class Server implements ServerInterface {
 
         this.serverIp = args[0];
         this.serverPort = Integer.parseInt(args[1]);
-        this.fingerTable = new Hashtable<>();
+        this.fingerTable = new HashMap<>();
         this.serverId = getServerIdentifier();
+        this.nodeID = (int) (Math.log(serverId) / Math.log(2));
+        initFingerTable();
 
         loadServersInfoFromDisk();
         saveServerInfoToDisk();
@@ -43,7 +51,7 @@ public class Server implements ServerInterface {
         sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         try {
             sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(serverPort);
-           // TODO: Not working
+            // TODO: Not working
             // sslServerSocket.setNeedClientAuth(true);
             sslServerSocket.setEnabledCipherSuites(sslServerSocket.getSupportedCipherSuites());
 
@@ -69,7 +77,7 @@ public class Server implements ServerInterface {
         while (true) {
             try {
                 System.out.println("Listening...");
-                new Thread(new ConnectionHandler((SSLSocket)sslServerSocket.accept())).start();
+                new Thread(new ConnectionHandler((SSLSocket) sslServerSocket.accept())).start();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -101,6 +109,22 @@ public class Server implements ServerInterface {
             e.printStackTrace();
             System.out.println("Failed to find registry");
         }*/
+
+
+    }
+
+    public void initFingerTable() {
+        for (int i = 1; i <= MAX_FINGER_TABLE_SIZE; i++) {
+            fingerTable.put(i, null);
+        }
+    }
+
+    /**
+     * Looks up in the finger table which server has the closest smallest key comparing to the key we want to lookup
+     *
+     * @param key 256-bit identifier
+     */
+    public void serverLookUp(int key) {
 
 
     }
@@ -137,16 +161,20 @@ public class Server implements ServerInterface {
             while (line != null) {
                 String[] serverInfo = line.split(":");
 
-                if (fingerTable.size() < MAX_FINGER_TABLE_SIZE) {
-                    fingerTable.put(new BigInteger(serverInfo[2]), serverInfo[0]);
-                } else {
-                    Enumeration<BigInteger> servers = fingerTable.keys();
-                    while (servers.hasMoreElements()) {
-                        BigInteger server = servers.nextElement();
+                int val = (int) (Math.log(Integer.getInteger(serverInfo[2])) / Math.log(2));
+                System.out.println(val);
 
-                        //TODO: Added closest preceding servers to finger table instead of all
-                        if (server.compareTo(new BigInteger(serverInfo[2])) == 1) {
-
+                for (Map.Entry<Integer, String> entry : fingerTable.entrySet()) {
+                    if(nodeID+Math.pow(2,(entry.getKey()-1)) < val){
+                        if(entry.getValue() == null){
+                            //TODO: change val to serverInfo[2]
+                            fingerTable.put(entry.getKey(), Integer.toString(val));
+                        }else if(val < Integer.parseInt(entry.getValue())){
+                            fingerTable.put(entry.getKey(), Integer.toString(val));
+                        }
+                    }else{
+                        if(entry.getValue() == null){
+                            fingerTable.put(entry.getKey(), Integer.toString(val));
                         }
                     }
                 }
@@ -158,10 +186,10 @@ public class Server implements ServerInterface {
     }
 
     /**
-     * @return Returns 256-bit hash using server ip and server port
+     * @return Returns 32-bit hash using server ip and server port
      */
-    public BigInteger getServerIdentifier() {
-        return getBigInteger(createHash(serverIp + serverPort));
+    public int getServerIdentifier() {
+        return get32bitHashValue(createHash(serverIp + serverPort));
     }
 
     /**
@@ -169,7 +197,6 @@ public class Server implements ServerInterface {
      */
     public String getServerIp() {
         return this.serverIp;
-
     }
 
     /**
@@ -177,6 +204,47 @@ public class Server implements ServerInterface {
      */
     public int getServerPort() {
         return this.serverPort;
+    }
+
+    public void analyseResponse(String response) {
+
+        System.out.println(response);
+    }
+
+    /**
+     * Regists user
+     *
+     * @param email    user email
+     * @param password user password
+     */
+    public void registUser(String email, String password) {
+        if (users.putIfAbsent(createHash(email), createHash(password)) != null)
+            System.out.println("Email already exists. Try to sign in instead of sign up...");
+        else System.out.println("Signed up with success!");
+    }
+
+    /**
+     * Authenticates user already registred
+     *
+     * @param email    user email
+     * @param password user password
+     * @return true if user authentication wents well, false if don't
+     */
+    public boolean loginUser(String email, String password) {
+
+        if (!users.containsKey(email)) {
+            System.out.println("Try to create an account. Your email was not found on the database...");
+            return false;
+        }
+
+        if (!users.get(email).equals(Utilities.createHash(password))) {
+            System.out.println("Impossible to sign in, wrong email or password...");
+            return false;
+        }
+
+        System.out.println("Logged in with success!");
+
+        return true;
     }
 
     /**
@@ -204,45 +272,5 @@ public class Server implements ServerInterface {
                 e.printStackTrace();
             }
         }
-    }
-
-
-    public void analyseResponse(String response){
-
-        System.out.println(response);
-    }
-
-    /**
-     * Regists user
-     * @param email user email
-     * @param password user password
-     */
-    public void registUser(String email, String password){
-        if(users.putIfAbsent(email, createHash(password))!=null)
-            System.out.println("Email already exists. Try to sign in instead of sign up...");
-        else System.out.println("Signed up with success!");
-    }
-
-    /**
-     * Authenticates user already registred
-     * @param email user email
-     * @param password user password
-     * @return true if user authentication wents well, false if don't
-     */
-    public boolean loginUser(String email, String password){
-
-        if(!users.containsKey(email)){
-            System.out.println("Try to create an account. Your email was not found on the database...");
-            return false;
-        }
-
-        if(!users.get(email).equals(Utilities.createHash(password))){
-            System.out.println("Impossible to sign in, wrong email or password...");
-            return false;
-        }
-
-        System.out.println("Logged in with success!");
-
-        return true;
     }
 }

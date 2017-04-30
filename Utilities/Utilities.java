@@ -16,6 +16,7 @@ public class Utilities {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(data.getBytes("UTF-8"));
+
             return hash;
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -34,7 +35,7 @@ public class Utilities {
         return DatatypeConverter.printHexBinary(hash);
     }
 
-    public static BigInteger getBigInteger(byte[] hash){
-        return new BigInteger( hash );
+    public static int get32bitHashValue(byte[] hash){
+        return new BigInteger(hash).intValue();
     }
 }
