@@ -4,7 +4,7 @@ import javax.xml.bind.DatatypeConverter;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 
-public class Utilities{
+public class Utilities {
 
     /**
      * Returns a hexadecimal encoded SHA-256 hash for the input String.
