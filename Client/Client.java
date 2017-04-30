@@ -10,7 +10,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.Scanner;
 import java.io.Console;
-import static Messages.MessageBuilder.createMessage;
+import static Messages.MessageUtils.createMessage;
 import static Utilities.Utilities.createHash;
 
 public class Client {
@@ -133,7 +133,7 @@ public class Client {
     }
 
     /**
-     * Gets Client id
+     * Returns Client id
      * @return client id
      */
     public String getClientId(){
