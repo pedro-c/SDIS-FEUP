@@ -43,8 +43,9 @@ public class Server implements ServerInterface {
         sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         try {
             sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(serverPort);
-            sslServerSocket.setNeedClientAuth(true);
-            sslServerSocket.setEnabledCipherSuites(sslServerSocketFactory.getSupportedCipherSuites());
+           // TODO: Not working
+            // sslServerSocket.setNeedClientAuth(true);
+            sslServerSocket.setEnabledCipherSuites(sslServerSocket.getSupportedCipherSuites());
 
         } catch (IOException e) {
             System.out.println("Failed to create sslServerSocket");
@@ -195,12 +196,20 @@ public class Server implements ServerInterface {
             System.out.println("Entrei");
             try {
                 in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
+                String response = in.readLine();
+                analyseResponse(response);
 
             } catch (IOException e) {
                 System.out.println("Error creating buffered reader...");
                 e.printStackTrace();
             }
         }
+    }
+
+
+    public void analyseResponse(String response){
+        
+        System.out.println(response);
     }
 
     /**
