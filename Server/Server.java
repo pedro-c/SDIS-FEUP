@@ -32,7 +32,6 @@ public class Server implements ServerInterface {
      */
     private HashMap<Integer, String> fingerTable;
     private int serverId;
-    private int nodeID;
     private String serverIp;
     private int serverPort;
 
@@ -42,7 +41,6 @@ public class Server implements ServerInterface {
         this.serverPort = Integer.parseInt(args[1]);
         this.fingerTable = new HashMap<>();
         this.serverId = getServerIdentifier();
-        this.nodeID = (int) (Math.log(serverId) / Math.log(2));
         initFingerTable();
 
         saveServerInfoToDisk();
@@ -61,7 +59,6 @@ public class Server implements ServerInterface {
             e.printStackTrace();
         }
 
-        System.out.println("Node ID: " + nodeID);
         for (Map.Entry<Integer, String> entry : fingerTable.entrySet()) {
             if(entry.getValue() != null){
                 System.out.println("i: " + entry.getKey() + " NodeID: " + entry.getValue());
@@ -122,6 +119,9 @@ public class Server implements ServerInterface {
 
     }
 
+    /**
+     * Initializes the finger table with m values (max number of nodes = 2^m)
+     */
     public void initFingerTable() {
         for (int i = 1; i <= MAX_FINGER_TABLE_SIZE; i++) {
             fingerTable.put(i, null);
@@ -175,17 +175,39 @@ public class Server implements ServerInterface {
             while (line != null) {
                 String[] serverInfo = line.split(":");
                 if(!serverInfo[0].equals(serverIp)){
-                    int val = (int) (Math.log(Integer.parseInt(serverInfo[2])) / Math.log(2));
+                    int val = Integer.parseInt(serverInfo[2]);
                     for (Map.Entry<Integer, String> entry : fingerTable.entrySet()) {
-                        if(nodeID+Math.pow(2,(entry.getKey()-1)) < val){
+                        /**
+                         * succeeder formula = succ(serverId+2^(i-1))
+                         *
+                         * succeder is a possible node responsible for the values between
+                         * the current and the succeder.
+                         *
+                         * serverId equals to this node position in the circle
+                         */
+                        int succ = (int)(serverId+Math.pow(2,(entry.getKey()-1)));
+                        /**
+                         * if succeder number is bigger than the circle size (max number of nodes)
+                         * it starts counting from the beginning
+                         * by removing this node position (serverId) from formula
+                         */
+                        if(succ > Math.pow(2,MAX_FINGER_TABLE_SIZE)){
+                            succ = (int)(Math.pow(2,(entry.getKey()-1)));
+                        }
+                        /**
+                         * if the succeder is smaller than the value of the node we are reading
+                         * from the config file this means that the node we are reading might be
+                         * responsible for the keys in between.
+                         * If there isn't another node responsible
+                         * for this interval or the node we are reading has a smaller value
+                         * than the node that used to be responsible for this interval,
+                         * than the node we are reading is now the node responsible
+                         */
+                        if(succ < val){
                             if(entry.getValue() == null){
                                 //TODO: change val to serverInfo[2]
                                 fingerTable.put(entry.getKey(), Integer.toString(val));
                             }else if(val < Integer.parseInt(entry.getValue())){
-                                fingerTable.put(entry.getKey(), Integer.toString(val));
-                            }
-                        }else{
-                            if(entry.getValue() == null){
                                 fingerTable.put(entry.getKey(), Integer.toString(val));
                             }
                         }
@@ -195,7 +217,7 @@ public class Server implements ServerInterface {
                 line = reader.readLine();
             }
         } catch (IOException e) {
-
+            e.printStackTrace();
         }
     }
 
