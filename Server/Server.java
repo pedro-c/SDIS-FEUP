@@ -43,8 +43,8 @@ public class Server implements ServerInterface {
         sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         try {
             sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(serverPort);
-           // TODO: Not working
-            // sslServerSocket.setNeedClientAuth(true);
+            // TODO: Not working
+           // sslServerSocket.setNeedClientAuth(true);
             sslServerSocket.setEnabledCipherSuites(sslServerSocket.getSupportedCipherSuites());
 
         } catch (IOException e) {
@@ -189,18 +189,21 @@ public class Server implements ServerInterface {
 
         public ConnectionHandler(SSLSocket socket) {
             this.sslSocket = socket;
+            try {
+                in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
+            } catch (IOException e) {
+                System.out.println("Error creating buffered reader...");
+                e.printStackTrace();
+            }
         }
 
         public void run() {
-
-            System.out.println("Entrei");
+            String response = null;
             try {
-                in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
-                String response = in.readLine();
+                response = in.readLine();
                 analyseResponse(response);
-
             } catch (IOException e) {
-                System.out.println("Error creating buffered reader...");
+                System.out.println("Error reading line...");
                 e.printStackTrace();
             }
         }
@@ -208,7 +211,6 @@ public class Server implements ServerInterface {
 
 
     public void analyseResponse(String response){
-
         System.out.println(response);
     }
 
