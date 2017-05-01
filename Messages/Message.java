@@ -1,12 +1,20 @@
 package Messages;
 
-public class Message {
+import java.io.Serializable;
 
-    private ChatMessage content;
-    private String messageType;
-    private Integer serverId;
+import static Utilities.Constants.CRLF;
 
-    public Message(){
+/**
+ * Message class.
+ */
+public class Message implements Serializable {
 
+    //TODO: Fix this. CRLF after header??? IT IS DIFFERENT TO READ! read line doesn't work
+    public static String createMessage(String... headerFields){
+        return (String.join(" ", headerFields) + " " + CRLF + CRLF);
+    }
+
+    public static String[] parseMessage(String message){
+        return message.split(" ");
     }
 }

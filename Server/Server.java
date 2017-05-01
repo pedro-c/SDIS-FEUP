@@ -13,8 +13,11 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import static Utilities.Constants.MAX_FINGER_TABLE_SIZE;
+import static Utilities.Constants.SIGNIN;
+import static Utilities.Constants.SIGNUP;
 import static Utilities.Utilities.createHash;
 import static Utilities.Utilities.get32bitHashValue;
+import static Messages.Message.parseMessage;
 
 public class Server implements ServerInterface {
 
@@ -278,8 +281,11 @@ public class Server implements ServerInterface {
      * @param email    user email
      * @param password user password
      */
-    public void registUser(String email, String password) {
-        if (users.putIfAbsent(createHash(email), createHash(password)) != null)
+    public void registUser(String email, String password){
+
+        System.out.println("Sign up...");
+
+        if(users.putIfAbsent(createHash(email), createHash(password))!=null)
             System.out.println("Email already exists. Try to sign in instead of sign up...");
         else System.out.println("Signed up with success!");
     }
@@ -293,7 +299,9 @@ public class Server implements ServerInterface {
      */
     public boolean loginUser(String email, String password) {
 
-        if (!users.containsKey(email)) {
+        System.out.println("Sign in...");
+
+        if(!users.containsKey(email)){
             System.out.println("Try to create an account. Your email was not found on the database...");
             return false;
         }
@@ -318,18 +326,21 @@ public class Server implements ServerInterface {
 
         public ConnectionHandler(SSLSocket socket) {
             this.sslSocket = socket;
+            try {
+                in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
+            } catch (IOException e) {
+                System.out.println("Error creating buffered reader...");
+                e.printStackTrace();
+            }
         }
 
         public void run() {
-
-            System.out.println("Entrei");
+            String response = null;
             try {
-                in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
-                String response = in.readLine();
+                response = in.readLine();
                 analyseResponse(response);
-
             } catch (IOException e) {
-                System.out.println("Error creating buffered reader...");
+                System.out.println("Error reading line...");
                 e.printStackTrace();
             }
         }
