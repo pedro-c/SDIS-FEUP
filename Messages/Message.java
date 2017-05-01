@@ -29,6 +29,20 @@ public class Message implements Serializable {
     }
 
     /**
+     * Message Constructor
+     * @param messageType
+     * @param senderId
+     * @param body
+     */
+    public Message(byte[] messageType, String senderId, String ... body){
+        this.messageType = new String(messageType);
+        this.senderId = senderId;
+        this.body = String.join(" ", body);
+
+        createMessage(this.messageType,this.senderId,this.body);
+    }
+
+    /**
      * Creates Message with format[MessageType][SenderId][CRLF][Body][CRLF][CRLF]
      * @param messageType
      * @param senderId
