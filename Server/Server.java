@@ -13,11 +13,8 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import static Utilities.Constants.MAX_FINGER_TABLE_SIZE;
-import static Utilities.Constants.SIGNIN;
-import static Utilities.Constants.SIGNUP;
 import static Utilities.Utilities.createHash;
 import static Utilities.Utilities.get32bitHashValue;
-import static Messages.Message.parseMessage;
 
 public class Server implements ServerInterface {
 
@@ -39,7 +36,7 @@ public class Server implements ServerInterface {
     /**
      * Key is the serverId and value is the Pair<Ip,Port>
      */
-    private HashMap<String, Pair<String,String>> serversInfo;
+    private HashMap<String, Pair<String, String>> serversInfo;
     private int serverId;
     private String serverIp;
     private int serverPort;
@@ -116,7 +113,7 @@ public class Server implements ServerInterface {
     /**
      * Initiates the server socket for incoming requests
      */
-    public void initServerSocket(){
+    public void initServerSocket() {
         sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         try {
             sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(serverPort);
@@ -142,8 +139,7 @@ public class Server implements ServerInterface {
     /**
      * Send finger table information to nodes in the finger table
      */
-    public void syncFingerTable(){
-
+    public void syncFingerTable() {
 
 
     }
@@ -234,7 +230,7 @@ public class Server implements ServerInterface {
                         if (succ < id) {
                             if (entry.getValue() == null) {
                                 fingerTable.put(entry.getKey(), Integer.toString(id));
-                                serversInfo.put(nodeId,new Pair(nodeIp,nodePort));
+                                serversInfo.put(nodeId, new Pair<>(nodeIp, nodePort));
                             } else if (id < Integer.parseInt(entry.getValue())) {
                                 fingerTable.put(entry.getKey(), Integer.toString(id));
                             }
@@ -281,11 +277,11 @@ public class Server implements ServerInterface {
      * @param email    user email
      * @param password user password
      */
-    public void registUser(String email, String password){
+    public void registUser(String email, String password) {
 
         System.out.println("Sign up...");
 
-        if(users.putIfAbsent(createHash(email), createHash(password))!=null)
+        if (users.putIfAbsent(createHash(email), createHash(password)) != null)
             System.out.println("Email already exists. Try to sign in instead of sign up...");
         else System.out.println("Signed up with success!");
     }
@@ -301,7 +297,7 @@ public class Server implements ServerInterface {
 
         System.out.println("Sign in...");
 
-        if(!users.containsKey(email)){
+        if (!users.containsKey(email)) {
             System.out.println("Try to create an account. Your email was not found on the database...");
             return false;
         }
