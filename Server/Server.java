@@ -15,6 +15,8 @@ import java.util.concurrent.Executors;
 
 import static Utilities.Constants.JOIN;
 import static Utilities.Constants.MAX_FINGER_TABLE_SIZE;
+import static Utilities.Constants.SIGNIN;
+import static Utilities.Constants.SIGNUP;
 import static Utilities.Utilities.createHash;
 
 public class Server extends Node {
@@ -241,9 +243,18 @@ public class Server extends Node {
     }
 
     public void analyseResponse(Message response) {
+        String[] body = response.getBody().split(" ");
 
-        System.out.println("Cheguei");
-
+        switch (response.getMessageType()){
+            case SIGNIN:
+                loginUser(body[0],body[1]);
+                break;
+            case SIGNUP:
+                registUser(body[0],body[1]);
+                break;
+            default:
+                break;
+        }
     }
 
     /**
@@ -252,13 +263,19 @@ public class Server extends Node {
      * @param email    user email
      * @param password user password
      */
-    public void registUser(String email, String password) {
+    public void registUser(String email, String password){
 
-        System.out.println("Sign up...");
 
-        if (users.putIfAbsent(createHash(email), createHash(password)) != null)
+        byte[] user_email = createHash(email);
+        System.out.println("Sign in with  " + user_email);
+
+      /* if (users.containsKey(user_email))
             System.out.println("Email already exists. Try to sign in instead of sign up...");
-        else System.out.println("Signed up with success!");
+       else {
+           users.put(user_email,createHash(password));
+           System.out.println("Signed up with success!");
+       }*/
+
     }
 
     /**
@@ -270,20 +287,20 @@ public class Server extends Node {
      */
     public boolean loginUser(String email, String password) {
 
-        System.out.println("Sign in...");
+        System.out.println("Sign up with " + email);
 
-        if (!users.containsKey(email)) {
+       /* if (!users.containsKey(email)) {
             System.out.println("Try to create an account. Your email was not found on the database...");
             return false;
         }
 
-        if (!users.get(email).equals(Utilities.createHash(password))) {
+        if (!users.get(email).equals(createHash(password))) {
             System.out.println("Impossible to sign in, wrong email or password...");
             return false;
         }
 
         System.out.println("Logged in with success!");
-
+*/
         return true;
     }
 

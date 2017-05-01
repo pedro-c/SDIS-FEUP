@@ -56,13 +56,7 @@ public class Client {
      */
     public void signInUser(){
         String password = getCredentials();
-
-        Message message = new Message(Constants.SIGNIN, getClientId(), email, password);
-        System.out.println(message.getMessageType());
-        System.out.println(message.getSenderId());
-        System.out.println(message.getBody());
-
-         sendMessage(new Message(Constants.SIGNIN, getClientId(), email, password));
+         sendMessage(new Message(Constants.SIGNIN.getBytes(), getClientId(), email, password));
     }
 
     /**
@@ -70,7 +64,7 @@ public class Client {
      */
     public void signUpUser(){
         String password = getCredentials();
-        sendMessage(new Message(Constants.SIGNIN, getClientId(), email, password));
+        sendMessage(new Message(Constants.SIGNUP.getBytes(), getClientId(), email, password));
     }
 
     /**
@@ -109,7 +103,28 @@ public class Client {
             e.printStackTrace();
         }
 
+        receiveMessage();
+    }
+
+    public void receiveMessage(){
+
+        Message message = null;
+
+        try {
+            message = (Message) clientInputStream.readObject();
+            analyseResponse(message);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
         closeSocket();
+    }
+
+
+    public void analyseResponse(Message message){
+
     }
 
     /**
