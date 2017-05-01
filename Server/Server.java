@@ -165,6 +165,13 @@ public class Server implements ServerInterface {
      */
     public void saveServerInfoToDisk() {
         try {
+            File file = new File("./",".config");
+
+            if (!file.isFile() && !file.createNewFile())
+            {
+                throw new IOException("Error creating new file: " + file.getAbsolutePath());
+            }
+
             BufferedReader reader = new BufferedReader(new FileReader(".config"));
             String line = reader.readLine();
             while (line != null) {
