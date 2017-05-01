@@ -14,6 +14,12 @@ public class Message implements Serializable {
     private String body;
 
 
+    /**
+     * Message Constructor
+     * @param messageType
+     * @param senderId
+     * @param body
+     */
     public Message(byte[] messageType, byte[] senderId, String ... body){
         this.messageType = new String(messageType);
         this.senderId = new String(senderId);
@@ -22,8 +28,15 @@ public class Message implements Serializable {
         createMessage(this.messageType,this.senderId,this.body);
     }
 
-    //MessageType SenderId CRLF Body CRLF CRLF
+    /**
+     * Creates Message with format[MessageType][SenderId][CRLF][Body][CRLF][CRLF]
+     * @param messageType
+     * @param senderId
+     * @param body
+     * @return
+     */
     public byte[] createMessage(String messageType, String senderId, String body){
+
         return (String.join(" ", messageType) + " "
                 + String.join(" ", senderId) + " "
                 + CRLF
@@ -53,14 +66,4 @@ public class Message implements Serializable {
     public String getBody() {
         return body;
     }
-
-
-    //TODO: Fix this. CRLF after header??? IT IS DIFFERENT TO READ! read line doesn't work
-   /* public static String createMessage(String... headerFields){
-        return (String.join(" ", headerFields) + " " + CRLF + CRLF);
-    }
-
-    public static String[] parseMessage(String message){
-        return message.split(" ");
-    }*/
 }

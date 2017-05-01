@@ -277,7 +277,10 @@ public class Server implements ServerInterface {
     }
 
     public void analyseResponse(Message message) {
-        System.out.println("Cheguei");
+        System.out.println(message.getMessageType());
+        System.out.println(message.getSenderId());
+        System.out.println(message.getBody());
+
     }
 
     /**
