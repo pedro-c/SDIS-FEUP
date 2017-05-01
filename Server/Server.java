@@ -1,21 +1,22 @@
 package Server;
 
 import Utilities.Utilities;
+import javafx.util.Pair;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
-import java.math.BigInteger;
-import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
 
 import static Utilities.Constants.MAX_FINGER_TABLE_SIZE;
 import static Utilities.Constants.SIGNIN;
 import static Utilities.Constants.SIGNUP;
 import static Utilities.Utilities.createHash;
-import static Utilities.Utilities.getBigInteger;
+import static Utilities.Utilities.get32bitHashValue;
 import static Messages.Message.parseMessage;
 
 public class Server implements ServerInterface {
@@ -24,36 +25,40 @@ public class Server implements ServerInterface {
     private SSLServerSocket sslServerSocket;
     private SSLSocketFactory sslSocketFactory;
     private SSLServerSocketFactory sslServerSocketFactory;
-    private Hashtable<Integer,String[]> serverConfig;
-    private Hashtable<String,byte[]> users;
     private BufferedReader in;
     private PrintWriter out;
-    private Hashtable<BigInteger, String> fingerTable;
-    private BigInteger serverId;
+    /**
+     * Key is the user id (32-bit hash from e-mail) and value is the 256-bit hashed user password
+     */
+    private Hashtable<byte[], byte[]> users;
+    /**
+     * Key is an integer representing the m nodes and the value it's the server identifier
+     * (32-bit integer hash from ip+port)
+     */
+    private HashMap<Integer, String> fingerTable;
+    /**
+     * Key is the serverId and value is the Pair<Ip,Port>
+     */
+    private HashMap<String, Pair<String,String>> serversInfo;
+    private int serverId;
     private String serverIp;
     private int serverPort;
+    private int minIndex;
+    private int maxIndex;
 
     public Server(String args[]) {
 
         this.serverIp = args[0];
         this.serverPort = Integer.parseInt(args[1]);
-        this.fingerTable = new Hashtable<>();
+        this.fingerTable = new HashMap<>();
+        this.serversInfo = new HashMap<>();
         this.serverId = getServerIdentifier();
-
-        loadServersInfoFromDisk();
+        initFingerTable();
         saveServerInfoToDisk();
+        loadServersInfoFromDisk();
+        initServerSocket();
+        syncFingerTable();
 
-        sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
-        try {
-            sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(serverPort);
-            // TODO: Not working
-           // sslServerSocket.setNeedClientAuth(true);
-            sslServerSocket.setEnabledCipherSuites(sslServerSocket.getSupportedCipherSuites());
-
-        } catch (IOException e) {
-            System.out.println("Failed to create sslServerSocket");
-            e.printStackTrace();
-        }
     }
 
     public static void main(String[] args) {
@@ -72,7 +77,7 @@ public class Server implements ServerInterface {
         while (true) {
             try {
                 System.out.println("Listening...");
-                new Thread(new ConnectionHandler((SSLSocket)sslServerSocket.accept())).start();
+                new Thread(new ConnectionHandler((SSLSocket) sslServerSocket.accept())).start();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -109,6 +114,57 @@ public class Server implements ServerInterface {
     }
 
     /**
+     * Initiates the server socket for incoming requests
+     */
+    public void initServerSocket(){
+        sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+        try {
+            sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(serverPort);
+            // TODO: Not working
+            // sslServerSocket.setNeedClientAuth(true);
+            sslServerSocket.setEnabledCipherSuites(sslServerSocket.getSupportedCipherSuites());
+
+        } catch (IOException e) {
+            System.out.println("Failed to create sslServerSocket");
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Initializes the finger table with m values (max number of nodes = 2^m)
+     */
+    public void initFingerTable() {
+        for (int i = 1; i <= MAX_FINGER_TABLE_SIZE; i++) {
+            fingerTable.put(i, null);
+        }
+    }
+
+    /**
+     * Send finger table information to nodes in the finger table
+     */
+    public void syncFingerTable(){
+
+
+
+    }
+
+    /**
+     * Looks up in the finger table which server has the closest smallest key comparing to the key we want to lookup
+     *
+     * @param key 256-bit identifier
+     */
+    public void serverLookUp(int key) {
+
+        for (Map.Entry<Integer, String> entry : fingerTable.entrySet()) {
+            if (Integer.parseInt(entry.getValue()) > key) {
+                //forwardRequestToServer(entry.getValue());
+            }
+        }
+        //forwardRequestToServer(fingerTable.get(MAX_FINGER_TABLE_SIZE));
+
+    }
+
+    /**
      * Checks if .config file already has info about this server, if not appends ip:port:id
      */
     public void saveServerInfoToDisk() {
@@ -117,8 +173,12 @@ public class Server implements ServerInterface {
             String line = reader.readLine();
             while (line != null) {
                 String[] serverInfo = line.split(":");
-                if (serverInfo[2].equals(serverId))
+                System.out.println(serverId);
+                System.out.println(serverInfo[2]);
+                if (serverInfo[2].equals(Integer.toString(serverId))) {
                     return;
+                }
+                line = reader.readLine();
             }
             PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(".config", true)));
             out.println(serverIp + ":" + serverPort + ":" + serverId);
@@ -138,33 +198,62 @@ public class Server implements ServerInterface {
             String line = reader.readLine();
 
             while (line != null) {
-                String[] serverInfo = line.split(":");
-
-                if (fingerTable.size() < MAX_FINGER_TABLE_SIZE) {
-                    fingerTable.put(new BigInteger(serverInfo[2]), serverInfo[0]);
-                } else {
-                    Enumeration<BigInteger> servers = fingerTable.keys();
-                    while (servers.hasMoreElements()) {
-                        BigInteger server = servers.nextElement();
-
-                        //TODO: Added closest preceding servers to finger table instead of all
-                        if (server.compareTo(new BigInteger(serverInfo[2])) == 1) {
-
+                String[] nodeInfo = line.split(":");
+                String nodeId = nodeInfo[2];
+                String nodeIp = nodeInfo[0];
+                String nodePort = nodeInfo[1];
+                if (!nodeIp.equals(serverIp)) {
+                    int id = Integer.parseInt(nodeId);
+                    for (Map.Entry<Integer, String> entry : fingerTable.entrySet()) {
+                        /**
+                         * succeeder formula = succ(serverId+2^(i-1))
+                         *
+                         * succeder is a possible node responsible for the values between
+                         * the current and the succeder.
+                         *
+                         * serverId equals to this node position in the circle
+                         */
+                        int succ = (int) (serverId + Math.pow(2, (entry.getKey() - 1)));
+                        /**
+                         * if succeder number is bigger than the circle size (max number of nodes)
+                         * it starts counting from the beginning
+                         * by removing this node position (serverId) from formula
+                         */
+                        if (succ > Math.pow(2, MAX_FINGER_TABLE_SIZE)) {
+                            succ = (int) (Math.pow(2, (entry.getKey() - 1)));
+                        }
+                        /**
+                         * if the succeder is smaller than the value of the node we are reading
+                         * from the config file this means that the node we are reading might be
+                         * responsible for the keys in between.
+                         * If there isn't another node responsible
+                         * for this interval or the node we are reading has a smaller value
+                         * than the node that used to be responsible for this interval,
+                         * than the node we are reading is now the node responsible
+                         */
+                        if (succ < id) {
+                            if (entry.getValue() == null) {
+                                fingerTable.put(entry.getKey(), Integer.toString(id));
+                                serversInfo.put(nodeId,new Pair(nodeIp,nodePort));
+                            } else if (id < Integer.parseInt(entry.getValue())) {
+                                fingerTable.put(entry.getKey(), Integer.toString(id));
+                            }
                         }
                     }
                 }
+
                 line = reader.readLine();
             }
         } catch (IOException e) {
-
+            e.printStackTrace();
         }
     }
 
     /**
-     * @return Returns 256-bit hash using server ip and server port
+     * @return Returns 32-bit hash using server ip and server port
      */
-    public BigInteger getServerIdentifier() {
-        return getBigInteger(createHash(serverIp + serverPort));
+    public int getServerIdentifier() {
+        return get32bitHashValue(createHash(serverIp + serverPort));
     }
 
     /**
@@ -172,7 +261,6 @@ public class Server implements ServerInterface {
      */
     public String getServerIp() {
         return this.serverIp;
-
     }
 
     /**
@@ -180,6 +268,52 @@ public class Server implements ServerInterface {
      */
     public int getServerPort() {
         return this.serverPort;
+    }
+
+    public void analyseResponse(String response) {
+
+        System.out.println(response);
+    }
+
+    /**
+     * Regists user
+     *
+     * @param email    user email
+     * @param password user password
+     */
+    public void registUser(String email, String password){
+
+        System.out.println("Sign up...");
+
+        if(users.putIfAbsent(createHash(email), createHash(password))!=null)
+            System.out.println("Email already exists. Try to sign in instead of sign up...");
+        else System.out.println("Signed up with success!");
+    }
+
+    /**
+     * Authenticates user already registred
+     *
+     * @param email    user email
+     * @param password user password
+     * @return true if user authentication wents well, false if don't
+     */
+    public boolean loginUser(String email, String password) {
+
+        System.out.println("Sign in...");
+
+        if(!users.containsKey(email)){
+            System.out.println("Try to create an account. Your email was not found on the database...");
+            return false;
+        }
+
+        if (!users.get(email).equals(Utilities.createHash(password))) {
+            System.out.println("Impossible to sign in, wrong email or password...");
+            return false;
+        }
+
+        System.out.println("Logged in with success!");
+
+        return true;
     }
 
     /**
@@ -210,64 +344,5 @@ public class Server implements ServerInterface {
                 e.printStackTrace();
             }
         }
-    }
-
-
-    /**
-     * Analyses response
-     * @param response String with message from ssl connection
-     */
-    public void analyseResponse(String response){
-        String[] parts = parseMessage(response);
-        String header = parts[0];
-        switch (header){
-            case SIGNIN:
-                registUser(parts[2],parts[3]);
-                break;
-            case SIGNUP:
-                loginUser(parts[2],parts[3]);
-                break;
-            default:
-                break;
-        }
-    }
-
-    /**
-     * Regists user
-     * @param email user email
-     * @param password user password
-     */
-    public void registUser(String email, String password){
-
-        System.out.println("Sign up...");
-
-        if(users.putIfAbsent(email, createHash(password))!=null)
-            System.out.println("Email already exists. Try to sign in instead of sign up...");
-        else System.out.println("Signed up with success!");
-    }
-
-    /**
-     * Authenticates user already registred
-     * @param email user email
-     * @param password user password
-     * @return true if user authentication wents well, false if don't
-     */
-    public boolean loginUser(String email, String password){
-
-        System.out.println("Sign in...");
-
-        if(!users.containsKey(email)){
-            System.out.println("Try to create an account. Your email was not found on the database...");
-            return false;
-        }
-
-        if(!users.get(email).equals(Utilities.createHash(password))){
-            System.out.println("Impossible to sign in, wrong email or password...");
-            return false;
-        }
-
-        System.out.println("Logged in with success!");
-
-        return true;
     }
 }
