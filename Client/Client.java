@@ -1,6 +1,7 @@
 package Client;
 
 import Messages.Message;
+import Messages.MessageHandler;
 import Utilities.Constants;
 
 import javax.net.ssl.SSLSocket;
@@ -56,7 +57,10 @@ public class Client {
      */
     public void signInUser(){
         String password = getCredentials();
-         sendMessage(new Message(Constants.SIGNIN.getBytes(), getClientId(), email, password));
+        Integer port = 4445;
+        System.out.println(1);
+        MessageHandler handler = new MessageHandler(new Message(Constants.SIGNIN.getBytes(), getClientId(), email, password), "localhost", port.toString(), this);
+        handler.sendMessage();
     }
 
     /**
@@ -64,7 +68,9 @@ public class Client {
      */
     public void signUpUser(){
         String password = getCredentials();
-        sendMessage(new Message(Constants.SIGNUP.getBytes(), getClientId(), email, password));
+        Integer port = 4445;
+        MessageHandler handler = new MessageHandler(new Message(Constants.SIGNUP.getBytes(), getClientId(), email, password), "localhost", port.toString(), this);
+        handler.sendMessage();
     }
 
     /**
@@ -95,7 +101,7 @@ public class Client {
      * Sends a message throw a ssl socket
      * @param message message to send
      */
-    public void sendMessage(Message message){
+  /*  public void sendMessage(Message message){
         connectToServer();
         try {
             clientOutputStream.writeObject(message);
@@ -104,9 +110,9 @@ public class Client {
         }
 
         receiveMessage();
-    }
+    }*/
 
-    public void receiveMessage(){
+  /*  public void receiveMessage(){
 
         Message message = null;
 
@@ -120,7 +126,7 @@ public class Client {
         }
 
         closeSocket();
-    }
+    }*/
 
 
     public void analyseResponse(Message message){
@@ -130,7 +136,7 @@ public class Client {
     /**
      * Connects to server
      */
-    public void connectToServer(){
+   /* public void connectToServer(){
 
         try {
             sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
@@ -145,19 +151,19 @@ public class Client {
             e.printStackTrace();
         }
 
-    }
+    }*/
 
     /**
      * Closes socket
      */
-    public void closeSocket(){
+   /* public void closeSocket(){
         try {
             sslSocket.close();
         } catch (IOException e) {
             System.out.println("Error closing ssl socket...");
             e.printStackTrace();
         }
-    }
+    }*/
 
     /**
      * Returns Client id

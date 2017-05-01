@@ -8,8 +8,8 @@ public class Constants {
     public static final String  CRLF = "\r\n";
 
 
-    public static final byte[] FINGERTABLE = "FINGERTABLE".getBytes();
-    public static final byte[] JOIN = "JOIN".getBytes();
+    public static final String FINGERTABLE = "FINGERTABLE";
+    public static final String JOIN = "JOIN";
     public static final String SIGNIN = "SIGNIN";
     public static final String SIGNUP = "SIGNUP";
 

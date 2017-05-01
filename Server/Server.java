@@ -129,11 +129,7 @@ public class Server extends Node {
      * Sends a message to the successor node, indicating its new predecessor
      */
     public void joinNetwork() {
-
-        Message message = new Message(JOIN, Integer.toString(this.getNodeId()), Integer.toString(predecessor.getNodeId()), predecessor.getNodeIp(), predecessor.getNodePort());
-
-
-
+       // Message message = new Message(JOIN.getBytes(), Integer.toString(this.getNodeId()), Integer.toString(predecessor.getNodeId()), predecessor.getNodeIp(), predecessor.getNodePort());
     }
 
     /**
@@ -267,7 +263,7 @@ public class Server extends Node {
 
 
         byte[] user_email = createHash(email);
-        System.out.println("Sign in with  " + user_email);
+        System.out.println("Sign in with  " + email + " " + user_email);
 
       /* if (users.containsKey(user_email))
             System.out.println("Email already exists. Try to sign in instead of sign up...");

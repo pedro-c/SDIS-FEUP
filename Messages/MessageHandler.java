@@ -29,6 +29,8 @@ public class MessageHandler implements Runnable {
         this.port = port;
         this.server = server;
 
+        run();
+
     }
 
     public MessageHandler(Message message, String ip, String port, Client client) {
@@ -37,6 +39,8 @@ public class MessageHandler implements Runnable {
         this.ip = ip;
         this.port = port;
         this.client = client;
+
+        run();
 
     }
 
@@ -65,17 +69,29 @@ public class MessageHandler implements Runnable {
     /**
      * Sends a message through a ssl socket
      *
-     * @param message message to send
      */
-    public void sendMessage(Message message) {
-        connectToServer();
+    public void sendMessage() {
         try {
-            outputStream.writeObject(message);
+            outputStream.writeObject(this.message);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
-        closeSocket();
+    /**
+     * Receives a message through a ssl socket
+     *
+     */
+    public Message receiveMessage(){
+        Message message = null;
+        try {
+            message = (Message) inputStream.readObject();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return message;
     }
 
     /**
