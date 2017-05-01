@@ -29,7 +29,8 @@ public class Server implements ServerInterface {
      */
     private Hashtable<byte[], byte[]> users;
     /**
-     * Key is an integer representing the m nodes and the value it's the server identifier (32-bit integer hash from ip+port)
+     * Key is an integer representing the m nodes and the value it's the server identifier
+     * (32-bit integer hash from ip+port)
      */
     private HashMap<Integer, String> fingerTable;
     /**
@@ -153,9 +154,10 @@ public class Server implements ServerInterface {
 
         for (Map.Entry<Integer, String> entry : fingerTable.entrySet()) {
             if (Integer.parseInt(entry.getValue()) > key) {
-
+                //forwardRequestToServer(entry.getValue());
             }
         }
+        //forwardRequestToServer(fingerTable.get(MAX_FINGER_TABLE_SIZE));
 
     }
 

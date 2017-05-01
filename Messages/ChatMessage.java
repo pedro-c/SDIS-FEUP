@@ -1,8 +1,6 @@
 package Messages;
 
-/**
- * Created by mariajoaomirapaulo on 28/04/17.
- */
+
 public class ChatMessage {
 
     private Integer senderId;
