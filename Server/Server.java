@@ -1,12 +1,11 @@
 package Server;
 
 import Messages.Message;
-import javafx.util.Pair;
+import Utilities.Utilities;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -14,6 +13,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static Utilities.Constants.JOIN;
 import static Utilities.Constants.MAX_FINGER_TABLE_SIZE;
 import static Utilities.Constants.SIGNIN;
 import static Utilities.Constants.SIGNUP;
@@ -30,21 +30,12 @@ public class Server extends Node {
      * (32-bit integer hash from ip+port)
      */
     private HashMap<Integer, Node> fingerTable = new HashMap<>();
-    /**
-     * Key is the serverId and value is the Pair<Ip,Port>
-     */
-    private HashMap<String, Pair<String, String>> serversInfo = new HashMap<>();
-    private SSLSocket sslSocket;
     private SSLServerSocket sslServerSocket;
-    private SSLSocketFactory sslSocketFactory;
     private SSLServerSocketFactory sslServerSocketFactory;
-    private BufferedReader in;
-    private PrintWriter out;
     private ExecutorService poolThread = Executors.newFixedThreadPool(10);
     private ObjectInputStream serverInputStream;
     private ObjectOutputStream serverOutputStream;
-    private int minIndex;
-    private int maxIndex;
+    private Node predecessor = null;
 
     public Server(String args[]) {
         super(args[0], args[1]);
@@ -53,7 +44,7 @@ public class Server extends Node {
         saveServerInfoToDisk();
         loadServersInfoFromDisk();
         initServerSocket();
-        syncFingerTable();
+        joinNetwork();
 
     }
 
@@ -73,7 +64,8 @@ public class Server extends Node {
         while (true) {
             try {
                 System.out.println("Listening...");
-                new Thread(new ConnectionHandler((SSLSocket) sslServerSocket.accept())).start();
+                ConnectionHandler handler = new ConnectionHandler((SSLSocket) sslServerSocket.accept());
+                poolThread.submit(handler);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -134,10 +126,11 @@ public class Server extends Node {
     }
 
     /**
-     * Send finger table information to nodes in the finger table
+     * Sends a message to the successor node, indicating its new predecessor
      */
-    public void syncFingerTable() {
+    public void joinNetwork() {
 
+        Message message = new Message(JOIN, Integer.toString(this.getNodeId()), Integer.toString(predecessor.getNodeId()), predecessor.getNodeIp(), predecessor.getNodePort());
 
 
 
@@ -235,7 +228,6 @@ public class Server extends Node {
                         if (succ < id) {
                             if (entry.getValue() == null) {
                                 fingerTable.put(entry.getKey(), new Node(nodeIp,nodePort));
-                                serversInfo.put(nodeId, new Pair<>(nodeIp, nodePort));
                             } else if (id < entry.getValue().getNodeId()) {
                                 fingerTable.put(entry.getKey(), new Node(nodeIp,nodePort));
                             }
