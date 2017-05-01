@@ -13,36 +13,52 @@ public class Node {
     public Node(String ip, String port){
         this.nodeIp = ip;
         this.nodePort = port;
-        this.nodeId = getServerIdentifier();
+        this.nodeId = setNodeIdentifier();
     }
 
     /**
-     * @return Returns 32-bit hash using server ip and server port
+     * @return Returns 32-bit hash using serv
+     * er ip and server port
      */
-    public int getServerIdentifier() {
+    public int setNodeIdentifier() {
         return get32bitHashValue(createHash(nodeIp +nodePort));
     }
 
+    /**
+     * @return Returns node identifier, 32-bit int hash
+     */
     public int getNodeId() {
         return nodeId;
     }
 
-    public void setNodeId(int nodeId) {
-        this.nodeId = nodeId;
-    }
-
+    /**
+     *
+     * @return Returns node ip address
+     */
     public String getNodeIp() {
         return nodeIp;
     }
 
+    /**
+     * Set node ip address
+     * @param nodeIp Ip address
+     */
     public void setNodeIp(String nodeIp) {
         this.nodeIp = nodeIp;
     }
 
+    /**
+     * Get node port
+     * @return node port
+     */
     public String getNodePort() {
         return nodePort;
     }
 
+    /**
+     * Set node port
+     * @param nodePort node port
+     */
     public void setNodePort(String nodePort) {
         this.nodePort = nodePort;
     }
