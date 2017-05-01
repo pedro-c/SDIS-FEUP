@@ -11,18 +11,14 @@ import java.io.*;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static Utilities.Constants.MAX_FINGER_TABLE_SIZE;
 import static Utilities.Utilities.createHash;
 
 public class Server extends Node {
 
-    private SSLSocket sslSocket;
-    private SSLServerSocket sslServerSocket;
-    private SSLSocketFactory sslSocketFactory;
-    private SSLServerSocketFactory sslServerSocketFactory;
-    private BufferedReader in;
-    private PrintWriter out;
     /**
      * Key is the user id (32-bit hash from e-mail) and value is the 256-bit hashed user password
      */
@@ -31,18 +27,23 @@ public class Server extends Node {
      * Key is an integer representing the m nodes and the value it's the server identifier
      * (32-bit integer hash from ip+port)
      */
-    private HashMap<Integer, Node> fingerTable;
+    private HashMap<Integer, Node> fingerTable = new HashMap<>();
     /**
      * Key is the serverId and value is the Pair<Ip,Port>
      */
-    private HashMap<String, Pair<String, String>> serversInfo;
+    private HashMap<String, Pair<String, String>> serversInfo = new HashMap<>();
+    private SSLSocket sslSocket;
+    private SSLServerSocket sslServerSocket;
+    private SSLSocketFactory sslSocketFactory;
+    private SSLServerSocketFactory sslServerSocketFactory;
+    private BufferedReader in;
+    private PrintWriter out;
+    private ExecutorService poolThread = Executors.newFixedThreadPool(10);
     private int minIndex;
     private int maxIndex;
 
     public Server(String args[]) {
         super(args[0], args[1]);
-        this.fingerTable = new HashMap<>();
-        this.serversInfo = new HashMap<>();
 
         initFingerTable();
         saveServerInfoToDisk();
@@ -134,6 +135,8 @@ public class Server extends Node {
     public void syncFingerTable() {
 
 
+
+
     }
 
     /**
@@ -200,16 +203,16 @@ public class Server extends Node {
                     int id = Integer.parseInt(nodeId);
                     for (Map.Entry<Integer, Node> entry : fingerTable.entrySet()) {
                         /**
-                         * succeeder formula = succ(serverId+2^(i-1))
+                         * successor formula = succ(serverId+2^(i-1))
                          *
-                         * succeder is a possible node responsible for the values between
-                         * the current and the succeder.
+                         * successor is a possible node responsible for the values between
+                         * the current and the successor.
                          *
                          * serverId equals to this node position in the circle
                          */
                         int succ = (int) (this.getNodeId() + Math.pow(2, (entry.getKey() - 1)));
                         /**
-                         * if succeder number is bigger than the circle size (max number of nodes)
+                         * if successor number is bigger than the circle size (max number of nodes)
                          * it starts counting from the beginning
                          * by removing this node position (serverId) from formula
                          */
@@ -217,7 +220,7 @@ public class Server extends Node {
                             succ = (int) (Math.pow(2, (entry.getKey() - 1)));
                         }
                         /**
-                         * if the succeder is smaller than the value of the node we are reading
+                         * if the successor is smaller than the value of the node we are readingee
                          * from the config file this means that the node we are reading might be
                          * responsible for the keys in between.
                          * If there isn't another node responsible
@@ -264,7 +267,7 @@ public class Server extends Node {
     }
 
     /**
-     * Authenticates user already registred
+     * Authenticates user already registered
      *
      * @param email    user email
      * @param password user password
