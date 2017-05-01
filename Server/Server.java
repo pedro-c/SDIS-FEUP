@@ -40,6 +40,8 @@ public class Server extends Node {
     private BufferedReader in;
     private PrintWriter out;
     private ExecutorService poolThread = Executors.newFixedThreadPool(10);
+    private ObjectInputStream serverInputStream;
+    private ObjectOutputStream serverOutputStream;
     private int minIndex;
     private int maxIndex;
 
@@ -247,7 +249,9 @@ public class Server extends Node {
         }
     }
 
-    public void analyseResponse(String response) {
+    public void analyseResponse(Message response) {
+
+        System.out.println("Cheguei");
 
     }
 
