@@ -10,7 +10,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.Scanner;
 import java.io.Console;
-import static Messages.MessageUtils.createMessage;
+import static Messages.Message.createMessage;
 import static Utilities.Utilities.createHash;
 
 public class Client {

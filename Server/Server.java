@@ -12,8 +12,11 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 
 import static Utilities.Constants.MAX_FINGER_TABLE_SIZE;
+import static Utilities.Constants.SIGNIN;
+import static Utilities.Constants.SIGNUP;
 import static Utilities.Utilities.createHash;
 import static Utilities.Utilities.getBigInteger;
+import static Messages.Message.parseMessage;
 
 public class Server implements ServerInterface {
 
@@ -210,8 +213,23 @@ public class Server implements ServerInterface {
     }
 
 
+    /**
+     * Analyses response
+     * @param response String with message from ssl connection
+     */
     public void analyseResponse(String response){
-        System.out.println(response);
+        String[] parts = parseMessage(response);
+        String header = parts[0];
+        switch (header){
+            case SIGNIN:
+                registUser(parts[2],parts[3]);
+                break;
+            case SIGNUP:
+                loginUser(parts[2],parts[3]);
+                break;
+            default:
+                break;
+        }
     }
 
     /**
@@ -220,6 +238,9 @@ public class Server implements ServerInterface {
      * @param password user password
      */
     public void registUser(String email, String password){
+
+        System.out.println("Sign up...");
+
         if(users.putIfAbsent(email, createHash(password))!=null)
             System.out.println("Email already exists. Try to sign in instead of sign up...");
         else System.out.println("Signed up with success!");
@@ -232,6 +253,8 @@ public class Server implements ServerInterface {
      * @return true if user authentication wents well, false if don't
      */
     public boolean loginUser(String email, String password){
+
+        System.out.println("Sign in...");
 
         if(!users.containsKey(email)){
             System.out.println("Try to create an account. Your email was not found on the database...");
