@@ -6,7 +6,6 @@ import Utilities.Utilities;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -31,8 +30,6 @@ public class Server extends Node {
     private HashMap<Integer, Node> fingerTable = new HashMap<>();
     private SSLServerSocket sslServerSocket;
     private SSLServerSocketFactory sslServerSocketFactory;
-    private BufferedReader in;
-    private PrintWriter out;
     private ExecutorService poolThread = Executors.newFixedThreadPool(10);
     private ObjectInputStream serverInputStream;
     private ObjectOutputStream serverOutputStream;
