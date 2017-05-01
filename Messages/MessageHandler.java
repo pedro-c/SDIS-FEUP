@@ -13,7 +13,7 @@ public class MessageHandler implements Runnable {
 
     Message message;
     String ip;
-    String port;
+    int port;
     Server server = null;
     Client client = null;
     private SSLSocket sslSocket;
@@ -26,9 +26,8 @@ public class MessageHandler implements Runnable {
 
         this.message = message;
         this.ip = ip;
-        this.port = port;
+        this.port = Integer.parseInt(port);
         this.server = server;
-
         run();
 
     }
@@ -37,9 +36,8 @@ public class MessageHandler implements Runnable {
 
         this.message = message;
         this.ip = ip;
-        this.port = port;
+        this.port =  Integer.parseInt(port);
         this.client = client;
-
         run();
 
     }
@@ -55,7 +53,7 @@ public class MessageHandler implements Runnable {
 
         try {
             sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-            sslSocket = (SSLSocket) sslSocketFactory.createSocket("localhost", 4445);
+            sslSocket = (SSLSocket) sslSocketFactory.createSocket(ip, port);
             sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
             outputStream = new ObjectOutputStream(sslSocket.getOutputStream());
             inputStream = new ObjectInputStream(sslSocket.getInputStream());
@@ -76,6 +74,7 @@ public class MessageHandler implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
     /**

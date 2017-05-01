@@ -261,16 +261,20 @@ public class Server extends Node {
      */
     public void registUser(String email, String password){
 
-
         byte[] user_email = createHash(email);
-        System.out.println("Sign in with  " + email + " " + user_email);
+        System.out.println("Sign in with  " + email);
 
-      /* if (users.containsKey(user_email))
+        if (users.containsKey(user_email)){
+            System.out.println(1);
             System.out.println("Email already exists. Try to sign in instead of sign up...");
-       else {
+        }
+        else {
+            System.out.println(2);
            users.put(user_email,createHash(password));
            System.out.println("Signed up with success!");
-       }*/
+       }
+
+        System.out.println(3);
 
     }
 
