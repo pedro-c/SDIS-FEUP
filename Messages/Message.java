@@ -13,7 +13,6 @@ public class Message implements Serializable {
     private String senderId;
     private String body;
 
-
     /**
      * Message Constructor
      * @param messageType
