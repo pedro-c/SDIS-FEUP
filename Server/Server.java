@@ -14,9 +14,8 @@ import java.util.Map;
 
 import static Utilities.Constants.MAX_FINGER_TABLE_SIZE;
 import static Utilities.Utilities.createHash;
-import static Utilities.Utilities.get32bitHashValue;
 
-public class Server implements ServerInterface {
+public class Server extends Node {
 
     private SSLSocket sslSocket;
     private SSLServerSocket sslServerSocket;
@@ -32,24 +31,19 @@ public class Server implements ServerInterface {
      * Key is an integer representing the m nodes and the value it's the server identifier
      * (32-bit integer hash from ip+port)
      */
-    private HashMap<Integer, String> fingerTable;
+    private HashMap<Integer, Node> fingerTable;
     /**
      * Key is the serverId and value is the Pair<Ip,Port>
      */
     private HashMap<String, Pair<String, String>> serversInfo;
-    private int serverId;
-    private String serverIp;
-    private int serverPort;
     private int minIndex;
     private int maxIndex;
 
     public Server(String args[]) {
-
-        this.serverIp = args[0];
-        this.serverPort = Integer.parseInt(args[1]);
+        super(args[0], args[1]);
         this.fingerTable = new HashMap<>();
         this.serversInfo = new HashMap<>();
-        this.serverId = getServerIdentifier();
+
         initFingerTable();
         saveServerInfoToDisk();
         loadServersInfoFromDisk();
@@ -106,8 +100,6 @@ public class Server implements ServerInterface {
             e.printStackTrace();
             System.out.println("Failed to find registry");
         }*/
-
-
     }
 
     /**
@@ -116,7 +108,7 @@ public class Server implements ServerInterface {
     public void initServerSocket() {
         sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         try {
-            sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(serverPort);
+            sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(Integer.parseInt(this.getNodePort()));
             // TODO: Not working
             // sslServerSocket.setNeedClientAuth(true);
             sslServerSocket.setEnabledCipherSuites(sslServerSocket.getSupportedCipherSuites());
@@ -151,8 +143,8 @@ public class Server implements ServerInterface {
      */
     public void serverLookUp(int key) {
 
-        for (Map.Entry<Integer, String> entry : fingerTable.entrySet()) {
-            if (Integer.parseInt(entry.getValue()) > key) {
+        for (Map.Entry<Integer, Node> entry : fingerTable.entrySet()) {
+            if (entry.getValue().getNodeId() > key) {
                 //forwardRequestToServer(entry.getValue());
             }
         }
@@ -165,10 +157,9 @@ public class Server implements ServerInterface {
      */
     public void saveServerInfoToDisk() {
         try {
-            File file = new File("./",".config");
+            File file = new File("./", ".config");
 
-            if (!file.isFile() && !file.createNewFile())
-            {
+            if (!file.isFile() && !file.createNewFile()) {
                 throw new IOException("Error creating new file: " + file.getAbsolutePath());
             }
 
@@ -176,15 +167,15 @@ public class Server implements ServerInterface {
             String line = reader.readLine();
             while (line != null) {
                 String[] serverInfo = line.split(":");
-                System.out.println(serverId);
+                System.out.println(this.getNodeId());
                 System.out.println(serverInfo[2]);
-                if (serverInfo[2].equals(Integer.toString(serverId))) {
+                if (serverInfo[2].equals(Integer.toString(this.getNodeId()))) {
                     return;
                 }
                 line = reader.readLine();
             }
             PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(".config", true)));
-            out.println(serverIp + ":" + serverPort + ":" + serverId);
+            out.println(this.getNodeIp() + ":" + this.getNodePort() + ":" + this.getNodeId());
             out.close();
             System.out.println("Saved server info to config file");
         } catch (IOException e) {
@@ -205,9 +196,9 @@ public class Server implements ServerInterface {
                 String nodeId = nodeInfo[2];
                 String nodeIp = nodeInfo[0];
                 String nodePort = nodeInfo[1];
-                if (!nodeIp.equals(serverIp)) {
+                if (!nodeIp.equals(this.getNodeIp())) {
                     int id = Integer.parseInt(nodeId);
-                    for (Map.Entry<Integer, String> entry : fingerTable.entrySet()) {
+                    for (Map.Entry<Integer, Node> entry : fingerTable.entrySet()) {
                         /**
                          * succeeder formula = succ(serverId+2^(i-1))
                          *
@@ -216,7 +207,7 @@ public class Server implements ServerInterface {
                          *
                          * serverId equals to this node position in the circle
                          */
-                        int succ = (int) (serverId + Math.pow(2, (entry.getKey() - 1)));
+                        int succ = (int) (this.getNodeId() + Math.pow(2, (entry.getKey() - 1)));
                         /**
                          * if succeder number is bigger than the circle size (max number of nodes)
                          * it starts counting from the beginning
@@ -236,10 +227,10 @@ public class Server implements ServerInterface {
                          */
                         if (succ < id) {
                             if (entry.getValue() == null) {
-                                fingerTable.put(entry.getKey(), Integer.toString(id));
+                                fingerTable.put(entry.getKey(), new Node(nodeIp,nodePort));
                                 serversInfo.put(nodeId, new Pair<>(nodeIp, nodePort));
-                            } else if (id < Integer.parseInt(entry.getValue())) {
-                                fingerTable.put(entry.getKey(), Integer.toString(id));
+                            } else if (id < entry.getValue().getNodeId()) {
+                                fingerTable.put(entry.getKey(), new Node(nodeIp,nodePort));
                             }
                         }
                     }
@@ -250,27 +241,6 @@ public class Server implements ServerInterface {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * @return Returns 32-bit hash using server ip and server port
-     */
-    public int getServerIdentifier() {
-        return get32bitHashValue(createHash(serverIp + serverPort));
-    }
-
-    /**
-     * @return Returns server ip address
-     */
-    public String getServerIp() {
-        return this.serverIp;
-    }
-
-    /**
-     * @return Returns server port
-     */
-    public int getServerPort() {
-        return this.serverPort;
     }
 
     public void analyseResponse(String response) {
