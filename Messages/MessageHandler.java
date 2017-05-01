@@ -5,9 +5,7 @@ import Server.Server;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 
 public class MessageHandler implements Runnable {
 
@@ -29,7 +27,6 @@ public class MessageHandler implements Runnable {
         this.port = Integer.parseInt(port);
         this.server = server;
         run();
-
     }
 
     public MessageHandler(Message message, String ip, String port, Client client) {
@@ -39,7 +36,6 @@ public class MessageHandler implements Runnable {
         this.port =  Integer.parseInt(port);
         this.client = client;
         run();
-
     }
 
     public void run() {

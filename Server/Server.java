@@ -246,7 +246,7 @@ public class Server extends Node {
                 loginUser(body[0],body[1]);
                 break;
             case SIGNUP:
-                registUser(body[0],body[1]);
+                addUser(body[0],body[1]);
                 break;
             default:
                 break;
@@ -259,11 +259,12 @@ public class Server extends Node {
      * @param email    user email
      * @param password user password
      */
-    public void registUser(String email, String password){
+    public void addUser(String email, String password){
 
         byte[] user_email = createHash(email);
         System.out.println("Sign in with  " + email);
 
+        //TODO: Not working, stops here.... don't know why??
         if (users.containsKey(user_email)){
             System.out.println(1);
             System.out.println("Email already exists. Try to sign in instead of sign up...");
@@ -273,9 +274,6 @@ public class Server extends Node {
            users.put(user_email,createHash(password));
            System.out.println("Signed up with success!");
        }
-
-        System.out.println(3);
-
     }
 
     /**
@@ -288,6 +286,8 @@ public class Server extends Node {
     public boolean loginUser(String email, String password) {
 
         System.out.println("Sign up with " + email);
+
+        //TODO: Same here
 
        /* if (!users.containsKey(email)) {
             System.out.println("Try to create an account. Your email was not found on the database...");
@@ -315,8 +315,7 @@ public class Server extends Node {
         public ConnectionHandler(SSLSocket socket) {
             this.sslSocket = socket;
             try {
-
-                 in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
+                in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
                 serverOutputStream = new ObjectOutputStream(sslSocket.getOutputStream());
                 serverInputStream = new ObjectInputStream(sslSocket.getInputStream());
             } catch (IOException e) {

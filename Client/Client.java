@@ -3,6 +3,8 @@ package Client;
 import Messages.Message;
 import Messages.MessageHandler;
 import Utilities.Constants;
+
+import javax.net.ssl.SSLSocket;
 import java.io.*;
 import java.util.Scanner;
 import static Utilities.Utilities.createHash;
@@ -95,10 +97,5 @@ public class Client {
      */
     public byte[] getClientId(){
         return createHash(email);
-    }
-
-
-    public void analyseResponse(Message message){
-
     }
 }
