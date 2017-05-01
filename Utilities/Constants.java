@@ -10,8 +10,8 @@ public class Constants {
     public static final String  CRLF = "\r\n";
 
 
-    public static final String SIGNIN = "SIGNIN";
-    public static final String SIGNUP = "SIGNUP";
+    public static final byte[] SIGNIN = "SIGNIN".getBytes();
+    public static final byte[] SIGNUP = "SIGNUP".getBytes();
 
     public static final int MAX_FINGER_TABLE_SIZE = 32;
 
