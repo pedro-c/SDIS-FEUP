@@ -1,7 +1,6 @@
 package Server;
 
 import Messages.Message;
-import Utilities.Utilities;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -13,10 +12,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static Utilities.Constants.JOIN;
-import static Utilities.Constants.MAX_FINGER_TABLE_SIZE;
-import static Utilities.Constants.SIGNIN;
-import static Utilities.Constants.SIGNUP;
+import static Utilities.Constants.*;
 import static Utilities.Utilities.createHash;
 
 public class Server extends Node {
@@ -32,10 +28,10 @@ public class Server extends Node {
     private HashMap<Integer, Node> fingerTable = new HashMap<>();
     private SSLServerSocket sslServerSocket;
     private SSLServerSocketFactory sslServerSocketFactory;
-    private ExecutorService poolThread = Executors.newFixedThreadPool(10);
+    private ExecutorService poolThread = Executors.newFixedThreadPool(MAX_NUMBER_OF_REQUESTS);
     private ObjectInputStream serverInputStream;
     private ObjectOutputStream serverOutputStream;
-    private Node predecessor = null;
+    private Node predecessor = this;
 
     public Server(String args[]) {
         super(args[0], args[1]);
@@ -121,18 +117,18 @@ public class Server extends Node {
      */
     public void initFingerTable() {
         for (int i = 1; i <= MAX_FINGER_TABLE_SIZE; i++) {
-            fingerTable.put(i, null);
+            fingerTable.put(i, this);
         }
     }
 
     /**
-     * Sends a message to the successor node, indicating its new predecessor
+     * Sends a message to the network
      */
     public void joinNetwork() {
 
-        Message message = new Message(JOIN, Integer.toString(this.getNodeId()), Integer.toString(predecessor.getNodeId()), predecessor.getNodeIp(), predecessor.getNodePort());
+        Message message = new Message(NEWNODE, Integer.toString(this.getNodeId()), Integer.toString(predecessor.getNodeId()), predecessor.getNodeIp(), predecessor.getNodePort());
 
-
+        //TODO: send message NEWNODE, receive message and responde with return from serverLookUp()
 
     }
 
@@ -141,15 +137,16 @@ public class Server extends Node {
      *
      * @param key 256-bit identifier
      */
-    public void serverLookUp(int key) {
+    public int serverLookUp(int key) {
+        int id=this.getNodeId();
 
         for (Map.Entry<Integer, Node> entry : fingerTable.entrySet()) {
-            if (entry.getValue().getNodeId() > key) {
-                //forwardRequestToServer(entry.getValue());
+            id=entry.getValue().getNodeId();
+            if (id > key) {
+                return id;
             }
         }
-        //forwardRequestToServer(fingerTable.get(MAX_FINGER_TABLE_SIZE));
-
+        return id;
     }
 
     /**
@@ -283,7 +280,7 @@ public class Server extends Node {
      *
      * @param email    user email
      * @param password user password
-     * @return true if user authentication wents well, false if don't
+     * @return true if user authentication went well, false if don't
      */
     public boolean loginUser(String email, String password) {
 
@@ -300,7 +297,7 @@ public class Server extends Node {
         }
 
         System.out.println("Logged in with success!");
-*/
+        */
         return true;
     }
 

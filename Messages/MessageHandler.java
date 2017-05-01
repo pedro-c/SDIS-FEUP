@@ -68,7 +68,6 @@ public class MessageHandler implements Runnable {
      * @param message message to send
      */
     public void sendMessage(Message message) {
-        connectToServer();
         try {
             outputStream.writeObject(message);
         } catch (IOException e) {
