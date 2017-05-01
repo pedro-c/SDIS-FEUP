@@ -1,16 +1,12 @@
 package Client;
 
+import Messages.Message;
 import Utilities.Constants;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.Scanner;
-import java.io.Console;
-import static Messages.Message.createMessage;
 import static Utilities.Utilities.createHash;
 
 public class Client {
@@ -20,6 +16,8 @@ public class Client {
     private SSLSocketFactory sslSocketFactory;
     private BufferedReader in;
     private PrintWriter out;
+    private ObjectInputStream clientInputStream;
+    private ObjectOutputStream clientOutputStream;
     private String email;
 
     public static void main(String[] args){
@@ -58,7 +56,13 @@ public class Client {
      */
     public void signInUser(){
         String password = getCredentials();
-        sendMessage(createMessage(Constants.SIGNIN, getClientId(), email, password));
+
+        Message message = new Message(Constants.SIGNIN, getClientId(), email, password);
+        System.out.println(message.getMessageType());
+        System.out.println(message.getSenderId());
+        System.out.println(message.getBody());
+
+         sendMessage(new Message(Constants.SIGNIN, getClientId(), email, password));
     }
 
     /**
@@ -66,7 +70,7 @@ public class Client {
      */
     public void signUpUser(){
         String password = getCredentials();
-        sendMessage(createMessage(Constants.SIGNUP, getClientId(), email, password));
+        sendMessage(new Message(Constants.SIGNIN, getClientId(), email, password));
     }
 
     /**
@@ -97,9 +101,14 @@ public class Client {
      * Sends a message throw a ssl socket
      * @param message message to send
      */
-    public void sendMessage(String message){
+    public void sendMessage(Message message){
         connectToServer();
-        out.println(message);
+        try {
+            clientOutputStream.writeObject(message);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         closeSocket();
     }
 
@@ -112,12 +121,15 @@ public class Client {
             sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
             sslSocket = (SSLSocket) sslSocketFactory.createSocket("localhost",4445);
             sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
-            in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
-            out = new PrintWriter(sslSocket.getOutputStream(), true);
+            clientOutputStream = new ObjectOutputStream(sslSocket.getOutputStream());
+            clientInputStream =  new ObjectInputStream(sslSocket.getInputStream());
+           in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
+           out = new PrintWriter(sslSocket.getOutputStream(), true);
         } catch (IOException e) {
             System.out.println("Error creating ssl socket...");
             e.printStackTrace();
         }
+
     }
 
     /**
@@ -136,7 +148,7 @@ public class Client {
      * Returns Client id
      * @return client id
      */
-    public String getClientId(){
-        return createHash(email).toString();
+    public byte[] getClientId(){
+        return createHash(email);
     }
 }

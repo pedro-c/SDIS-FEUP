@@ -1,5 +1,6 @@
 package Server;
 
+import Messages.Message;
 import Utilities.Utilities;
 import javafx.util.Pair;
 
@@ -248,7 +249,6 @@ public class Server extends Node {
 
     public void analyseResponse(String response) {
 
-        System.out.println(response);
     }
 
     /**
@@ -303,7 +303,10 @@ public class Server extends Node {
         public ConnectionHandler(SSLSocket socket) {
             this.sslSocket = socket;
             try {
-                in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
+
+                 in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
+                serverOutputStream = new ObjectOutputStream(sslSocket.getOutputStream());
+                serverInputStream = new ObjectInputStream(sslSocket.getInputStream());
             } catch (IOException e) {
                 System.out.println("Error creating buffered reader...");
                 e.printStackTrace();
@@ -311,14 +314,19 @@ public class Server extends Node {
         }
 
         public void run() {
-            String response = null;
+            Message message = null;
             try {
-                response = in.readLine();
-                analyseResponse(response);
+                message = (Message) serverInputStream.readObject();
+                analyseResponse(message);
             } catch (IOException e) {
-                System.out.println("Error reading line...");
+                System.out.println("Error reading message...");
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                System.out.println("Error reading message...");
                 e.printStackTrace();
             }
+
+         }
         }
     }
-}
+
