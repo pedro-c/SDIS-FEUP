@@ -10,6 +10,7 @@ public class Constants {
 
     public static final byte[] FINGERTABLE = "FINGERTABLE".getBytes();
     public static final byte[] NEWNODE = "NEWNODE".getBytes();
+    public static final byte[] PREDECESSOR = "PREDECESSOR".getBytes();
     public static final String SIGNIN = "SIGNIN";
     public static final String SIGNUP = "SIGNUP";
 

@@ -1,6 +1,7 @@
 package Server;
 
 import Messages.Message;
+import Messages.MessageHandler;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -126,8 +127,7 @@ public class Server extends Node {
 
         Message message = new Message(NEWNODE, Integer.toString(this.getNodeId()), Integer.toString(predecessor.getNodeId()), predecessor.getNodeIp(), predecessor.getNodePort());
 
-        //TODO: send message NEWNODE, receive message and responde with return from serverLookUp()
-        //TODO: CHANGE hashtable to array estupido !
+        MessageHandler handler = new MessageHandler(message)
     }
 
     /**
@@ -239,6 +239,10 @@ public class Server extends Node {
         }
     }
 
+    public void setPredecessor(Node node){
+        this.predecessor=node;
+    }
+
     public void analyseResponse(Message response) {
         String[] body = response.getBody().split(" ");
 
@@ -247,7 +251,7 @@ public class Server extends Node {
                 loginUser(body[0], body[1]);
                 break;
             case SIGNUP:
-                registUser(body[0], body[1]);
+                registerUser(body[0], body[1]);
                 break;
             default:
                 break;
@@ -260,7 +264,7 @@ public class Server extends Node {
      * @param email    user email
      * @param password user password
      */
-    public void registUser(String email, String password) {
+    public void registerUser(String email, String password) {
 
 
         byte[] user_email = createHash(email);
