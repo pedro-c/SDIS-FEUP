@@ -62,9 +62,9 @@ public class Client {
     public void signUpUser(){
         String password = getCredentials();
         Integer port = 4445;
-        MessageHandler handler = new MessageHandler(new Message(Constants.SIGNUP.getBytes(), getClientId(), email, password), "localhost", port.toString(), this);
-        handler.sendMessage();
-        handler.receiveMessage();
+        MessageHandler handler = new MessageHandler(getClientId(), email, password), "localhost", port.toString(), this);
+        handler.sendMessage(new Message(Constants.SIGNUP.getBytes());
+        handler.receiveResponse();
     }
 
     /**

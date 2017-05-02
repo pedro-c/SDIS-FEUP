@@ -12,7 +12,6 @@ import static Utilities.Constants.PREDECESSOR;
 
 public class MessageHandler implements Runnable {
 
-    Message message;
     String ip;
     int port;
     Server server = null;
@@ -23,18 +22,16 @@ public class MessageHandler implements Runnable {
     private ObjectOutputStream outputStream;
 
 
-    public MessageHandler(Message message, String ip, String port, Server server) {
+    public MessageHandler(String ip, String port, Server server) {
 
-        this.message = message;
         this.ip = ip;
         this.port = Integer.parseInt(port);
         this.server = server;
         run();
     }
 
-    public MessageHandler(Message message, String ip, String port, Client client) {
+    public MessageHandler(String ip, String port, Client client) {
 
-        this.message = message;
         this.ip = ip;
         this.port =  Integer.parseInt(port);
         this.client = client;
@@ -43,7 +40,7 @@ public class MessageHandler implements Runnable {
 
     public void run() {
         connectToServer();
-        sendMessage(message);
+        //sendMessage(message);
         receiveResponse();
         closeSocket();
     }
@@ -72,7 +69,7 @@ public class MessageHandler implements Runnable {
      */
     public void sendMessage(Message message) {
         try {
-            outputStream.writeObject(this.message);
+            outputStream.writeObject(message);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -104,24 +101,8 @@ public class MessageHandler implements Runnable {
             Node node = new Node(nodeInfo[0],nodeInfo[1]);
             this.server.setPredecessor(node);
         }
-
     }
 
-    /**
-     * Receives a message through a ssl socket
-     *
-     */
-    public Message receiveMessage(){
-        Message message = null;
-        try {
-            message = (Message) inputStream.readObject();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return message;
-    }
 
     /**
      * Closes socket

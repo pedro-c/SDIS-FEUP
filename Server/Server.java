@@ -134,7 +134,7 @@ public class Server extends Node {
      */
     public void joinNetwork(Node knownNode) {
 
-        Message message = new Message(NEWNODE, Integer.toString(this.getNodeId()), Integer.toString(predecessor.getNodeId()), predecessor.getNodeIp(), predecessor.getNodePort());
+        Message message = new Message(NEWNODE.getBytes(), Integer.toString(this.getNodeId()), Integer.toString(predecessor.getNodeId()), predecessor.getNodeIp(), predecessor.getNodePort());
 
         MessageHandler handler = new MessageHandler(message, knownNode.getNodeIp(), knownNode.getNodePort(), this);
 
