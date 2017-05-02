@@ -39,10 +39,19 @@ public class Server extends Node {
         saveServerInfoToDisk();
         loadServersInfoFromDisk();
         initServerSocket();
-        joinNetwork();
+
+        if(args.length>3){
+            Node knownNode = new Node(args[2],args[3]);
+            joinNetwork(knownNode);
+        }
+
 
     }
 
+    /**
+     *
+     * @param args [serverIp] [serverPort] [knownServerIp] [knownServerPort]
+     */
     public static void main(String[] args) {
         //For now lets receive a port and a hostname
         if (args.length != 2) {
@@ -123,11 +132,13 @@ public class Server extends Node {
     /**
      * Sends a message to the network
      */
-    public void joinNetwork() {
+    public void joinNetwork(Node knownNode) {
 
         Message message = new Message(NEWNODE, Integer.toString(this.getNodeId()), Integer.toString(predecessor.getNodeId()), predecessor.getNodeIp(), predecessor.getNodePort());
 
-        MessageHandler handler = new MessageHandler(message)
+        MessageHandler handler = new MessageHandler(message, knownNode.getNodeIp(), knownNode.getNodePort(), this);
+
+
     }
 
     /**
