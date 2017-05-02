@@ -8,7 +8,7 @@ public class Constants {
     public static final String  CRLF = "\r\n";
 
 
-    public static final byte[] FINGERTABLE = "FINGERTABLE".getBytes();
+    public static final String FINGERTABLE = "FINGERTABLE";
     public static final byte[] NEWNODE = "NEWNODE".getBytes();
     public static final byte[] PREDECESSOR = "PREDECESSOR".getBytes();
     public static final String SIGNIN = "SIGNIN";

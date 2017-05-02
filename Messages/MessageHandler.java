@@ -6,9 +6,7 @@ import Server.Node;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 
 import static Utilities.Constants.PREDECESSOR;
 
@@ -16,7 +14,7 @@ public class MessageHandler implements Runnable {
 
     Message message;
     String ip;
-    String port;
+    int port;
     Server server = null;
     Client client = null;
     private SSLSocket sslSocket;
@@ -29,18 +27,18 @@ public class MessageHandler implements Runnable {
 
         this.message = message;
         this.ip = ip;
-        this.port = port;
+        this.port = Integer.parseInt(port);
         this.server = server;
-
+        run();
     }
 
     public MessageHandler(Message message, String ip, String port, Client client) {
 
         this.message = message;
         this.ip = ip;
-        this.port = port;
+        this.port =  Integer.parseInt(port);
         this.client = client;
-
+        run();
     }
 
     public void run() {
@@ -57,7 +55,7 @@ public class MessageHandler implements Runnable {
 
         try {
             sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-            sslSocket = (SSLSocket) sslSocketFactory.createSocket("localhost", 4445);
+            sslSocket = (SSLSocket) sslSocketFactory.createSocket(ip, port);
             sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
             outputStream = new ObjectOutputStream(sslSocket.getOutputStream());
             inputStream = new ObjectInputStream(sslSocket.getInputStream());
@@ -71,16 +69,14 @@ public class MessageHandler implements Runnable {
     /**
      * Sends a message through a ssl socket
      *
-     * @param message message to send
      */
     public void sendMessage(Message message) {
         try {
-            outputStream.writeObject(message);
+            outputStream.writeObject(this.message);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        closeSocket();
     }
 
     /**
@@ -109,6 +105,22 @@ public class MessageHandler implements Runnable {
             this.server.setPredecessor(node);
         }
 
+    }
+
+    /**
+     * Receives a message through a ssl socket
+     *
+     */
+    public Message receiveMessage(){
+        Message message = null;
+        try {
+            message = (Message) inputStream.readObject();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return message;
     }
 
     /**

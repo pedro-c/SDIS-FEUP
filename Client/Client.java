@@ -1,10 +1,10 @@
 package Client;
 
 import Messages.Message;
+import Messages.MessageHandler;
 import Utilities.Constants;
 
 import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.util.Scanner;
 import static Utilities.Utilities.createHash;
@@ -12,12 +12,6 @@ import static Utilities.Utilities.createHash;
 public class Client {
 
     private Scanner scannerIn;
-    private SSLSocket sslSocket;
-    private SSLSocketFactory sslSocketFactory;
-    private BufferedReader in;
-    private PrintWriter out;
-    private ObjectInputStream clientInputStream;
-    private ObjectOutputStream clientOutputStream;
     private String email;
 
     public static void main(String[] args){
@@ -56,7 +50,10 @@ public class Client {
      */
     public void signInUser(){
         String password = getCredentials();
-         sendMessage(new Message(Constants.SIGNIN.getBytes(), getClientId(), email, password));
+        Integer port = 4445;
+        System.out.println(1);
+        MessageHandler handler = new MessageHandler(new Message(Constants.SIGNIN.getBytes(), getClientId(), email, password), "localhost", port.toString(), this);
+        handler.sendMessage();
     }
 
     /**
@@ -64,7 +61,10 @@ public class Client {
      */
     public void signUpUser(){
         String password = getCredentials();
-        sendMessage(new Message(Constants.SIGNUP.getBytes(), getClientId(), email, password));
+        Integer port = 4445;
+        MessageHandler handler = new MessageHandler(new Message(Constants.SIGNUP.getBytes(), getClientId(), email, password), "localhost", port.toString(), this);
+        handler.sendMessage();
+        handler.receiveMessage();
     }
 
     /**
@@ -89,74 +89,6 @@ public class Client {
         String password = new String(oldPassword);
 
         return password;
-    }
-
-    /**
-     * Sends a message throw a ssl socket
-     * @param message message to send
-     */
-    public void sendMessage(Message message){
-        connectToServer();
-        try {
-            clientOutputStream.writeObject(message);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        receiveMessage();
-    }
-
-    public void receiveMessage(){
-
-        Message message = null;
-
-        try {
-            message = (Message) clientInputStream.readObject();
-            analyseResponse(message);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        closeSocket();
-    }
-
-
-    public void analyseResponse(Message message){
-
-    }
-
-    /**
-     * Connects to server
-     */
-    public void connectToServer(){
-
-        try {
-            sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-            sslSocket = (SSLSocket) sslSocketFactory.createSocket("localhost",4445);
-            sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
-            clientOutputStream = new ObjectOutputStream(sslSocket.getOutputStream());
-            clientInputStream =  new ObjectInputStream(sslSocket.getInputStream());
-           in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
-           out = new PrintWriter(sslSocket.getOutputStream(), true);
-        } catch (IOException e) {
-            System.out.println("Error creating ssl socket...");
-            e.printStackTrace();
-        }
-
-    }
-
-    /**
-     * Closes socket
-     */
-    public void closeSocket(){
-        try {
-            sslSocket.close();
-        } catch (IOException e) {
-            System.out.println("Error closing ssl socket...");
-            e.printStackTrace();
-        }
     }
 
     /**
