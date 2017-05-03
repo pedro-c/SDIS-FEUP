@@ -51,9 +51,9 @@ public class Client {
     public void signInUser(){
         String password = getCredentials();
         Integer port = 4445;
-        System.out.println(1);
-        MessageHandler handler = new MessageHandler(new Message(Constants.SIGNIN.getBytes(), getClientId(), email, password), "localhost", port.toString(), this);
-        handler.sendMessage();
+        Message message = new Message(Constants.SIGNIN.getBytes(), getClientId(), email, password);
+        MessageHandler handler = new MessageHandler(message,"localhost", port.toString(), this);
+        handler.run();
     }
 
     /**
@@ -62,9 +62,9 @@ public class Client {
     public void signUpUser(){
         String password = getCredentials();
         Integer port = 4445;
-        MessageHandler handler = new MessageHandler(getClientId(), email, password), "localhost", port.toString(), this);
-        handler.sendMessage(new Message(Constants.SIGNUP.getBytes());
-        handler.receiveResponse();
+        Message message = new Message(getClientId(), email, password);
+        MessageHandler handler = new MessageHandler(message, "localhost", port.toString(), this);
+        handler.run();
     }
 
     /**

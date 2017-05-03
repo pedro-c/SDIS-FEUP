@@ -20,29 +20,33 @@ public class MessageHandler implements Runnable {
     private SSLSocketFactory sslSocketFactory;
     private ObjectInputStream inputStream;
     private ObjectOutputStream outputStream;
+    private Message message;
 
-
-    public MessageHandler(String ip, String port, Server server) {
+    public MessageHandler(Message message, String ip, String port, Server server) {
 
         this.ip = ip;
         this.port = Integer.parseInt(port);
         this.server = server;
+        this.message = message;
         run();
     }
 
-    public MessageHandler(String ip, String port, Client client) {
+    public MessageHandler(Message message, String ip, String port, Client client) {
 
         this.ip = ip;
         this.port =  Integer.parseInt(port);
         this.client = client;
+        this.message = message;
         run();
     }
 
     public void run() {
         connectToServer();
-        //sendMessage(message);
-        receiveResponse();
-        closeSocket();
+        sendMessage(message);
+
+        while(true){
+            receiveResponse();
+        }
     }
 
     /**

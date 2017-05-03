@@ -27,9 +27,7 @@ public class Server extends Node {
     private Node[] fingerTable = new Node[MAX_FINGER_TABLE_SIZE];
     private SSLServerSocket sslServerSocket;
     private SSLServerSocketFactory sslServerSocketFactory;
-    private ExecutorService poolThread = Executors.newFixedThreadPool(MAX_NUMBER_OF_REQUESTS);
-    private ObjectInputStream serverInputStream;
-    private ObjectOutputStream serverOutputStream;
+    private ExecutorService threadPool = Executors.newFixedThreadPool(MAX_NUMBER_OF_REQUESTS);
     private Node predecessor = this;
 
     public Server(String args[]) {
@@ -68,39 +66,12 @@ public class Server extends Node {
         while (true) {
             try {
                 System.out.println("Listening...");
-                ConnectionHandler handler = new ConnectionHandler((SSLSocket) sslServerSocket.accept());
-                poolThread.submit(handler);
+                ConnectionHandler handler = new ConnectionHandler((SSLSocket) sslServerSocket.accept(), this);
+                threadPool.submit(handler);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-    }
-
-    /**
-     * Registers server to RMI
-     */
-    public void registerServer() {
-
-        //TODO: Do we really need RMI? It's not scalable on the internet
-        /*
-        try {
-            Registry registry = LocateRegistry.getRegistry();
-            try{
-                registry.lookup(this.serverId.toString());
-                registerServer();
-            }
-            catch (NotBoundException e) {
-                try {
-                    registry.rebind(serverId.toString(), this);
-                } catch (Exception e1) {
-                    e1.printStackTrace();
-                    System.out.println("Failed to bind peer to registry");
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Failed to find registry");
-        }*/
     }
 
     /**
@@ -137,6 +108,8 @@ public class Server extends Node {
         Message message = new Message(NEWNODE.getBytes(), Integer.toString(this.getNodeId()), Integer.toString(predecessor.getNodeId()), predecessor.getNodeIp(), predecessor.getNodePort());
 
         MessageHandler handler = new MessageHandler(message, knownNode.getNodeIp(), knownNode.getNodePort(), this);
+
+        threadPool.submit(handler);
 
 
     }
@@ -254,21 +227,6 @@ public class Server extends Node {
         this.predecessor=node;
     }
 
-    public void analyseResponse(Message response) {
-        String[] body = response.getBody().split(" ");
-
-        switch (response.getMessageType()) {
-            case SIGNIN:
-                loginUser(body[0], body[1]);
-                break;
-            case SIGNUP:
-                addUser(body[0],body[1]);
-                break;
-            default:
-                break;
-        }
-    }
-
     /**
      * Regists user
      *
@@ -318,42 +276,6 @@ public class Server extends Node {
         System.out.println("Logged in with success!");
         */
         return true;
-    }
-
-    /**
-     * Handles new SSL Connections to the server
-     */
-    public class ConnectionHandler implements Runnable {
-
-        private SSLSocket sslSocket;
-        private BufferedReader in;
-
-        public ConnectionHandler(SSLSocket socket) {
-            this.sslSocket = socket;
-            try {
-                in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
-                serverOutputStream = new ObjectOutputStream(sslSocket.getOutputStream());
-                serverInputStream = new ObjectInputStream(sslSocket.getInputStream());
-            } catch (IOException e) {
-                System.out.println("Error creating buffered reader...");
-                e.printStackTrace();
-            }
-        }
-
-        public void run() {
-            Message message = null;
-            try {
-                message = (Message) serverInputStream.readObject();
-                analyseResponse(message);
-            } catch (IOException e) {
-                System.out.println("Error reading message...");
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
-                System.out.println("Error reading message...");
-                e.printStackTrace();
-            }
-
-        }
     }
 }
 
