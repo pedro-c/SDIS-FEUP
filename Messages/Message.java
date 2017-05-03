@@ -1,6 +1,7 @@
 package Messages;
 
 import java.io.*;
+import java.math.BigInteger;
 
 import static Utilities.Constants.CRLF;
 
@@ -19,9 +20,9 @@ public class Message implements Serializable {
      * @param senderId
      * @param body
      */
-    public Message(byte[] messageType, byte[] senderId, String ... body){
-        this.messageType = new String(messageType);
-        this.senderId = new String(senderId);
+    public Message(String messageType, BigInteger senderId, String ... body){
+        this.messageType = messageType;
+        this.senderId = new String(senderId.toByteArray());
         this.body = String.join(" ", body);
 
         createMessage(this.messageType,this.senderId,this.body);
@@ -78,5 +79,14 @@ public class Message implements Serializable {
      */
     public String getBody() {
         return body;
+    }
+
+    /**
+     * Prints message content
+     */
+    public void printMessage(Message message){
+
+        System.out.println("Message Type: " + message.getMessageType() + "\n");
+        System.out.println("Body: " + message.getBody() + "\n");
     }
 }

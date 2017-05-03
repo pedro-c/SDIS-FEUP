@@ -6,13 +6,19 @@ import Utilities.Constants;
 
 import javax.net.ssl.SSLSocket;
 import java.io.*;
+import java.math.BigInteger;
 import java.util.Scanner;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import static Utilities.Constants.MAX_NUMBER_OF_REQUESTS;
 import static Utilities.Utilities.createHash;
 
 public class Client {
 
     private Scanner scannerIn;
     private String email;
+    private ExecutorService threadPool = Executors.newFixedThreadPool(MAX_NUMBER_OF_REQUESTS);
 
     public static void main(String[] args){
         Client client = new Client();
@@ -51,9 +57,9 @@ public class Client {
     public void signInUser(){
         String password = getCredentials();
         Integer port = 4445;
-        Message message = new Message(Constants.SIGNIN.getBytes(), getClientId(), email, password);
+        Message message = new Message(Constants.SIGNIN, getClientId(), email, password);
         MessageHandler handler = new MessageHandler(message,"localhost", port.toString(), this);
-        handler.run();
+        threadPool.submit(handler);
     }
 
     /**
@@ -62,9 +68,9 @@ public class Client {
     public void signUpUser(){
         String password = getCredentials();
         Integer port = 4445;
-        Message message = new Message(getClientId(), email, password);
+        Message message = new Message(Constants.SIGNUP, getClientId(), email, password);
         MessageHandler handler = new MessageHandler(message, "localhost", port.toString(), this);
-        handler.run();
+        threadPool.submit(handler);
     }
 
     /**
@@ -95,7 +101,7 @@ public class Client {
      * Returns Client id
      * @return client id
      */
-    public byte[] getClientId(){
+    public BigInteger getClientId(){
         return createHash(email);
     }
 }

@@ -28,7 +28,6 @@ public class MessageHandler implements Runnable {
         this.port = Integer.parseInt(port);
         this.server = server;
         this.message = message;
-        run();
     }
 
     public MessageHandler(Message message, String ip, String port, Client client) {
@@ -37,13 +36,12 @@ public class MessageHandler implements Runnable {
         this.port =  Integer.parseInt(port);
         this.client = client;
         this.message = message;
-        run();
     }
 
     public void run() {
+
         connectToServer();
         sendMessage(message);
-
         while(true){
             receiveResponse();
         }

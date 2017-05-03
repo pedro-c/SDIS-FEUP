@@ -12,12 +12,13 @@ public class Utilities {
      * @param data
      * @return string with Hash
      */
-    public static byte[] createHash(String data) {
+    public static BigInteger createHash(String data) {
+
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(data.getBytes("UTF-8"));
+            return new BigInteger(hash);
 
-            return hash;
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -31,11 +32,11 @@ public class Utilities {
      * @param hash
      * @return string with hash in hexadecimal
      */
-    private static String bytesToHex(byte[] hash) {
+    public static String bytesToHex(byte[] hash) {
         return DatatypeConverter.printHexBinary(hash);
     }
 
-    public static int get32bitHashValue(byte[] hash){
-        return Math.abs(new BigInteger(hash).intValue());
+    public static int get32bitHashValue(BigInteger bigInteger){
+        return Math.abs(bigInteger.intValue());
     }
 }
