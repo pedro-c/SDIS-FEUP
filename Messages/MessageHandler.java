@@ -2,14 +2,16 @@ package Messages;
 
 import Client.Client;
 import Server.Server;
+import Server.Node;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 
+import static Utilities.Constants.PREDECESSOR;
+
 public class MessageHandler implements Runnable {
 
-    Message message;
     String ip;
     int port;
     Server server = null;
@@ -18,28 +20,33 @@ public class MessageHandler implements Runnable {
     private SSLSocketFactory sslSocketFactory;
     private ObjectInputStream inputStream;
     private ObjectOutputStream outputStream;
-
+    private Message message;
 
     public MessageHandler(Message message, String ip, String port, Server server) {
 
-        this.message = message;
         this.ip = ip;
         this.port = Integer.parseInt(port);
         this.server = server;
+        this.message = message;
         run();
     }
 
     public MessageHandler(Message message, String ip, String port, Client client) {
 
-        this.message = message;
         this.ip = ip;
         this.port =  Integer.parseInt(port);
         this.client = client;
+        this.message = message;
         run();
     }
 
     public void run() {
         connectToServer();
+        sendMessage(message);
+
+        while(true){
+            receiveResponse();
+        }
     }
 
     /**
@@ -64,9 +71,9 @@ public class MessageHandler implements Runnable {
      * Sends a message through a ssl socket
      *
      */
-    public void sendMessage() {
+    public void sendMessage(Message message) {
         try {
-            outputStream.writeObject(this.message);
+            outputStream.writeObject(message);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -74,20 +81,32 @@ public class MessageHandler implements Runnable {
     }
 
     /**
-     * Receives a message through a ssl socket
-     *
+     * Reads a message response from the socket and calls the handler function
      */
-    public Message receiveMessage(){
-        Message message = null;
+    public void receiveResponse(){
+        Message response = null;
         try {
-            message = (Message) inputStream.readObject();
+            response = (Message) inputStream.readObject();
+            handleResponse(response);
         } catch (IOException e) {
+            System.out.println("Error reading message...");
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
+            System.out.println("Error reading message...");
             e.printStackTrace();
         }
-        return message;
     }
+
+
+    public void handleResponse(Message response){
+
+        if(response.getMessageType().equals(PREDECESSOR)){
+            String[] nodeInfo = response.getBody().split(" ");
+            Node node = new Node(nodeInfo[0],nodeInfo[1]);
+            this.server.setPredecessor(node);
+        }
+    }
+
 
     /**
      * Closes socket

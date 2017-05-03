@@ -1,22 +1,17 @@
 package Server;
 
 import Messages.Message;
-import Utilities.Utilities;
+import Messages.MessageHandler;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.*;
-import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static Utilities.Constants.JOIN;
-import static Utilities.Constants.MAX_FINGER_TABLE_SIZE;
-import static Utilities.Constants.SIGNIN;
-import static Utilities.Constants.SIGNUP;
+import static Utilities.Constants.*;
 import static Utilities.Utilities.createHash;
 
 public class Server extends Node {
@@ -29,13 +24,11 @@ public class Server extends Node {
      * Key is an integer representing the m nodes and the value it's the server identifier
      * (32-bit integer hash from ip+port)
      */
-    private HashMap<Integer, Node> fingerTable = new HashMap<>();
+    private Node[] fingerTable = new Node[MAX_FINGER_TABLE_SIZE];
     private SSLServerSocket sslServerSocket;
     private SSLServerSocketFactory sslServerSocketFactory;
-    private ExecutorService poolThread = Executors.newFixedThreadPool(10);
-    private ObjectInputStream serverInputStream;
-    private ObjectOutputStream serverOutputStream;
-    private Node predecessor = null;
+    private ExecutorService threadPool = Executors.newFixedThreadPool(MAX_NUMBER_OF_REQUESTS);
+    private Node predecessor = this;
 
     public Server(String args[]) {
         super(args[0], args[1]);
@@ -44,10 +37,19 @@ public class Server extends Node {
         saveServerInfoToDisk();
         loadServersInfoFromDisk();
         initServerSocket();
-        joinNetwork();
+
+        if(args.length>3){
+            Node knownNode = new Node(args[2],args[3]);
+            joinNetwork(knownNode);
+        }
+
 
     }
 
+    /**
+     *
+     * @param args [serverIp] [serverPort] [knownServerIp] [knownServerPort]
+     */
     public static void main(String[] args) {
         //For now lets receive a port and a hostname
         if (args.length != 2) {
@@ -64,39 +66,12 @@ public class Server extends Node {
         while (true) {
             try {
                 System.out.println("Listening...");
-                ConnectionHandler handler = new ConnectionHandler((SSLSocket) sslServerSocket.accept());
-                poolThread.submit(handler);
+                ConnectionHandler handler = new ConnectionHandler((SSLSocket) sslServerSocket.accept(), this);
+                threadPool.submit(handler);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-    }
-
-    /**
-     * Registers server to RMI
-     */
-    public void registerServer() {
-
-        //TODO: Do we really need RMI? It's not scalable on the internet
-        /*
-        try {
-            Registry registry = LocateRegistry.getRegistry();
-            try{
-                registry.lookup(this.serverId.toString());
-                registerServer();
-            }
-            catch (NotBoundException e) {
-                try {
-                    registry.rebind(serverId.toString(), this);
-                } catch (Exception e1) {
-                    e1.printStackTrace();
-                    System.out.println("Failed to bind peer to registry");
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Failed to find registry");
-        }*/
     }
 
     /**
@@ -121,15 +96,22 @@ public class Server extends Node {
      */
     public void initFingerTable() {
         for (int i = 1; i <= MAX_FINGER_TABLE_SIZE; i++) {
-            fingerTable.put(i, null);
+            fingerTable[i] = this;
         }
     }
 
     /**
-     * Sends a message to the successor node, indicating its new predecessor
+     * Sends a message to the network
      */
-    public void joinNetwork() {
-       // Message message = new Message(JOIN.getBytes(), Integer.toString(this.getNodeId()), Integer.toString(predecessor.getNodeId()), predecessor.getNodeIp(), predecessor.getNodePort());
+    public void joinNetwork(Node knownNode) {
+
+        Message message = new Message(NEWNODE.getBytes(), Integer.toString(this.getNodeId()), Integer.toString(predecessor.getNodeId()), predecessor.getNodeIp(), predecessor.getNodePort());
+
+        MessageHandler handler = new MessageHandler(message, knownNode.getNodeIp(), knownNode.getNodePort(), this);
+
+        threadPool.submit(handler);
+
+
     }
 
     /**
@@ -137,15 +119,16 @@ public class Server extends Node {
      *
      * @param key 256-bit identifier
      */
-    public void serverLookUp(int key) {
+    public int serverLookUp(int key) {
+        int id = this.getNodeId();
 
-        for (Map.Entry<Integer, Node> entry : fingerTable.entrySet()) {
-            if (entry.getValue().getNodeId() > key) {
-                //forwardRequestToServer(entry.getValue());
+        for (int i = 0; i < fingerTable.length; i++) {
+            id = fingerTable[i].getNodeId();
+            if (id > key) {
+                return id;
             }
         }
-        //forwardRequestToServer(fingerTable.get(MAX_FINGER_TABLE_SIZE));
-
+        return id;
     }
 
     /**
@@ -194,7 +177,9 @@ public class Server extends Node {
                 String nodePort = nodeInfo[1];
                 if (!nodeIp.equals(this.getNodeIp())) {
                     int id = Integer.parseInt(nodeId);
-                    for (Map.Entry<Integer, Node> entry : fingerTable.entrySet()) {
+                    for (int i = 0; i < fingerTable.length; i++) {
+
+
                         /**
                          * successor formula = succ(serverId+2^(i-1))
                          *
@@ -203,14 +188,14 @@ public class Server extends Node {
                          *
                          * serverId equals to this node position in the circle
                          */
-                        int succ = (int) (this.getNodeId() + Math.pow(2, (entry.getKey() - 1)));
+                        int succ = (int) (this.getNodeId() + Math.pow(2, (i - 1)));
                         /**
                          * if successor number is bigger than the circle size (max number of nodes)
                          * it starts counting from the beginning
                          * by removing this node position (serverId) from formula
                          */
                         if (succ > Math.pow(2, MAX_FINGER_TABLE_SIZE)) {
-                            succ = (int) (Math.pow(2, (entry.getKey() - 1)));
+                            succ = (int) (Math.pow(2, (i - 1)));
                         }
                         /**
                          * if the successor is smaller than the value of the node we are readingee
@@ -222,10 +207,10 @@ public class Server extends Node {
                          * than the node we are reading is now the node responsible
                          */
                         if (succ < id) {
-                            if (entry.getValue() == null) {
-                                fingerTable.put(entry.getKey(), new Node(nodeIp,nodePort));
-                            } else if (id < entry.getValue().getNodeId()) {
-                                fingerTable.put(entry.getKey(), new Node(nodeIp,nodePort));
+                            if (fingerTable[i] == null) {
+                                fingerTable[i] = new Node(nodeIp, nodePort);
+                            } else if (id < fingerTable[i].getNodeId()) {
+                                fingerTable[i] = new Node(nodeIp, nodePort);
                             }
                         }
                     }
@@ -238,19 +223,8 @@ public class Server extends Node {
         }
     }
 
-    public void analyseResponse(Message response) {
-        String[] body = response.getBody().split(" ");
-
-        switch (response.getMessageType()){
-            case SIGNIN:
-                loginUser(body[0],body[1]);
-                break;
-            case SIGNUP:
-                addUser(body[0],body[1]);
-                break;
-            default:
-                break;
-        }
+    public void setPredecessor(Node node){
+        this.predecessor=node;
     }
 
     /**
@@ -281,7 +255,7 @@ public class Server extends Node {
      *
      * @param email    user email
      * @param password user password
-     * @return true if user authentication wents well, false if don't
+     * @return true if user authentication went well, false if don't
      */
     public boolean loginUser(String email, String password) {
 
@@ -300,44 +274,8 @@ public class Server extends Node {
         }
 
         System.out.println("Logged in with success!");
-*/
+        */
         return true;
     }
-
-    /**
-     * Handles new SSL Connections to the server
-     */
-    public class ConnectionHandler implements Runnable {
-
-        private SSLSocket sslSocket;
-        private BufferedReader in;
-
-        public ConnectionHandler(SSLSocket socket) {
-            this.sslSocket = socket;
-            try {
-                in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
-                serverOutputStream = new ObjectOutputStream(sslSocket.getOutputStream());
-                serverInputStream = new ObjectInputStream(sslSocket.getInputStream());
-            } catch (IOException e) {
-                System.out.println("Error creating buffered reader...");
-                e.printStackTrace();
-            }
-        }
-
-        public void run() {
-            Message message = null;
-            try {
-                message = (Message) serverInputStream.readObject();
-                analyseResponse(message);
-            } catch (IOException e) {
-                System.out.println("Error reading message...");
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
-                System.out.println("Error reading message...");
-                e.printStackTrace();
-            }
-
-         }
-        }
-    }
+}
 
