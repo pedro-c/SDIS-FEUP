@@ -1,12 +1,12 @@
 package Server;
 
 import Messages.Message;
+import Messages.MessageHandler;
 
 import javax.net.ssl.SSLSocket;
 import java.io.*;
 
-import static Utilities.Constants.SIGNIN;
-import static Utilities.Constants.SIGNUP;
+import static Utilities.Constants.*;
 
 /**
  * Handles new SSL Connections to the server
@@ -31,6 +31,16 @@ public class ConnectionHandler implements Runnable {
         }
     }
 
+    /**
+     * Sends a message through a ssl socket
+     */
+    public void sendMessage(Message message) {
+        try {
+            serverOutputStream.writeObject(message);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public void analyseResponse(Message response) {
         String[] body = response.getBody().split(" ");
@@ -42,6 +52,22 @@ public class ConnectionHandler implements Runnable {
             case SIGNUP:
                 server.addUser(body[0],body[1]);
                 break;
+            case NEWNODE:
+                Node n = server.predecessorLookUp(Integer.parseInt(body[0]));
+                if(n.getNodeId() < Integer.parseInt(body[0])){
+                    MessageHandler handler = new MessageHandler(new Message(PREDECESSOR.getBytes(),Integer.toString(server.getNodeId()),body[0],body[1],body[2]), body[1], body[2], server);
+                    handler.sendMessage();
+                    handler.closeSocket();
+                }else{
+                    MessageHandler handler = new MessageHandler(new Message(NEWNODE.getBytes(),Integer.toString(server.getNodeId()),body[0],body[1],body[2]), body[1], body[2], server);
+                    handler.sendMessage();
+                    handler.closeSocket();
+                }
+                try {
+                    sslSocket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             default:
                 break;
         }

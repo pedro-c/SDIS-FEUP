@@ -28,7 +28,6 @@ public class MessageHandler implements Runnable {
         this.port = Integer.parseInt(port);
         this.server = server;
         this.message = message;
-        run();
     }
 
     public MessageHandler(Message message, String ip, String port, Client client) {
@@ -37,7 +36,6 @@ public class MessageHandler implements Runnable {
         this.port =  Integer.parseInt(port);
         this.client = client;
         this.message = message;
-        run();
     }
 
     public void run() {
@@ -77,7 +75,18 @@ public class MessageHandler implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
+    /**
+     * Sends a message through a ssl socket
+     *
+     */
+    public void sendMessage() {
+        try {
+            outputStream.writeObject(message);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -100,10 +109,13 @@ public class MessageHandler implements Runnable {
 
     public void handleResponse(Message response){
 
-        if(response.getMessageType().equals(PREDECESSOR)){
-            String[] nodeInfo = response.getBody().split(" ");
-            Node node = new Node(nodeInfo[0],nodeInfo[1]);
-            this.server.setPredecessor(node);
+        switch (response.getMessageType()){
+            case PREDECESSOR:
+                String[] nodeInfo = response.getBody().split(" ");
+                this.server.setPredecessor(new Node(nodeInfo[0],nodeInfo[1]));
+                break;
+            default:
+                break;
         }
     }
 
