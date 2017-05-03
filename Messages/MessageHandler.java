@@ -41,7 +41,6 @@ public class MessageHandler implements Runnable {
     public void run() {
         connectToServer();
         sendMessage(message);
-
         while(true){
             receiveResponse();
         }

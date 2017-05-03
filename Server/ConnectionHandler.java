@@ -19,8 +19,14 @@ public class ConnectionHandler implements Runnable {
     private ObjectOutputStream serverOutputStream;
     private Server server;
 
+    /**
+     * Handles new SSL Connections to the server
+     * @param socket
+     * @param server
+     */
     public ConnectionHandler(SSLSocket socket, Server server) {
         this.sslSocket = socket;
+        this.server = server;
         try {
             in = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
             serverOutputStream = new ObjectOutputStream(sslSocket.getOutputStream());
@@ -42,8 +48,14 @@ public class ConnectionHandler implements Runnable {
         }
     }
 
+    /**
+     * Analyses Responses
+     * @param response
+     */
     public void analyseResponse(Message response) {
         String[] body = response.getBody().split(" ");
+
+        System.out.println(response.getMessageType());
 
         switch (response.getMessageType()) {
             case SIGNIN:
@@ -74,6 +86,9 @@ public class ConnectionHandler implements Runnable {
     }
 
 
+    /**
+     * Reads Messages
+     */
     public void run() {
         Message message = null;
         try {
@@ -81,10 +96,8 @@ public class ConnectionHandler implements Runnable {
             analyseResponse(message);
         } catch (IOException e) {
             System.out.println("Error reading message...");
-            e.printStackTrace();
         } catch (ClassNotFoundException e) {
             System.out.println("Error reading message...");
-            e.printStackTrace();
         }
 
     }

@@ -7,6 +7,7 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.*;
+import java.math.BigInteger;
 import java.util.Hashtable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,9 +18,9 @@ import static Utilities.Utilities.createHash;
 public class Server extends Node {
 
     /**
-     * Key is the user id (32-bit hash from e-mail) and value is the 256-bit hashed user password
+     * Key is the user id (hash from e-mail) and value is the 256-bit hashed user password
      */
-    private Hashtable<byte[], byte[]> users;
+    private Hashtable<BigInteger, BigInteger> users;
     /**
      * Key is an integer representing the m nodes and the value it's the server identifier
      * (32-bit integer hash from ip+port)
@@ -43,6 +44,7 @@ public class Server extends Node {
             joinNetwork(knownNode);
         }
 
+        users = new Hashtable<>();
     }
 
     /**
@@ -107,7 +109,6 @@ public class Server extends Node {
         handler.connectToServer();
         handler.sendMessage(message);
         handler.receiveResponse();
-
 
     }
 
@@ -249,16 +250,14 @@ public class Server extends Node {
      */
     public void addUser(String email, String password){
 
-        byte[] user_email = createHash(email);
-        System.out.println("Sign in with  " + email);
+        System.out.println("Sign up with  " + email);
 
-        //TODO: Not working, stops here.... don't know why??
-        if (users.containsKey(user_email)){
-            System.out.println(1);
+        BigInteger user_email = createHash(email);
+
+        if(users.containsKey(user_email)){
             System.out.println("Email already exists. Try to sign in instead of sign up...");
         }
-        else {
-            System.out.println(2);
+        else{
            users.put(user_email,createHash(password));
            System.out.println("Signed up with success!");
        }
@@ -273,22 +272,22 @@ public class Server extends Node {
      */
     public boolean loginUser(String email, String password) {
 
-        System.out.println("Sign up with " + email);
+        System.out.println("Sign in with " + email);
 
-        //TODO: Same here
+        BigInteger user_email = createHash(email);
 
-       /* if (!users.containsKey(email)) {
+        if (users.get(user_email) == null) {
             System.out.println("Try to create an account. Your email was not found on the database...");
             return false;
         }
 
-        if (!users.get(email).equals(createHash(password))) {
+        if (!users.get(user_email).equals(createHash(password))) {
             System.out.println("Impossible to sign in, wrong email or password...");
             return false;
         }
 
         System.out.println("Logged in with success!");
-        */
+
         return true;
     }
 }
