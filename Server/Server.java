@@ -35,8 +35,8 @@ public class Server extends Node {
         super(args[0], args[1]);
 
         initFingerTable();
-        saveServerInfoToDisk();
-        loadServersInfoFromDisk();
+        //saveServerInfoToDisk();
+        //loadServersInfoFromDisk();
         initServerSocket();
 
         if(args.length>3){
@@ -52,10 +52,6 @@ public class Server extends Node {
      * @param args [serverIp] [serverPort] [knownServerIp] [knownServerPort]
      */
     public static void main(String[] args) {
-        //For now lets receive a port and a hostname
-        if (args.length != 2) {
-            throw new IllegalArgumentException("Usage: java server.Server<ip,port>");
-        }
         Server server = new Server(args);
         server.listen();
     }
@@ -110,7 +106,9 @@ public class Server extends Node {
 
         MessageHandler handler = new MessageHandler(message, knownNode.getNodeIp(), knownNode.getNodePort(), this);
 
-        threadPool.submit(handler);
+        handler.connectToServer();
+        handler.sendMessage(message);
+        handler.receiveResponse();
 
     }
 
@@ -121,11 +119,28 @@ public class Server extends Node {
      */
     public int serverLookUp(int key) {
         int id = this.getNodeId();
-
         for (int i = 0; i < fingerTable.length; i++) {
             id = fingerTable[i].getNodeId();
             if (id > key) {
                 return id;
+            }
+        }
+        return id;
+    }
+
+    /**
+     * Looks up in the finger table which server has the closest smallest key comparing to the key we want to lookup
+     * and returns its predecessor
+     *
+     * @param key 32-bit identifier
+     * @return Predecessor node
+     */
+    public Node predecessorLookUp(int key){
+        Node id = this;
+        for (int i = 0; i < fingerTable.length; i++) {
+            id = fingerTable[i];
+            if (id.getNodeId() > key) {
+                return this.predecessor;
             }
         }
         return id;
