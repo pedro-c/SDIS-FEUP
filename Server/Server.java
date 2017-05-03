@@ -112,7 +112,6 @@ public class Server extends Node {
 
         threadPool.submit(handler);
 
-
     }
 
     /**
