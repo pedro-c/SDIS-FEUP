@@ -39,7 +39,7 @@ public class Server extends Node {
         //loadServersInfoFromDisk();
         initServerSocket();
 
-        if(args.length>3){
+        if(args.length>2){
             Node knownNode = new Node(args[2],args[3]);
             joinNetwork(knownNode);
         }
@@ -102,7 +102,8 @@ public class Server extends Node {
      */
     public void joinNetwork(Node knownNode) {
 
-        Message message = new Message(NEWNODE.getBytes(), Integer.toString(this.getNodeId()), Integer.toString(predecessor.getNodeId()), predecessor.getNodeIp(), predecessor.getNodePort());
+        Message message = new Message(NEWNODE.getBytes(), Integer.toString(this.getNodeId()),
+                Integer.toString(predecessor.getNodeId()), predecessor.getNodeIp(), predecessor.getNodePort());
 
         MessageHandler handler = new MessageHandler(message, knownNode.getNodeIp(), knownNode.getNodePort(), this);
 
@@ -137,10 +138,16 @@ public class Server extends Node {
      */
     public Node predecessorLookUp(int key){
         Node id = this;
-        for (int i = 0; i < fingerTable.length; i++) {
+
+        if(predecessor.getNodeId() > key)
+            return predecessor;
+        else if(getNodeId() > key)
+            return this;
+
+        for (int i = 1; i < fingerTable.length; i++) {
             id = fingerTable[i];
             if (id.getNodeId() > key) {
-                return this.predecessor;
+                return fingerTable[i-1];
             }
         }
         return id;
@@ -289,6 +296,10 @@ public class Server extends Node {
         System.out.println("Logged in with success!");
 
         return true;
+    }
+
+    public Node getPredecessor() {
+        return predecessor;
     }
 }
 

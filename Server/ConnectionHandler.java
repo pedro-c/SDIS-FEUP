@@ -66,7 +66,31 @@ public class ConnectionHandler implements Runnable {
                 break;
             case NEWNODE:
                 Node n = server.predecessorLookUp(Integer.parseInt(body[0]));
-                if(n.getNodeId() < Integer.parseInt(body[0])){
+
+                //In case of being a successor
+                if(n == server){
+                    MessageHandler handler = new MessageHandler(new Message(SUCCESSOR.getBytes(),
+                            Integer.toString(server.getNodeId()),server.getNodeIp(),server.getNodePort()),
+                            body[1], body[2], server);
+                    handler.sendMessage();
+                    handler.closeSocket();
+                }
+                else if(n == server.getPredecessor()){
+                    MessageHandler handler = new MessageHandler(new Message(SUCCESSOR.getBytes(),
+                            Integer.toString(server.getPredecessor().getNodeId()),server.getPredecessor().getNodeIp(),server.getPredecessor().getNodePort()),
+                            body[1], body[2], server);
+                    handler.sendMessage();
+                    handler.closeSocket();
+                }
+                else {
+                    MessageHandler handler = new MessageHandler(new Message(PREDECESSOR.getBytes(),
+                            Integer.toString(n.getNodeId()),n.getNodeIp(), n.getNodePort()),
+                            body[1], body[2], server);
+                    handler.sendMessage();
+                    handler.closeSocket();
+                }
+
+                /*if(n.getNodeId() < Integer.parseInt(body[0])){
                     MessageHandler handler = new MessageHandler(new Message(PREDECESSOR.getBytes(),Integer.toString(server.getNodeId()),body[0],body[1],body[2]), body[1], body[2], server);
                     handler.sendMessage();
                     handler.closeSocket();
@@ -74,7 +98,8 @@ public class ConnectionHandler implements Runnable {
                     MessageHandler handler = new MessageHandler(new Message(NEWNODE.getBytes(),Integer.toString(server.getNodeId()),body[0],body[1],body[2]), body[1], body[2], server);
                     handler.sendMessage();
                     handler.closeSocket();
-                }
+                }*/
+
                 try {
                     sslSocket.close();
                 } catch (IOException e) {

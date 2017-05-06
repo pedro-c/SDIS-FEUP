@@ -9,6 +9,7 @@ import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 
 import static Utilities.Constants.PREDECESSOR;
+import static Utilities.Constants.SUCCESSOR;
 
 public class MessageHandler implements Runnable {
 
@@ -112,6 +113,9 @@ public class MessageHandler implements Runnable {
             case PREDECESSOR:
                 String[] nodeInfo = response.getBody().split(" ");
                 this.server.setPredecessor(new Node(nodeInfo[0],nodeInfo[1]));
+                break;
+            //SUCCESSOR NodeId NodeIp NodePort
+            case SUCCESSOR:
                 break;
             default:
                 break;
