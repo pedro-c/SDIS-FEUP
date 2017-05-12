@@ -16,6 +16,16 @@ public class Node {
         this.nodeId = setNodeIdentifier();
     }
 
+    public Node(String ip, String port, int key){
+        this.nodeIp = ip;
+        this.nodePort = port;
+        this.nodeId = key;
+    }
+
+    public Node(){
+
+    }
+
     /**
      * @return Returns 32-bit hash using serv
      * er ip and server port
@@ -61,5 +71,14 @@ public class Node {
      */
     public void setNodePort(String nodePort) {
         this.nodePort = nodePort;
+    }
+
+    public boolean isTheNodeEmpty(){
+
+        if(nodeId == 0){
+            return true;
+        }
+
+        return false;
     }
 }

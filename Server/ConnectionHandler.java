@@ -55,7 +55,7 @@ public class ConnectionHandler implements Runnable {
     public void analyseResponse(Message response) {
         String[] body = response.getBody().split(" ");
 
-        System.out.println(response.getMessageType());
+        System.out.println("Message received: " + response.getMessageType());
 
         switch (response.getMessageType()) {
             case SIGNIN:
@@ -65,40 +65,41 @@ public class ConnectionHandler implements Runnable {
                 server.addUser(body[0],body[1]);
                 break;
             case NEWNODE:
-                Node n = server.predecessorLookUp(Integer.parseInt(body[0]));
+                int newNodeKey = Integer.parseInt(body[0]);
+                Node n = server.predecessorLookUp(newNodeKey);
+                int position = server.getNewNodePosition(newNodeKey);
+
+                Node newNode = new Node(body[1],body[2],Integer.parseInt(body[0]));
 
                 //In case of being a successor
-                if(n == server){
-                    MessageHandler handler = new MessageHandler(new Message(SUCCESSOR.getBytes(),
-                            Integer.toString(server.getNodeId()),server.getNodeIp(),server.getNodePort()),
-                            body[1], body[2], server);
-                    handler.sendMessage();
-                    handler.closeSocket();
+                if(n.getNodeId() == server.getNodeId() && position == BEFORE){
+                    try {
+                        serverOutputStream.writeObject(new Message(SUCCESSOR.getBytes(),
+                                Integer.toString(server.getNodeId()),Integer.toString(server.getNodeId()),server.getNodeIp(),server.getNodePort()));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    server.setPredecessor(newNode);
                 }
-                else if(n == server.getPredecessor()){
-                    MessageHandler handler = new MessageHandler(new Message(SUCCESSOR.getBytes(),
-                            Integer.toString(server.getPredecessor().getNodeId()),server.getPredecessor().getNodeIp(),server.getPredecessor().getNodePort()),
-                            body[1], body[2], server);
-                    handler.sendMessage();
-                    handler.closeSocket();
+                //In case of being the predecessor
+                else if(n.getNodeId() == server.getNodeId() && position == AFTER){
+                    try {
+                        serverOutputStream.writeObject(new Message(PREDECESSOR.getBytes(),
+                                Integer.toString(server.getNodeId()),Integer.toString(server.getNodeId()),server.getNodeIp(),server.getNodePort()));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
                 else {
-                    MessageHandler handler = new MessageHandler(new Message(PREDECESSOR.getBytes(),
-                            Integer.toString(n.getNodeId()),n.getNodeIp(), n.getNodePort()),
-                            body[1], body[2], server);
-                    handler.sendMessage();
-                    handler.closeSocket();
+                    try {
+                        serverOutputStream.writeObject(new Message(NEWNODE_ANSWER.getBytes(),
+                                Integer.toString(server.getNodeId()),Integer.toString(n.getNodeId()),n.getNodeIp(),n.getNodePort()));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
 
-                /*if(n.getNodeId() < Integer.parseInt(body[0])){
-                    MessageHandler handler = new MessageHandler(new Message(PREDECESSOR.getBytes(),Integer.toString(server.getNodeId()),body[0],body[1],body[2]), body[1], body[2], server);
-                    handler.sendMessage();
-                    handler.closeSocket();
-                }else{
-                    MessageHandler handler = new MessageHandler(new Message(NEWNODE.getBytes(),Integer.toString(server.getNodeId()),body[0],body[1],body[2]), body[1], body[2], server);
-                    handler.sendMessage();
-                    handler.closeSocket();
-                }*/
+                server.updateFingerTable(newNode);
 
                 try {
                     sslSocket.close();

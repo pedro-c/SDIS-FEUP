@@ -7,7 +7,9 @@ import Server.Node;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
+import java.net.InetAddress;
 
+import static Utilities.Constants.NEWNODE_ANSWER;
 import static Utilities.Constants.PREDECESSOR;
 import static Utilities.Constants.SUCCESSOR;
 
@@ -54,7 +56,7 @@ public class MessageHandler implements Runnable {
 
         try {
             sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-            sslSocket = (SSLSocket) sslSocketFactory.createSocket(ip, port);
+            sslSocket = (SSLSocket) sslSocketFactory.createSocket(InetAddress.getByName(ip), port);
             sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
             outputStream = new ObjectOutputStream(sslSocket.getOutputStream());
             inputStream = new ObjectInputStream(sslSocket.getInputStream());
@@ -109,13 +111,28 @@ public class MessageHandler implements Runnable {
 
     public void handleResponse(Message response){
 
+        String[] nodeInfo;
+
+        System.out.println("Message received: " + response.getMessageType());
+
         switch (response.getMessageType()){
+            //PREDECESSOR NodeId NodeIp NodePort
             case PREDECESSOR:
-                String[] nodeInfo = response.getBody().split(" ");
-                this.server.setPredecessor(new Node(nodeInfo[0],nodeInfo[1]));
+                nodeInfo = response.getBody().split(" ");
+                this.server.setPredecessor(new Node(nodeInfo[1],nodeInfo[2],Integer.parseInt(nodeInfo[0])));
                 break;
             //SUCCESSOR NodeId NodeIp NodePort
             case SUCCESSOR:
+                nodeInfo = response.getBody().split(" ");
+                Node successor = new Node(nodeInfo[1],nodeInfo[2],Integer.parseInt(nodeInfo[0]));
+                this.server.updateFingerTable(successor);
+                break;
+            //NEWNODE_ANSWER NodeId NodeIp NodePort
+            //Talk to the node with that ip an port
+            case NEWNODE_ANSWER:
+                nodeInfo = response.getBody().split(" ");
+                Node nextNode = new Node(nodeInfo[1],nodeInfo[2],Integer.parseInt(nodeInfo[0]));
+                this.server.joinNetwork(nextNode);
                 break;
             default:
                 break;

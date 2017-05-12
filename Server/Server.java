@@ -7,7 +7,9 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.*;
+import java.lang.reflect.Array;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,7 +27,7 @@ public class Server extends Node {
      * Key is an integer representing the m nodes and the value it's the server identifier
      * (32-bit integer hash from ip+port)
      */
-    private Node[] fingerTable = new Node[MAX_FINGER_TABLE_SIZE + 1];
+    private ArrayList<Node> fingerTable = new ArrayList<Node>(MAX_FINGER_TABLE_SIZE);
     private SSLServerSocket sslServerSocket;
     private SSLServerSocketFactory sslServerSocketFactory;
     private ExecutorService threadPool = Executors.newFixedThreadPool(MAX_NUMBER_OF_REQUESTS);
@@ -92,8 +94,9 @@ public class Server extends Node {
      * Initializes the finger table with m values (max number of nodes = 2^m)
      */
     public void initFingerTable() {
+        Node n = new Node();
         for (int i = 1; i <= MAX_FINGER_TABLE_SIZE; i++) {
-            fingerTable[i] = this;
+            fingerTable.add(n);
         }
     }
 
@@ -120,8 +123,8 @@ public class Server extends Node {
      */
     public int serverLookUp(int key) {
         int id = this.getNodeId();
-        for (int i = 0; i < fingerTable.length; i++) {
-            id = fingerTable[i].getNodeId();
+        for (int i = 0; i < fingerTable.size(); i++) {
+            id = fingerTable.get(i).getNodeId();
             if (id > key) {
                 return id;
             }
@@ -143,14 +146,64 @@ public class Server extends Node {
             return predecessor;
         else if(getNodeId() > key)
             return this;
+        else if(fingerTable.get(1).isTheNodeEmpty())
+            return this;
 
-        for (int i = 1; i < fingerTable.length; i++) {
-            id = fingerTable[i];
-            if (id.getNodeId() > key) {
-                return fingerTable[i-1];
+        for (int i = 1; i < fingerTable.size(); i++) {
+            id = fingerTable.get(i);
+            if (id.getNodeId() > key && i > 1) {
+                return fingerTable.get(i-1);
+            }
+            else if (id.getNodeId() > key && i > 1) {
+                return this;
+            }
+
+            if(id.isTheNodeEmpty()){
+                id = fingerTable.get(i-1);
+                break;
             }
         }
         return id;
+    }
+
+    public void updateFingerTable(Node newNode){
+
+        int position = 0;
+
+
+        for (int i = 1; i <= fingerTable.size(); i++) {
+            Node node = fingerTable.get(i);
+
+            if(node.isTheNodeEmpty()){
+                position = i;
+                break;
+            }
+            if(node.getNodeId() > newNode.getNodeId()){
+                position = i;
+                break;
+            }
+        }
+
+        if(position < MAX_FINGER_TABLE_SIZE){
+            fingerTable.add(position,newNode);
+
+            fingerTable.remove(fingerTable.size()-1);
+
+            System.out.println("Finger table updated on position: " + position + " by id " + fingerTable.get(1).getNodeId());
+        }
+    }
+
+    /**
+     * Gets the position of the new node em relation to the peer
+     * @param key key of the new node
+     * @return 0 if the new node it's before, 1 if it's after
+     */
+    public int getNewNodePosition(int key){
+
+        if(getNodeId() > key)
+            return BEFORE;
+
+        return AFTER;
     }
 
     /**
@@ -199,7 +252,7 @@ public class Server extends Node {
                 String nodePort = nodeInfo[1];
                 if (!nodeIp.equals(this.getNodeIp())) {
                     int id = Integer.parseInt(nodeId);
-                    for (int i = 0; i < fingerTable.length; i++) {
+                    for (int i = 0; i < fingerTable.size(); i++) {
 
 
                         /**
@@ -229,10 +282,10 @@ public class Server extends Node {
                          * than the node we are reading is now the node responsible
                          */
                         if (succ < id) {
-                            if (fingerTable[i] == null) {
-                                fingerTable[i] = new Node(nodeIp, nodePort);
-                            } else if (id < fingerTable[i].getNodeId()) {
-                                fingerTable[i] = new Node(nodeIp, nodePort);
+                            if (fingerTable.get(i) == null) {
+                                fingerTable.add(new Node(nodeIp, nodePort));
+                            } else if (id < fingerTable.get(i).getNodeId()) {
+                                fingerTable.add(new Node(nodeIp, nodePort));
                             }
                         }
                     }
