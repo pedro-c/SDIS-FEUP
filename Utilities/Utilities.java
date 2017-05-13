@@ -37,6 +37,6 @@ public class Utilities {
     }
 
     public static int get32bitHashValue(BigInteger bigInteger){
-        return Math.abs(bigInteger.intValue());
+        return bigInteger.intValue();
     }
 }

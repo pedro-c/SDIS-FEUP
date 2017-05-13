@@ -7,13 +7,11 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.*;
-import java.lang.reflect.Array;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
 import static Utilities.Constants.*;
 import static Utilities.Utilities.createHash;
 
@@ -33,12 +31,14 @@ public class Server extends Node {
     private ExecutorService threadPool = Executors.newFixedThreadPool(MAX_NUMBER_OF_REQUESTS);
     private Node predecessor = this;
 
+    /**
+     *
+     * @param args ServerId ServerPort KnownServerId KnownServer Port
+     */
     public Server(String args[]) {
         super(args[0], args[1]);
 
         initFingerTable();
-        //saveServerInfoToDisk();
-        //loadServersInfoFromDisk();
         initServerSocket();
 
         if(args.length>2){
@@ -94,19 +94,18 @@ public class Server extends Node {
      * Initializes the finger table with m values (max number of nodes = 2^m)
      */
     public void initFingerTable() {
-        Node n = new Node();
         for (int i = 1; i <= MAX_FINGER_TABLE_SIZE; i++) {
-            fingerTable.add(n);
+            fingerTable.add(this.predecessor);
         }
     }
 
     /**
      * Sends a message to the network
+     * Message: [NEWNODE] [SenderID] [NodeID] [NodeIp] [NodePort]
      */
     public void joinNetwork(Node knownNode) {
 
-        Message message = new Message(NEWNODE.getBytes(), Integer.toString(this.getNodeId()),
-                Integer.toString(predecessor.getNodeId()), predecessor.getNodeIp(), predecessor.getNodePort());
+        Message message = new Message(NEWNODE, new BigInteger(Integer.toString(this.getNodeId())), Integer.toString(predecessor.getNodeId()), predecessor.getNodeIp(), predecessor.getNodePort());
 
         MessageHandler handler = new MessageHandler(message, knownNode.getNodeIp(), knownNode.getNodePort(), this);
 
@@ -141,14 +140,6 @@ public class Server extends Node {
      */
     public Node predecessorLookUp(int key){
         Node id = this;
-
-        if(predecessor.getNodeId() > key)
-            return predecessor;
-        else if(getNodeId() > key)
-            return this;
-        else if(fingerTable.get(1).isTheNodeEmpty())
-            return this;
-
         for (int i = 1; i < fingerTable.size(); i++) {
             id = fingerTable.get(i);
             if (id.getNodeId() > key && i > 1) {
@@ -157,40 +148,44 @@ public class Server extends Node {
             else if (id.getNodeId() > key && i > 1) {
                 return this;
             }
-
-            if(id.isTheNodeEmpty()){
-                id = fingerTable.get(i-1);
-                break;
-            }
         }
         return id;
     }
 
     public void updateFingerTable(Node newNode){
 
-        int position = 0;
-
+        long position;
+        long distance;
 
         for (int i = 1; i <= fingerTable.size(); i++) {
             Node node = fingerTable.get(i);
 
-            if(node.isTheNodeEmpty()){
-                position = i;
-                break;
-            }
-            if(node.getNodeId() > newNode.getNodeId()){
-                position = i;
-                break;
+            distance = (long)Math.pow(2,(double)i-1);
+            position = this.getNodeId() + distance;
+            if((newNode.getNodeId() > position && newNode.getNodeId() < node.getNodeId()) || (newNode.getNodeId() > position && node == this)){
+                fingerTable.set(i, newNode);
+            }else if((node == this && MAX_NUMBER_OF_NODES-position+newNode.getNodeId() >= 0) || (node != this && MAX_NUMBER_OF_NODES-position+newNode.getNodeId() > 0 && newNode.getNodeId() < node.getNodeId())){
+                fingerTable.set(i, newNode);
             }
         }
+    }
 
-        if(position < MAX_FINGER_TABLE_SIZE){
-            fingerTable.add(position,newNode);
+    public void newNode(String[] info){
+        //Message: [NEWNODE] [SenderID] [NodeID] [NodeIp] [NodePort]
 
-            fingerTable.remove(fingerTable.size()-1);
+        int newNodeKey = Integer.parseInt(info[0]);
+        String newNodeIp = info[1];
+        String newNodePort = info[2];
 
-            System.out.println("Finger table updated on position: " + position + " by id " + fingerTable.get(1).getNodeId());
-        }
+        Node n = predecessorLookUp(newNodeKey);
+        int position = getNewNodePosition(newNodeKey);
+
+        Node newNode = new Node(newNodeIp,newNodePort,newNodeKey);
+
+        updateFingerTable(newNode);
+
+
+
     }
 
     /**

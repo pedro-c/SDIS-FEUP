@@ -73,12 +73,4 @@ public class Node {
         this.nodePort = nodePort;
     }
 
-    public boolean isTheNodeEmpty(){
-
-        if(nodeId == 0){
-            return true;
-        }
-
-        return false;
-    }
 }

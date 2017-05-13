@@ -1,8 +1,6 @@
 package Server;
 
 import Messages.Message;
-import Messages.MessageHandler;
-
 import javax.net.ssl.SSLSocket;
 import java.io.*;
 
@@ -65,47 +63,7 @@ public class ConnectionHandler implements Runnable {
                 server.addUser(body[0],body[1]);
                 break;
             case NEWNODE:
-                int newNodeKey = Integer.parseInt(body[0]);
-                Node n = server.predecessorLookUp(newNodeKey);
-                int position = server.getNewNodePosition(newNodeKey);
-
-                Node newNode = new Node(body[1],body[2],Integer.parseInt(body[0]));
-
-                //In case of being a successor
-                if(n.getNodeId() == server.getNodeId() && position == BEFORE){
-                    try {
-                        serverOutputStream.writeObject(new Message(SUCCESSOR.getBytes(),
-                                Integer.toString(server.getNodeId()),Integer.toString(server.getNodeId()),server.getNodeIp(),server.getNodePort()));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    server.setPredecessor(newNode);
-                }
-                //In case of being the predecessor
-                else if(n.getNodeId() == server.getNodeId() && position == AFTER){
-                    try {
-                        serverOutputStream.writeObject(new Message(PREDECESSOR.getBytes(),
-                                Integer.toString(server.getNodeId()),Integer.toString(server.getNodeId()),server.getNodeIp(),server.getNodePort()));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-                else {
-                    try {
-                        serverOutputStream.writeObject(new Message(NEWNODE_ANSWER.getBytes(),
-                                Integer.toString(server.getNodeId()),Integer.toString(n.getNodeId()),n.getNodeIp(),n.getNodePort()));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                server.updateFingerTable(newNode);
-
-                try {
-                    sslSocket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                server.newNode(body);
             default:
                 break;
         }
