@@ -8,7 +8,11 @@ import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.*;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -21,6 +25,9 @@ public class Server extends Node {
      * Key is the user id (hash from e-mail) and value is the 256-bit hashed user password
      */
     private Hashtable<BigInteger, User> users;
+
+    private ArrayList<Node> serversInfo;
+
     /**
      * Key is an integer representing the m nodes and the value it's the server identifier
      * (32-bit integer hash from ip+port)
@@ -39,11 +46,6 @@ public class Server extends Node {
         //loadServersInfoFromDisk();
         initServerSocket();
 
-        if(args.length>3){
-            Node knownNode = new Node(args[2],args[3]);
-            joinNetwork(knownNode);
-        }
-
         //creating directories
         String usersPath = DATA_DIRECTORY + "/" + nodeId + "/" + USER_DIRECTORY;
         String chatsPath = DATA_DIRECTORY + "/" + nodeId + "/" + CHAT_DIRECTORY;
@@ -54,13 +56,22 @@ public class Server extends Node {
         createDir(chatsPath);
 
         users = new Hashtable<>();
+
+        serversInfo = new ArrayList<Node>();
+
+        loadServersInfo();
     }
 
     /**
      *
-     * @param args [serverIp] [serverPort] [knownServerIp] [knownServerPort]
+     * @param args [serverIp] [serverPort]
      */
     public static void main(String[] args) {
+
+        if(args.length != 2){
+            throw new IllegalArgumentException("\nUsage : java Server.Server <serverIp> <serverPort>");
+        }
+
         Server server = new Server(args);
         server.listen();
     }
@@ -312,6 +323,23 @@ public class Server extends Node {
 
         if (file.mkdir()) {
             System.out.println("Directory: " + path + " created");
+        }
+    }
+
+    private void loadServersInfo(){
+        try {
+            List<String> lines = Files.readAllLines(Paths.get(SERVERS_INFO));
+            for(String line : lines){
+                String infos[] = line.split(" ");
+                Node node = new Node(infos[0],infos[1]);
+
+                if(!serversInfo.contains(node)){
+                    System.out.println("Read server with ip: " + infos[0] + " and port " + infos[1]);
+                    serversInfo.add(node);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

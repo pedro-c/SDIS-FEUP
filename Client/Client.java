@@ -26,7 +26,7 @@ public class Client {
     public static void main(String[] args) {
 
         if (args.length != 2) {
-            throw new IllegalArgumentException("\nUsage : java Server.Server <port>");
+            throw new IllegalArgumentException("\nUsage : java Server.Server <serverIp> <serverPort>");
         }
 
         String serverIp = args[0];
