@@ -5,6 +5,7 @@ import Messages.MessageHandler;
 
 import javax.net.ssl.SSLSocket;
 import java.io.*;
+import java.math.BigInteger;
 
 import static Utilities.Constants.*;
 
@@ -52,26 +53,24 @@ public class ConnectionHandler implements Runnable {
      * Analyses Responses
      * @param response
      */
-    public void analyseResponse(Message response) {
+    public boolean analyseResponse(Message response) {
         String[] body = response.getBody().split(" ");
 
         System.out.println(response.getMessageType());
 
         switch (response.getMessageType()) {
             case SIGNIN:
-                server.loginUser(body[0], body[1]);
-                break;
+                return server.loginUser(body[0], body[1]);
             case SIGNUP:
-                server.addUser(body[0],body[1]);
-                break;
+                return server.addUser(body[0],body[1]);
             case NEWNODE:
                 Node n = server.predecessorLookUp(Integer.parseInt(body[0]));
                 if(n.getNodeId() < Integer.parseInt(body[0])){
-                    MessageHandler handler = new MessageHandler(new Message(PREDECESSOR.getBytes(),Integer.toString(server.getNodeId()),body[0],body[1],body[2]), body[1], body[2], server);
+                    MessageHandler handler = new MessageHandler(new Message(PREDECESSOR, BigInteger.valueOf(server.getNodeId()),body[0],body[1],body[2]), body[1], body[2], server);
                     handler.sendMessage();
                     handler.closeSocket();
                 }else{
-                    MessageHandler handler = new MessageHandler(new Message(NEWNODE.getBytes(),Integer.toString(server.getNodeId()),body[0],body[1],body[2]), body[1], body[2], server);
+                    MessageHandler handler = new MessageHandler(new Message(NEWNODE,BigInteger.valueOf(server.getNodeId()),body[0],body[1],body[2]), body[1], body[2], server);
                     handler.sendMessage();
                     handler.closeSocket();
                 }
@@ -83,6 +82,7 @@ public class ConnectionHandler implements Runnable {
             default:
                 break;
         }
+        return true;
     }
 
 
@@ -93,7 +93,10 @@ public class ConnectionHandler implements Runnable {
         Message message = null;
         try {
             message = (Message) serverInputStream.readObject();
-            analyseResponse(message);
+            if(analyseResponse(message))
+                message =  new Message(LOGGEDIN,BigInteger.valueOf(server.getNodeId()));
+            else message =  new Message(LOGINERROR,BigInteger.valueOf(server.getNodeId()));
+            sendMessage(message);
         } catch (IOException e) {
             System.out.println("Error reading message...");
         } catch (ClassNotFoundException e) {

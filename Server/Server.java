@@ -111,7 +111,7 @@ public class Server extends Node {
      */
     public void joinNetwork(Node knownNode) {
 
-        Message message = new Message(NEWNODE.getBytes(), Integer.toString(this.getNodeId()), Integer.toString(predecessor.getNodeId()), predecessor.getNodeIp(), predecessor.getNodePort());
+        Message message = new Message(NEWNODE, BigInteger.valueOf(this.getNodeId()), Integer.toString(predecessor.getNodeId()), predecessor.getNodeIp(), predecessor.getNodePort());
 
         MessageHandler handler = new MessageHandler(message, knownNode.getNodeIp(), knownNode.getNodePort(), this);
 
@@ -257,7 +257,7 @@ public class Server extends Node {
      * @param email    user email
      * @param password user password
      */
-    public void addUser(String email, String password){
+    public boolean addUser(String email, String password){
 
         System.out.println("Sign up with  " + email);
 
@@ -265,10 +265,12 @@ public class Server extends Node {
 
         if(users.containsKey(user_email)){
             System.out.println("Email already exists. Try to sign in instead of sign up...");
+            return false;
         }
         else{
            users.put(user_email,new User(email,new BigInteger(password)));
            System.out.println("Signed up with success!");
+           return true;
        }
     }
 
@@ -296,7 +298,6 @@ public class Server extends Node {
         }
 
         System.out.println("Logged in with success!");
-
         return true;
     }
 

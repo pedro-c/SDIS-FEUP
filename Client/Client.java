@@ -6,6 +6,8 @@ import Utilities.Constants;
 
 import java.io.*;
 import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -18,30 +20,34 @@ public class Client {
     private Scanner scannerIn;
     private String email;
     private ExecutorService threadPool = Executors.newFixedThreadPool(MAX_NUMBER_OF_REQUESTS);
-    private int port;
+    private int serverPort;
+    private String serverIp;
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
 
-        if(args.length != 1){
+        if (args.length != 2) {
             throw new IllegalArgumentException("\nUsage : java Server.Server <port>");
         }
 
-        int port = Integer.parseInt(args[0]);
+        String serverIp = args[0];
 
-        if(port < 0 && port > 65535){
+        int serverPort = Integer.parseInt(args[1]);
+
+        if (serverPort < 0 && serverPort > 65535) {
             throw new IllegalArgumentException("\nThe port needs to be between 0 and 65535");
         }
 
-        Client client = new Client(port);
+        Client client = new Client(serverIp, serverPort);
         client.mainMenu();
     }
 
     /**
      * Client
      */
-    public Client(int port){
+    public Client(String serverIp, int serverPort) {
 
-        this.port = port;
+        this.serverPort = serverPort;
+        this.serverIp = serverIp;
 
         scannerIn = new Scanner(System.in);
     }
@@ -53,7 +59,7 @@ public class Client {
         String menu = "\n Menu " + "\n 1. Sign in" + "\n 2. Sign up" + "\n 3. Exit" + "\n";
         System.out.println(menu);
         int option = scannerIn.nextInt();
-        switch (option){
+        switch (option) {
             case 1:
                 signInUser();
                 break;
@@ -61,6 +67,21 @@ public class Client {
                 signUpUser();
                 break;
             case 3:
+            default:
+                System.exit(0);
+        }
+    }
+
+    public void chatMenu() {
+        String menu = "\n Menu " + "\n 1. Create a new Chat" + "\n 2. Open Chat" + "\n";
+        System.out.println(menu);
+        int option = scannerIn.nextInt();
+        switch (option) {
+            case 1:
+                break;
+            case 2:
+                break;
+            default:
                 System.exit(0);
         }
     }
@@ -68,28 +89,33 @@ public class Client {
     /**
      * Sends a sign in message throw a ssl socket
      */
-    public void signInUser(){
+    public void signInUser() {
         String password = getCredentials();
         Message message = new Message(Constants.SIGNIN, getClientId(), email, password);
-        MessageHandler handler = new MessageHandler(message,"localhost", Integer.toString(port), this);
+        MessageHandler handler = null;
+        handler = new MessageHandler(message, serverIp, Integer.toString(serverPort), this);
         threadPool.submit(handler);
+
     }
 
     /**
      * Sends a sign up message throw a ssl socket
      */
-    public void signUpUser(){
+    public void signUpUser() {
         String password = getCredentials();
         Message message = new Message(Constants.SIGNUP, getClientId(), email, createHash(password).toString());
-        MessageHandler handler = new MessageHandler(message, "localhost", Integer.toString(port), this);
+        MessageHandler handler = null;
+        handler = new MessageHandler(message, serverIp, Integer.toString(serverPort), this);
         threadPool.submit(handler);
+
     }
- 
+
     /**
      * Asks user for email and password
+     *
      * @return String password
      */
-    public String getCredentials(){
+    public String getCredentials() {
 
          /*The class Console has a method readPassword() that hides input.*/
         Console console = System.console();
@@ -104,7 +130,7 @@ public class Client {
 
         System.out.print("Password: ");
 
-        char [] oldPassword = console.readPassword();
+        char[] oldPassword = console.readPassword();
         String password = new String(oldPassword);
         console.printf(password + "\n");
 
@@ -113,9 +139,10 @@ public class Client {
 
     /**
      * Returns Client id
+     *
      * @return client id
      */
-    public BigInteger getClientId(){
+    public BigInteger getClientId() {
         return createHash(email);
     }
 }

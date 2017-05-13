@@ -6,9 +6,11 @@ import Server.Node;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
-import javax.sound.midi.SysexMessage;
 import java.io.*;
+import java.net.InetAddress;
 
+import static Utilities.Constants.LOGGEDIN;
+import static Utilities.Constants.LOGINERROR;
 import static Utilities.Constants.PREDECESSOR;
 
 public class MessageHandler implements Runnable {
@@ -43,7 +45,6 @@ public class MessageHandler implements Runnable {
         connectToServer();
         sendMessage(message);
         while(true){
-            System.out.println(1);
             receiveResponse();
         }
     }
@@ -96,10 +97,9 @@ public class MessageHandler implements Runnable {
     public void receiveResponse(){
         Message response = null;
         try {
-            System.out.println(2);
             response = (Message) inputStream.readObject();
-            System.out.println(3);
             handleResponse(response);
+            System.out.println("Handle response");
         } catch (IOException e) {
             System.out.println("Error reading message...");
             e.printStackTrace();
@@ -117,6 +117,11 @@ public class MessageHandler implements Runnable {
                 String[] nodeInfo = response.getBody().split(" ");
                 this.server.setPredecessor(new Node(nodeInfo[0],nodeInfo[1]));
                 break;
+            case LOGGEDIN:
+                this.client.chatMenu();
+                break;
+            case LOGINERROR:
+                this.client.mainMenu();
             default:
                 break;
         }
