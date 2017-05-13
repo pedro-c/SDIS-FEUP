@@ -44,6 +44,15 @@ public class Server extends Node {
             joinNetwork(knownNode);
         }
 
+        //creating directories
+        String usersPath = DATA_DIRECTORY + "/" + nodeId + "/" + USER_DIRECTORY;
+        String chatsPath = DATA_DIRECTORY + "/" + nodeId + "/" + CHAT_DIRECTORY;
+
+        createDir(DATA_DIRECTORY);
+        createDir(DATA_DIRECTORY + "/" + Integer.toString(nodeId));
+        createDir(usersPath);
+        createDir(chatsPath);
+
         users = new Hashtable<>();
     }
 
@@ -289,6 +298,20 @@ public class Server extends Node {
         System.out.println("Logged in with success!");
 
         return true;
+    }
+
+    /**
+     * Create a directory
+     *
+     * @param path path of the directory to be created
+     */
+    private void createDir(String path) {
+
+        File file = new File(path);
+
+        if (file.mkdir()) {
+            System.out.println("Directory: " + path + " created");
+        }
     }
 }
 
