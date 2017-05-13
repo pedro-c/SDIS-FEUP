@@ -290,7 +290,7 @@ public class Server extends Node {
             return false;
         }
 
-        if (!users.get(user_email).equals(createHash(password))) {
+        if (!users.get(user_email).getPassword().equals(new BigInteger(password))) {
             System.out.println("Impossible to sign in, wrong email or password...");
             return false;
         }
