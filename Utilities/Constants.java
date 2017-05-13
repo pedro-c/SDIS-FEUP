@@ -16,6 +16,7 @@ public class Constants {
     public static final String USER_DIRECTORY = "users";
     public static final String CHAT_DIRECTORY = "chats";
     public static final String DATA_DIRECTORY = "data";
+    public static final String SERVERS_INFO = "servers.info";
 
     public static final int MAX_FINGER_TABLE_SIZE = 32;
     public static final int MAX_NUMBER_OF_REQUESTS = 10;

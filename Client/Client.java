@@ -23,7 +23,7 @@ public class Client {
     public static void main(String[] args){
 
         if(args.length != 1){
-            throw new IllegalArgumentException("\nUsage : java Server.Server <port>");
+            throw new IllegalArgumentException("\nUsage : java Client.Client <port>");
         }
 
         int port = Integer.parseInt(args[0]);

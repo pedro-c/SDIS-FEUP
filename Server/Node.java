@@ -46,4 +46,22 @@ public class Node {
     public String getNodePort() {
         return nodePort;
     }
+
+    @Override
+    public boolean equals(Object o) {
+
+        if (o == null) {
+            return false;
+        }
+        if (!Node.class.isAssignableFrom(o.getClass())) {
+            return false;
+        }
+
+        final Node node = (Node) o;
+
+        if(nodeId == ((Node) o).getNodeId())
+            return true;
+
+        return false;
+    }
 }
