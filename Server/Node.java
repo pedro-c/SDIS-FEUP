@@ -6,9 +6,9 @@ import static Utilities.Utilities.get32bitHashValue;
 
 public class Node {
 
-    private int nodeId;
-    private String nodeIp;
-    private String nodePort;
+    protected final int nodeId;
+    protected final String nodeIp;
+    protected final String nodePort;
 
     public Node(String ip, String port){
         this.nodeIp = ip;
@@ -40,26 +40,10 @@ public class Node {
     }
 
     /**
-     * Set node ip address
-     * @param nodeIp Ip address
-     */
-    public void setNodeIp(String nodeIp) {
-        this.nodeIp = nodeIp;
-    }
-
-    /**
      * Get node port
      * @return node port
      */
     public String getNodePort() {
         return nodePort;
-    }
-
-    /**
-     * Set node port
-     * @param nodePort node port
-     */
-    public void setNodePort(String nodePort) {
-        this.nodePort = nodePort;
     }
 }
