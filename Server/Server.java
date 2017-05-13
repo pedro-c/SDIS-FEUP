@@ -20,7 +20,7 @@ public class Server extends Node {
     /**
      * Key is the user id (hash from e-mail) and value is the 256-bit hashed user password
      */
-    private Hashtable<BigInteger, BigInteger> users;
+    private Hashtable<BigInteger, User> users;
     /**
      * Key is an integer representing the m nodes and the value it's the server identifier
      * (32-bit integer hash from ip+port)
@@ -258,7 +258,7 @@ public class Server extends Node {
             System.out.println("Email already exists. Try to sign in instead of sign up...");
         }
         else{
-           users.put(user_email,createHash(password));
+           users.put(user_email,new User(email,new BigInteger(password)));
            System.out.println("Signed up with success!");
        }
     }

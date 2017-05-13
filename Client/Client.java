@@ -68,7 +68,7 @@ public class Client {
     public void signUpUser(){
         String password = getCredentials();
         Integer port = 4445;
-        Message message = new Message(Constants.SIGNUP, getClientId(), email, password);
+        Message message = new Message(Constants.SIGNUP, getClientId(), email, createHash(password).toString());
         MessageHandler handler = new MessageHandler(message, "localhost", port.toString(), this);
         threadPool.submit(handler);
     }
@@ -91,7 +91,9 @@ public class Client {
         console.printf(email + "\n");
 
         System.out.print("Password: ");
+
         char [] oldPassword = console.readPassword();
+        console.printf(oldPassword + "\n");
         String password = new String(oldPassword);
 
         return password;

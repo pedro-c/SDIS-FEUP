@@ -6,6 +6,7 @@ import Server.Node;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+import javax.sound.midi.SysexMessage;
 import java.io.*;
 
 import static Utilities.Constants.PREDECESSOR;
@@ -42,6 +43,7 @@ public class MessageHandler implements Runnable {
         connectToServer();
         sendMessage(message);
         while(true){
+            System.out.println(1);
             receiveResponse();
         }
     }
@@ -94,7 +96,9 @@ public class MessageHandler implements Runnable {
     public void receiveResponse(){
         Message response = null;
         try {
+            System.out.println(2);
             response = (Message) inputStream.readObject();
+            System.out.println(3);
             handleResponse(response);
         } catch (IOException e) {
             System.out.println("Error reading message...");
