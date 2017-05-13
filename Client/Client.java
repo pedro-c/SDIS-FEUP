@@ -4,7 +4,6 @@ import Messages.Message;
 import Messages.MessageHandler;
 import Utilities.Constants;
 
-import javax.net.ssl.SSLSocket;
 import java.io.*;
 import java.math.BigInteger;
 import java.util.Scanner;
@@ -19,16 +18,31 @@ public class Client {
     private Scanner scannerIn;
     private String email;
     private ExecutorService threadPool = Executors.newFixedThreadPool(MAX_NUMBER_OF_REQUESTS);
+    private int port;
 
     public static void main(String[] args){
-        Client client = new Client();
+
+        if(args.length != 1){
+            throw new IllegalArgumentException("\nUsage : java Server.Server <port>");
+        }
+
+        int port = Integer.parseInt(args[0]);
+
+        if(port < 0 && port > 65535){
+            throw new IllegalArgumentException("\nThe port needs to be between 0 and 65535");
+        }
+
+        Client client = new Client(port);
         client.mainMenu();
     }
 
     /**
      * Client
      */
-    public Client(){
+    public Client(int port){
+
+        this.port = port;
+
         scannerIn = new Scanner(System.in);
     }
 
@@ -56,9 +70,8 @@ public class Client {
      */
     public void signInUser(){
         String password = getCredentials();
-        Integer port = 4445;
         Message message = new Message(Constants.SIGNIN, getClientId(), email, password);
-        MessageHandler handler = new MessageHandler(message,"localhost", port.toString(), this);
+        MessageHandler handler = new MessageHandler(message,"localhost", Integer.toString(port), this);
         threadPool.submit(handler);
     }
 
@@ -67,12 +80,11 @@ public class Client {
      */
     public void signUpUser(){
         String password = getCredentials();
-        Integer port = 4445;
         Message message = new Message(Constants.SIGNUP, getClientId(), email, createHash(password).toString());
-        MessageHandler handler = new MessageHandler(message, "localhost", port.toString(), this);
+        MessageHandler handler = new MessageHandler(message, "localhost", Integer.toString(port), this);
         threadPool.submit(handler);
     }
-
+ 
     /**
      * Asks user for email and password
      * @return String password
