@@ -2,7 +2,6 @@ package Server;
 
 import Messages.Message;
 import Messages.MessageHandler;
-import Utilities.Constants;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -27,7 +26,10 @@ public class Server extends Node {
      */
     private Hashtable<BigInteger, User> users;
 
-    private ArrayList<Node> serversInfo;
+    /**
+     * ArrayList with a list of servers (ip, port and id)
+     */
+    private ArrayList<Node> serversList;
 
     /**
      * Key is an integer representing the m nodes and the value it's the server identifier
@@ -58,7 +60,7 @@ public class Server extends Node {
 
         users = new Hashtable<>();
 
-        serversInfo = new ArrayList<Node>();
+        serversList = new ArrayList<Node>();
 
         loadServersInfo();
     }
@@ -269,7 +271,7 @@ public class Server extends Node {
      * @param email    user email
      * @param password user password
      */
-    public Message addUser(String email, String password){
+    public Message addUserByClient(String email, String password){
 
         System.out.println("Sign up with  " + email);
 
@@ -279,11 +281,46 @@ public class Server extends Node {
 
         if(users.containsKey(user_email)){
             System.out.println("Email already exists. Try to sign in instead of sign up...");
-            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId), Constants.EMAIL_ALREADY_USED);
+            message = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId), EMAIL_ALREADY_USED);
         }
         else{
             users.put(user_email,new User(email,new BigInteger(password)));
-            message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
+            message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
+            System.out.println("Signed up with success!");
+
+            //Lets send the user info to the others servers
+            Message serverMessage;
+            MessageHandler serverHandler;
+            for(Node server: serversList){
+                serverMessage = new Message(ADD_USER, BigInteger.valueOf(nodeId), email, password);
+                serverHandler= new MessageHandler(serverMessage, server.getNodeIp(), server.getNodePort(), this);
+                threadPool.submit(serverHandler);
+            }
+        }
+
+        return message;
+    }
+
+    /**
+     * Registers a user
+     * @param email
+     * @param password
+     * @return return message (success or error)
+     */
+    public Message addUserByServer(String email, String password){
+        System.out.println("Sign up with  " + email);
+
+        BigInteger user_email = createHash(email);
+
+        Message message;
+
+        if(users.containsKey(user_email)){
+            System.out.println("Email already exists. Try to sign in instead of sign up...");
+            message = new Message(SERVER_ERROR, BigInteger.valueOf(nodeId), EMAIL_ALREADY_USED);
+        }
+        else{
+            users.put(user_email,new User(email,new BigInteger(password)));
+            message = new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId));
             System.out.println("Signed up with success!");
         }
 
@@ -307,15 +344,15 @@ public class Server extends Node {
 
         if (users.get(user_email) == null) {
             System.out.println("Try to create an account. Your email was not found on the database...");
-            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId),Constants.EMAIL_NOT_FOUND);
+            message = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId),EMAIL_NOT_FOUND);
         }
         else if (!users.get(user_email).getPassword().equals(new BigInteger(password))) {
             System.out.println("Impossible to sign in, wrong email or password...");
-            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId),Constants.WRONG_PASSWORD);
+            message = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId),WRONG_PASSWORD);
         }
         else {
             System.out.println("Logged in with success!");
-            message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
+            message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
         }
 
         return message;
@@ -345,13 +382,25 @@ public class Server extends Node {
                 String infos[] = line.split(" ");
                 Node node = new Node(infos[0],infos[1]);
 
-                if(!serversInfo.contains(node) && nodeId != node.getNodeId()){
+                if(!serversList.contains(node) && nodeId != node.getNodeId()){
                     System.out.println("Read server with ip: " + infos[0] + " and port " + infos[1]);
-                    serversInfo.add(node);
+                    serversList.add(node);
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void removeServerFromList(String ip,int port){
+        Node node = new Node(ip,Integer.toString(port));
+
+        if(serversList.contains(node)){
+            if(serversList.remove(node)){
+                System.out.println("\nRemoved server with ip: " + node.getNodeIp() +
+                        " and port " + node.getNodePort() + " from servers list\n");
+            }
+
         }
     }
 }

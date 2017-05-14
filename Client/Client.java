@@ -2,7 +2,6 @@ package Client;
 
 import Messages.Message;
 import Messages.MessageHandler;
-import Utilities.Constants;
 
 import java.io.*;
 import java.math.BigInteger;
@@ -10,7 +9,7 @@ import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static Utilities.Constants.MAX_NUMBER_OF_REQUESTS;
+import static Utilities.Constants.*;
 import static Utilities.Utilities.createHash;
 
 public class Client {
@@ -102,7 +101,7 @@ public class Client {
     public void signInUser() {
         atualState = Task.WAITING_SIGNIN;
         String password = getCredentials();
-        Message message = new Message(Constants.SIGNIN, getClientId(), email, createHash(password).toString());
+        Message message = new Message(SIGNIN, getClientId(), email, createHash(password).toString());
         MessageHandler handler = null;
         handler = new MessageHandler(message, serverIp, Integer.toString(serverPort), this);
         threadPool.submit(handler);
@@ -115,7 +114,7 @@ public class Client {
     public void signUpUser() {
         atualState = Task.WAITING_SIGNUP;
         String password = getCredentials();
-        Message message = new Message(Constants.SIGNUP, getClientId(), email, createHash(password).toString());
+        Message message = new Message(SIGNUP, getClientId(), email, createHash(password).toString());
         MessageHandler handler = null;
         handler = new MessageHandler(message, serverIp, Integer.toString(serverPort), this);
         threadPool.submit(handler);
@@ -164,7 +163,7 @@ public class Client {
         switch (atualState){
             case WAITING_SIGNIN:
             case WAITING_SIGNUP:
-                if(response.getMessageType().equals(Constants.CLIENT_SUCCESS)){
+                if(response.getMessageType().equals(CLIENT_SUCCESS)){
                     atualState = Task.SIGNED_IN;
                     signInMenu();
                 }
@@ -185,13 +184,13 @@ public class Client {
      */
     public void printError(String code){
         switch (code){
-            case Constants.EMAIL_ALREADY_USED:
+            case EMAIL_ALREADY_USED:
                 System.out.println("\nEmail already exists. Try to sign in instead of sign up...");
                 break;
-            case Constants.EMAIL_NOT_FOUND:
+            case EMAIL_NOT_FOUND:
                 System.out.println("\nTry to create an account. Your email was not found on the database...");
                 break;
-            case Constants.WRONG_PASSWORD:
+            case WRONG_PASSWORD:
                 System.out.println("\nImpossible to sign in, wrong email or password...");
                 break;
             default:

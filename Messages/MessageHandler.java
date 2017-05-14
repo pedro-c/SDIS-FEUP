@@ -58,8 +58,11 @@ public class MessageHandler implements Runnable {
             outputStream = new ObjectOutputStream(sslSocket.getOutputStream());
             inputStream = new ObjectInputStream(sslSocket.getInputStream());
         } catch (IOException e) {
-            System.out.println("Error creating ssl socket...");
             e.printStackTrace();
+            System.out.println("Error creating ssl socket...");
+            if(server != null){
+                server.removeServerFromList(ip,port);
+            }
         }
 
     }
@@ -115,9 +118,14 @@ public class MessageHandler implements Runnable {
                 String[] nodeInfo = response.getBody().split(" ");
                 this.server.setPredecessor(new Node(nodeInfo[0],nodeInfo[1]));
                 break;
+            //Client messages
             case CLIENT_SUCCESS:
             case CLIENT_ERROR:
                 client.verifyState(response);
+                break;
+            //Server Messages
+            case SERVER_SUCCESS:
+            case SERVER_ERROR:
                 break;
             default:
                 break;

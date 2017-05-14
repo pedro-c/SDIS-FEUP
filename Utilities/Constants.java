@@ -24,6 +24,15 @@ public class Constants {
     //CLIENT_ERROR SenderId code
     public static final String CLIENT_ERROR = "CLIENT_ERROR";
 
+    //SERVER_SUCCESS SenderId
+    public static final String SERVER_SUCCESS = "SERVER_SUCCESS";
+
+    //SERVER_SUCCESS SenderId code
+    public static final String SERVER_ERROR = "SERVER_ERROR";
+
+    //ADD_USER SenderId email passwordHash
+    public static final String ADD_USER = "ADD_USER";
+
     //Directories
     public static final String USER_DIRECTORY = "users";
     public static final String CHAT_DIRECTORY = "chats";

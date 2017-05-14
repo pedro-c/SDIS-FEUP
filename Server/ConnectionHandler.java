@@ -59,10 +59,11 @@ public class ConnectionHandler implements Runnable {
         System.out.println(response.getMessageType());
 
         switch (response.getMessageType()) {
+            //Clients messages
             case SIGNIN:
                 return server.loginUser(body[0], body[1]);
             case SIGNUP:
-                return server.addUser(body[0],body[1]);
+                return server.addUserByClient(body[0],body[1]);
             case NEWNODE:
                 Node n = server.predecessorLookUp(Integer.parseInt(body[0]));
                 if(n.getNodeId() < Integer.parseInt(body[0])){
@@ -79,6 +80,9 @@ public class ConnectionHandler implements Runnable {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+            //Server messages
+            case ADD_USER:
+                return server.addUserByServer(body[0],body[1]);
             default:
                 break;
         }
