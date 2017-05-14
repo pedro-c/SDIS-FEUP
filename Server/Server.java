@@ -128,21 +128,19 @@ public class Server extends Node {
         Node successor = this;
 
         for (int i = 1; i<fingerTable.size(); i++){
+            Node node = fingerTable.get(i);
 
             distance = (long)Math.pow(2,(double)i-1);
             position = this.getNodeId() + distance;
-
-            if(key != fingerTable.get(i).getNodeId()){
-                if(key > this.getNodeId()){
-                    if(MAX_NUMBER_OF_NODES-position-key >= 0){
-                        successor = fingerTable.get(i);
-                    }
-                }else{
-                    if(MAX_NUMBER_OF_NODES-position+key >= 0){
-                        successor = fingerTable.get(i);
-                    }
-                }
+            if(this.getNodeId() < key){
+                if(node.getNodeId() > key)
+                    return node;
+            }else{
+                if(node.getNodeId() < key)
+                    return node;
             }
+
+
 
 
         }
@@ -186,7 +184,7 @@ public class Server extends Node {
                 fingerTable.set(i, newNode);
             }else if(newNode.getNodeId() < this.getNodeId()){
                 if(newNode.getNodeId() < node.getNodeId()){
-                    if(MAX_NUMBER_OF_NODES-position+newNode.getNodeId() >= 0 && Math.abs(newNode.getNodeId()-this.getNodeId())<node.getNodeId()){
+                    if(MAX_NUMBER_OF_NODES-position+newNode.getNodeId() >= 0 && MAX_NUMBER_OF_NODES-this.getNodeId()+node.getNodeId() > MAX_NUMBER_OF_NODES-this.getNodeId()+newNode.getNodeId()){
                         fingerTable.set(i, newNode);
                     }else if(MAX_NUMBER_OF_NODES-position+newNode.getNodeId() >= 0 && node.getNodeId() == this.getNodeId()){
                         fingerTable.set(i, newNode);
