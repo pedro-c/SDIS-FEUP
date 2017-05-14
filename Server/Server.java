@@ -132,13 +132,16 @@ public class Server extends Node {
 
             distance = (long)Math.pow(2,(double)i-1);
             position = this.getNodeId() + distance;
-            if(this.getNodeId() < key){
-                if(node.getNodeId() > key)
-                    return node;
+            if(key > this.getNodeId()){
+                if(node.getNodeId() >= key)
+                    successor = node;
             }else{
-                if(node.getNodeId() < key)
-                    return node;
+                if(key < node.getNodeId()){
+                    
+                }
             }
+
+
 
 
 
