@@ -335,6 +335,9 @@ public class Server extends Node {
         }
     }
 
+    /**
+     * Loads all servers from a file
+     */
     private void loadServersInfo(){
         try {
             List<String> lines = Files.readAllLines(Paths.get(SERVERS_INFO));
@@ -342,7 +345,7 @@ public class Server extends Node {
                 String infos[] = line.split(" ");
                 Node node = new Node(infos[0],infos[1]);
 
-                if(!serversInfo.contains(node)){
+                if(!serversInfo.contains(node) && nodeId != node.getNodeId()){
                     System.out.println("Read server with ip: " + infos[0] + " and port " + infos[1]);
                     serversInfo.add(node);
                 }

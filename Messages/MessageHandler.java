@@ -78,7 +78,6 @@ public class MessageHandler implements Runnable {
 
     /**
      * Sends a message through a ssl socket
-     *
      */
     public void sendMessage() {
         try {
@@ -105,7 +104,10 @@ public class MessageHandler implements Runnable {
         }
     }
 
-
+    /**
+     * Handles with the responses
+     * @param response
+     */
     public void handleResponse(Message response){
 
         switch (response.getMessageType()){

@@ -156,6 +156,10 @@ public class Client {
         return createHash(email);
     }
 
+    /**
+     * Acts according off the actual state
+     * @param response response message
+     */
     public void verifyState(Message response){
         switch (atualState){
             case WAITING_SIGNIN:
@@ -175,6 +179,10 @@ public class Client {
         }
     }
 
+    /**
+     * Prints the error that comes from the server
+     * @param code error code
+     */
     public void printError(String code){
         switch (code){
             case Constants.EMAIL_ALREADY_USED:
