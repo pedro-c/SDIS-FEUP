@@ -1,5 +1,6 @@
 package Client;
 
+import Chat.Chat;
 import Messages.Message;
 import Messages.MessageHandler;
 import Utilities.Constants;
@@ -10,8 +11,11 @@ import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static Utilities.Constants.MAX_NUMBER_OF_REQUESTS;
+import static Utilities.Constants.*;
 import static Utilities.Utilities.createHash;
+import static Utilities.Utilities.getTimestamp;
+import static Utilities.Utilities.serializeObject;
+import static Utilities.Utilities.deserializeObject;
 
 public class Client {
 
@@ -78,12 +82,16 @@ public class Client {
         }
     }
 
+    /**
+     * Logged in user menu
+     */
     public void signInMenu() {
-        String menu = "\n Menu " + "\n 1. Create a new Chat" + "\n 2. Open Chat" + "\n 3. Sign Out";
+        String menu = "\n Menu " + "\n 1. Create a new Chat" + "\n 2. Open Chat" + "\n 3. Sign Out" + "\n";
         System.out.println(menu);
         int option = scannerIn.nextInt();
         switch (option) {
             case 1:
+                createNewChat();
                 break;
             case 2:
                 break;
@@ -97,14 +105,39 @@ public class Client {
     }
 
     /**
+     * Creates a new chat
+     */
+    public void createNewChat(){
+        Console console = System.console();
+
+        System.out.println("Name: ");
+        String chatName = console.readLine();
+        Chat newChat = new Chat(generateChatId());
+        if(chatName!=null)
+            newChat.setChatName(chatName);
+        Message message = new Message(Constants.CREATE_CHAT, getClientId(), new String(serializeObject(newChat)));
+        MessageHandler handler = new MessageHandler(message, serverIp, Integer.toString(serverPort),this);
+        threadPool.submit(handler);
+
+    }
+
+    /**
+     * Generates Chat id with creation date and user_id : CREATION_DATE + USER_CREATOR_ID
+     * @return BigInteger chat Id
+     */
+    public BigInteger generateChatId(){
+        return createHash(String.valueOf(getTimestamp()) + email);
+    }
+
+
+    /**
      * Sends a sign in message throw a ssl socket
      */
     public void signInUser() {
         atualState = Task.WAITING_SIGNIN;
         String password = getCredentials();
         Message message = new Message(Constants.SIGNIN, getClientId(), email, createHash(password).toString());
-        MessageHandler handler = null;
-        handler = new MessageHandler(message, serverIp, Integer.toString(serverPort), this);
+        MessageHandler handler = new MessageHandler(message, serverIp, Integer.toString(serverPort), this);
         threadPool.submit(handler);
 
     }
@@ -185,13 +218,13 @@ public class Client {
      */
     public void printError(String code){
         switch (code){
-            case Constants.EMAIL_ALREADY_USED:
+            case EMAIL_ALREADY_USED:
                 System.out.println("\nEmail already exists. Try to sign in instead of sign up...");
                 break;
-            case Constants.EMAIL_NOT_FOUND:
+            case EMAIL_NOT_FOUND:
                 System.out.println("\nTry to create an account. Your email was not found on the database...");
                 break;
-            case Constants.WRONG_PASSWORD:
+            case WRONG_PASSWORD:
                 System.out.println("\nImpossible to sign in, wrong email or password...");
                 break;
             default:

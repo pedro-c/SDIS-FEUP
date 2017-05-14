@@ -1,6 +1,7 @@
 package Server;
 
 import Messages.Message;
+import Chat.Chat;
 import Messages.MessageHandler;
 import Utilities.Constants;
 
@@ -19,6 +20,7 @@ import java.util.concurrent.Executors;
 
 import static Utilities.Constants.*;
 import static Utilities.Utilities.createHash;
+import static Utilities.Utilities.deserializeObject;
 
 public class Server extends Node {
 
@@ -353,6 +355,20 @@ public class Server extends Node {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public Message createChat(String body){
+        Message message = null;
+
+
+        //TODO: ERROR HERE
+
+        Chat newChat = null;
+        newChat = (Chat) deserializeObject(body.getBytes());
+        System.out.println(newChat.getChatName());
+
+        return message;
+
     }
 }
 

@@ -1,8 +1,13 @@
 package Utilities;
 
 import javax.xml.bind.DatatypeConverter;
+import java.io.*;
 import java.math.BigInteger;
 import java.security.MessageDigest;
+
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class Utilities {
 
@@ -38,5 +43,52 @@ public class Utilities {
 
     public static int get32bitHashValue(BigInteger bigInteger){
         return Math.abs(bigInteger.intValue());
+    }
+
+    public static long getTimestamp(){
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        return timestamp.getTime();
+    }
+
+    /**
+     * Serializes an object
+     * @param object
+     * @return
+     */
+    public static byte[] serializeObject(Object object){
+
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+        ObjectOutputStream oos = null;
+        try {
+            oos = new ObjectOutputStream(buffer);
+            oos.writeObject(object);
+            oos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return buffer.toByteArray();
+    }
+
+    public static Object deserializeObject(byte[] data){
+
+        ByteArrayInputStream bis = new ByteArrayInputStream(data);
+        ObjectInputStream ois = null;
+
+        Object object = null;
+        try {
+            ois = new ObjectInputStream(bis);
+            try {
+                object = ois.readObject();
+                ois.close();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return object;
     }
 }

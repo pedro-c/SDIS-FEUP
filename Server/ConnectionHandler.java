@@ -54,6 +54,7 @@ public class ConnectionHandler implements Runnable {
      * @param response
      */
     public Message analyseResponse(Message response) {
+
         String[] body = response.getBody().split(" ");
 
         System.out.println(response.getMessageType());
@@ -63,6 +64,8 @@ public class ConnectionHandler implements Runnable {
                 return server.loginUser(body[0], body[1]);
             case SIGNUP:
                 return server.addUser(body[0],body[1]);
+            case CREATE_CHAT:
+                return server.createChat(response.getBody());
             case NEWNODE:
                 Node n = server.predecessorLookUp(Integer.parseInt(body[0]));
                 if(n.getNodeId() < Integer.parseInt(body[0])){
