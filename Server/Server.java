@@ -2,6 +2,7 @@ package Server;
 
 import Messages.Message;
 import Messages.MessageHandler;
+import Utilities.Constants;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -268,21 +269,25 @@ public class Server extends Node {
      * @param email    user email
      * @param password user password
      */
-    public boolean addUser(String email, String password){
+    public Message addUser(String email, String password){
 
         System.out.println("Sign up with  " + email);
 
         BigInteger user_email = createHash(email);
 
+        Message message;
+
         if(users.containsKey(user_email)){
             System.out.println("Email already exists. Try to sign in instead of sign up...");
-            return false;
+            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId), Constants.EMAIL_ALREADY_USED);
         }
         else{
-           users.put(user_email,new User(email,new BigInteger(password)));
-           System.out.println("Signed up with success!");
-           return true;
-       }
+            users.put(user_email,new User(email,new BigInteger(password)));
+            message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
+            System.out.println("Signed up with success!");
+        }
+
+        return message;
     }
 
     /**
@@ -292,24 +297,28 @@ public class Server extends Node {
      * @param password user password
      * @return true if user authentication went well, false if don't
      */
-    public boolean loginUser(String email, String password) {
+    public Message loginUser(String email, String password) {
 
         System.out.println("Sign in with " + email);
 
         BigInteger user_email = createHash(email);
 
+        Message message;
+
         if (users.get(user_email) == null) {
             System.out.println("Try to create an account. Your email was not found on the database...");
-            return false;
+            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId),Constants.EMAIL_NOT_FOUND);
         }
-
-        if (!users.get(user_email).getPassword().equals(new BigInteger(password))) {
+        else if (!users.get(user_email).getPassword().equals(new BigInteger(password))) {
             System.out.println("Impossible to sign in, wrong email or password...");
-            return false;
+            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId),Constants.WRONG_PASSWORD);
+        }
+        else {
+            System.out.println("Logged in with success!");
+            message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
         }
 
-        System.out.println("Logged in with success!");
-        return true;
+        return message;
     }
 
     /**
@@ -326,6 +335,9 @@ public class Server extends Node {
         }
     }
 
+    /**
+     * Loads all servers from a file
+     */
     private void loadServersInfo(){
         try {
             List<String> lines = Files.readAllLines(Paths.get(SERVERS_INFO));
@@ -333,7 +345,7 @@ public class Server extends Node {
                 String infos[] = line.split(" ");
                 Node node = new Node(infos[0],infos[1]);
 
-                if(!serversInfo.contains(node)){
+                if(!serversInfo.contains(node) && nodeId != node.getNodeId()){
                     System.out.println("Read server with ip: " + infos[0] + " and port " + infos[1]);
                     serversInfo.add(node);
                 }

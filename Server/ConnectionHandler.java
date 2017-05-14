@@ -53,7 +53,7 @@ public class ConnectionHandler implements Runnable {
      * Analyses Responses
      * @param response
      */
-    public boolean analyseResponse(Message response) {
+    public Message analyseResponse(Message response) {
         String[] body = response.getBody().split(" ");
 
         System.out.println(response.getMessageType());
@@ -82,7 +82,7 @@ public class ConnectionHandler implements Runnable {
             default:
                 break;
         }
-        return true;
+        return null;
     }
 
 
@@ -93,10 +93,8 @@ public class ConnectionHandler implements Runnable {
         Message message = null;
         try {
             message = (Message) serverInputStream.readObject();
-            if(analyseResponse(message))
-                message =  new Message(LOGGEDIN,BigInteger.valueOf(server.getNodeId()));
-            else message =  new Message(LOGINERROR,BigInteger.valueOf(server.getNodeId()));
-            sendMessage(message);
+            Message responseMessage = analyseResponse(message);
+            sendMessage(responseMessage);
         } catch (IOException e) {
             System.out.println("Error reading message...");
         } catch (ClassNotFoundException e) {

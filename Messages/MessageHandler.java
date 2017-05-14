@@ -7,11 +7,8 @@ import Server.Node;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
-import java.net.InetAddress;
 
-import static Utilities.Constants.LOGGEDIN;
-import static Utilities.Constants.LOGINERROR;
-import static Utilities.Constants.PREDECESSOR;
+import static Utilities.Constants.*;
 
 public class MessageHandler implements Runnable {
 
@@ -81,7 +78,6 @@ public class MessageHandler implements Runnable {
 
     /**
      * Sends a message through a ssl socket
-     *
      */
     public void sendMessage() {
         try {
@@ -99,7 +95,6 @@ public class MessageHandler implements Runnable {
         try {
             response = (Message) inputStream.readObject();
             handleResponse(response);
-            System.out.println("Handle response");
         } catch (IOException e) {
             System.out.println("Error reading message...");
             e.printStackTrace();
@@ -109,7 +104,10 @@ public class MessageHandler implements Runnable {
         }
     }
 
-
+    /**
+     * Handles with the responses
+     * @param response
+     */
     public void handleResponse(Message response){
 
         switch (response.getMessageType()){
@@ -117,16 +115,14 @@ public class MessageHandler implements Runnable {
                 String[] nodeInfo = response.getBody().split(" ");
                 this.server.setPredecessor(new Node(nodeInfo[0],nodeInfo[1]));
                 break;
-            case LOGGEDIN:
-                this.client.chatMenu();
+            case CLIENT_SUCCESS:
+            case CLIENT_ERROR:
+                client.verifyState(response);
                 break;
-            case LOGINERROR:
-                this.client.mainMenu();
             default:
                 break;
         }
     }
-
 
     /**
      * Closes socket

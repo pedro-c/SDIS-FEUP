@@ -6,8 +6,6 @@ import Utilities.Constants;
 
 import java.io.*;
 import java.math.BigInteger;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -23,10 +21,16 @@ public class Client {
     private int serverPort;
     private String serverIp;
 
+    public enum Task {
+        HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN
+    }
+
+    private Task atualState;
+
     public static void main(String[] args) {
 
         if (args.length != 2) {
-            throw new IllegalArgumentException("\nUsage : java Server.Server <serverIp> <serverPort>");
+            throw new IllegalArgumentException("\nUsage : java Client.Client <serverIp> <serverPort>");
         }
 
         String serverIp = args[0];
@@ -48,6 +52,8 @@ public class Client {
 
         this.serverPort = serverPort;
         this.serverIp = serverIp;
+
+        this.atualState = Task.HOLDING;
 
         scannerIn = new Scanner(System.in);
     }
@@ -72,14 +78,18 @@ public class Client {
         }
     }
 
-    public void chatMenu() {
-        String menu = "\n Menu " + "\n 1. Create a new Chat" + "\n 2. Open Chat" + "\n";
+    public void signInMenu() {
+        String menu = "\n Menu " + "\n 1. Create a new Chat" + "\n 2. Open Chat" + "\n 3. Sign Out";
         System.out.println(menu);
         int option = scannerIn.nextInt();
         switch (option) {
             case 1:
                 break;
             case 2:
+                break;
+            case 3:
+                atualState = Task.HOLDING;
+                mainMenu();
                 break;
             default:
                 System.exit(0);
@@ -90,8 +100,9 @@ public class Client {
      * Sends a sign in message throw a ssl socket
      */
     public void signInUser() {
+        atualState = Task.WAITING_SIGNIN;
         String password = getCredentials();
-        Message message = new Message(Constants.SIGNIN, getClientId(), email, password);
+        Message message = new Message(Constants.SIGNIN, getClientId(), email, createHash(password).toString());
         MessageHandler handler = null;
         handler = new MessageHandler(message, serverIp, Integer.toString(serverPort), this);
         threadPool.submit(handler);
@@ -102,12 +113,12 @@ public class Client {
      * Sends a sign up message throw a ssl socket
      */
     public void signUpUser() {
+        atualState = Task.WAITING_SIGNUP;
         String password = getCredentials();
         Message message = new Message(Constants.SIGNUP, getClientId(), email, createHash(password).toString());
         MessageHandler handler = null;
         handler = new MessageHandler(message, serverIp, Integer.toString(serverPort), this);
         threadPool.submit(handler);
-
     }
 
     /**
@@ -132,7 +143,6 @@ public class Client {
 
         char[] oldPassword = console.readPassword();
         String password = new String(oldPassword);
-        console.printf(password + "\n");
 
         return password;
     }
@@ -144,5 +154,48 @@ public class Client {
      */
     public BigInteger getClientId() {
         return createHash(email);
+    }
+
+    /**
+     * Acts according off the actual state
+     * @param response response message
+     */
+    public void verifyState(Message response){
+        switch (atualState){
+            case WAITING_SIGNIN:
+            case WAITING_SIGNUP:
+                if(response.getMessageType().equals(Constants.CLIENT_SUCCESS)){
+                    atualState = Task.SIGNED_IN;
+                    signInMenu();
+                }
+                else {
+                    atualState = Task.HOLDING;
+                    printError(response.getBody());
+                    mainMenu();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    /**
+     * Prints the error that comes from the server
+     * @param code error code
+     */
+    public void printError(String code){
+        switch (code){
+            case Constants.EMAIL_ALREADY_USED:
+                System.out.println("\nEmail already exists. Try to sign in instead of sign up...");
+                break;
+            case Constants.EMAIL_NOT_FOUND:
+                System.out.println("\nTry to create an account. Your email was not found on the database...");
+                break;
+            case Constants.WRONG_PASSWORD:
+                System.out.println("\nImpossible to sign in, wrong email or password...");
+                break;
+            default:
+                break;
+        }
     }
 }
