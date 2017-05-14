@@ -25,7 +25,7 @@ public class Server extends Node {
      * Key is an integer representing the m nodes and the value it's the server identifier
      * (32-bit integer hash from ip+port)
      */
-    private ArrayList<Node> fingerTable = new ArrayList<Node>(MAX_FINGER_TABLE_SIZE);
+    private ArrayList<Node> fingerTable = new ArrayList<Node>();
     private SSLServerSocket sslServerSocket;
     private SSLServerSocketFactory sslServerSocketFactory;
     private ExecutorService threadPool = Executors.newFixedThreadPool(MAX_NUMBER_OF_REQUESTS);
@@ -36,13 +36,15 @@ public class Server extends Node {
      * @param args ServerId ServerPort KnownServerId KnownServer Port
      */
     public Server(String args[]) {
-        super(args[0], args[1]);
+        super(Integer.parseInt(args[0]), args[1], args[2]);
+
+        System.out.println("Server ID: " + this.getNodeId());
 
         initFingerTable();
         initServerSocket();
 
-        if(args.length>2){
-            Node knownNode = new Node(args[2],args[3]);
+        if(args.length>3){
+            Node knownNode = new Node(Integer.parseInt(args[3]),args[4],args[5]);
             joinNetwork(knownNode);
         }
 
@@ -94,8 +96,8 @@ public class Server extends Node {
      * Initializes the finger table with m values (max number of nodes = 2^m)
      */
     public void initFingerTable() {
-        for (int i = 1; i <= MAX_FINGER_TABLE_SIZE; i++) {
-            fingerTable.add(this.predecessor);
+        for (int i = 0; i <= MAX_FINGER_TABLE_SIZE; i++) {
+            fingerTable.add(this);
         }
     }
 
@@ -120,15 +122,31 @@ public class Server extends Node {
      *
      * @param key 256-bit identifier
      */
-    public int serverLookUp(int key) {
-        int id = this.getNodeId();
-        for (int i = 0; i < fingerTable.size(); i++) {
-            id = fingerTable.get(i).getNodeId();
-            if (id > key) {
-                return id;
+    public Node serverLookUp(int key) {
+
+        long distance, position;
+        Node successor = this;
+
+        for (int i = 1; i<fingerTable.size(); i++){
+
+            distance = (long)Math.pow(2,(double)i-1);
+            position = this.getNodeId() + distance;
+
+            if(key != fingerTable.get(i).getNodeId()){
+                if(key > this.getNodeId()){
+                    if(MAX_NUMBER_OF_NODES-position-key >= 0){
+                        successor = fingerTable.get(i);
+                    }
+                }else{
+                    if(MAX_NUMBER_OF_NODES-position+key >= 0){
+                        successor = fingerTable.get(i);
+                    }
+                }
             }
+
+
         }
-        return id;
+        return successor;
     }
 
     /**
@@ -157,34 +175,40 @@ public class Server extends Node {
         long position;
         long distance;
 
-        for (int i = 1; i <= fingerTable.size(); i++) {
+        for (int i = 1; i < fingerTable.size(); i++) {
             Node node = fingerTable.get(i);
 
             distance = (long)Math.pow(2,(double)i-1);
             position = this.getNodeId() + distance;
-            if((newNode.getNodeId() > position && newNode.getNodeId() < node.getNodeId()) || (newNode.getNodeId() > position && node == this)){
+            if(node.getNodeId() == this.getNodeId() && newNode.getNodeId()>=position){
                 fingerTable.set(i, newNode);
-            }else if((node == this && MAX_NUMBER_OF_NODES-position+newNode.getNodeId() >= 0) || (node != this && MAX_NUMBER_OF_NODES-position+newNode.getNodeId() > 0 && newNode.getNodeId() < node.getNodeId())){
+            }else if(newNode.getNodeId()>=position && newNode.getNodeId()<node.getNodeId()){
                 fingerTable.set(i, newNode);
+            }else if(newNode.getNodeId() < this.getNodeId()){
+                if(newNode.getNodeId() < node.getNodeId()){
+                    if(MAX_NUMBER_OF_NODES-position+newNode.getNodeId() >= 0 && Math.abs(newNode.getNodeId()-this.getNodeId())<node.getNodeId()){
+                        fingerTable.set(i, newNode);
+                    }else if(MAX_NUMBER_OF_NODES-position+newNode.getNodeId() >= 0 && node.getNodeId() == this.getNodeId()){
+                        fingerTable.set(i, newNode);
+                    }
+                }
             }
         }
     }
 
     public void newNode(String[] info){
-        //Message: [NEWNODE] [SenderID] [NodeID] [NodeIp] [NodePort]
-
         int newNodeKey = Integer.parseInt(info[0]);
         String newNodeIp = info[1];
         String newNodePort = info[2];
 
-        Node n = predecessorLookUp(newNodeKey);
-        int position = getNewNodePosition(newNodeKey);
-
         Node newNode = new Node(newNodeIp,newNodePort,newNodeKey);
-
         updateFingerTable(newNode);
 
+        printFingerTable();
 
+        Node n = serverLookUp(newNodeKey);
+
+        System.out.println("Successor of " + newNodeKey + " : " + n.getNodeId());
 
     }
 
@@ -278,9 +302,9 @@ public class Server extends Node {
                          */
                         if (succ < id) {
                             if (fingerTable.get(i) == null) {
-                                fingerTable.add(new Node(nodeIp, nodePort));
+                                //fingerTable.add(new Node(nodeIp, nodePort));
                             } else if (id < fingerTable.get(i).getNodeId()) {
-                                fingerTable.add(new Node(nodeIp, nodePort));
+                                //fingerTable.add(new Node(nodeIp, nodePort));
                             }
                         }
                     }
@@ -348,6 +372,18 @@ public class Server extends Node {
 
     public Node getPredecessor() {
         return predecessor;
+    }
+
+    public void printFingerTable(){
+        System.out.println("FINGERTABLE");
+        System.out.println("-----------");
+        System.out.println("Node ID: " + this.getNodeId());
+        System.out.println("-----------");
+        System.out.println("FINGERtableSize: " + fingerTable.size());
+        for (int i = 1; i < fingerTable.size(); i++) {
+           System.out.println(i + "    "  + fingerTable.get(i).getNodeId());
+        }
+        System.out.println("-----------");
     }
 }
 

@@ -10,10 +10,12 @@ public class Node {
     private String nodeIp;
     private String nodePort;
 
-    public Node(String ip, String port){
+    public Node(int id, String ip, String port){
         this.nodeIp = ip;
         this.nodePort = port;
-        this.nodeId = setNodeIdentifier();
+        //this.nodeId = setNodeIdentifier();
+
+        this.nodeId = id;
     }
 
     public Node(String ip, String port, int key){
