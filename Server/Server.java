@@ -4,6 +4,7 @@ import Messages.Message;
 import Chat.Chat;
 import Messages.MessageHandler;
 import Utilities.Constants;
+import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -15,6 +16,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,8 +29,11 @@ public class Server extends Node {
      * Key is the user id (hash from e-mail) and value is the 256-bit hashed user password
      */
     private Hashtable<BigInteger, User> users;
-
     private ArrayList<Node> serversInfo;
+    private ConcurrentHashMap<BigInteger, Chat> chats;
+
+    //Logged in users
+    private ConcurrentHashMap<BigInteger, SSLSocket> loggedInUsers;
 
     /**
      * Key is an integer representing the m nodes and the value it's the server identifier
@@ -60,6 +65,8 @@ public class Server extends Node {
         users = new Hashtable<>();
 
         serversInfo = new ArrayList<Node>();
+        chats = new ConcurrentHashMap<BigInteger, Chat>();
+        loggedInUsers = new ConcurrentHashMap<>();
 
         loadServersInfo();
     }
@@ -364,10 +371,27 @@ public class Server extends Node {
     public Message createChat(Chat chat){
         Message message = null;
 
-        System.out.println(chat.getChatName());
-
+        if(chats.get(chat.getIdChat())!=null){
+            System.out.println("Error creating chat");
+            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId),Constants.ERROR_CREATING_CHAT);
+        }
+        else {
+            chats.put(chat.getIdChat(),chat);
+            message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId),chat);
+        }
         return message;
 
+    }
+
+    /**
+     * Saves client connection
+     * @param sslSocket
+     * @param clientId
+     */
+    public void saveConnection(SSLSocket sslSocket, BigInteger clientId){
+        System.out.println("11");
+        loggedInUsers.put(clientId,sslSocket);
+        System.out.println("12");
     }
 }
 

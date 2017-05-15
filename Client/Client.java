@@ -7,10 +7,12 @@ import Utilities.Constants;
 
 import java.io.*;
 import java.math.BigInteger;
+import java.util.Hashtable;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static Client.Client.Task.CREATING_CHAT;
 import static Utilities.Constants.*;
 import static Utilities.Utilities.createHash;
 import static Utilities.Utilities.getTimestamp;
@@ -22,9 +24,10 @@ public class Client {
     private ExecutorService threadPool = Executors.newFixedThreadPool(MAX_NUMBER_OF_REQUESTS);
     private int serverPort;
     private String serverIp;
+    private Hashtable<BigInteger, Chat> userChats;
 
     public enum Task {
-        HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN
+        HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT
     }
 
     private Task atualState;
@@ -89,6 +92,7 @@ public class Client {
         int option = scannerIn.nextInt();
         switch (option) {
             case 1:
+                atualState = CREATING_CHAT;
                 createNewChat();
                 break;
             case 2:
@@ -107,6 +111,7 @@ public class Client {
      */
     public void createNewChat(){
         Console console = System.console();
+        atualState = Task.WAITING_CREATE_CHAT;
 
         System.out.println("Name: ");
         String chatName = console.readLine();
@@ -187,6 +192,15 @@ public class Client {
         return createHash(email);
     }
 
+
+    /**
+     * Stores a chat
+     * @param chat
+     */
+    public void storeChat(Chat chat){
+        userChats.put(chat.getIdChat(),chat);
+    }
+
     /**
      * Acts according off the actual state
      * @param response response message
@@ -203,6 +217,16 @@ public class Client {
                     atualState = Task.HOLDING;
                     printError(response.getBody());
                     mainMenu();
+                }
+                break;
+            case WAITING_CREATE_CHAT:
+                if(response.getMessageType().equals(Constants.CLIENT_SUCCESS)){
+                    storeChat((Chat) response.getObject());
+                }
+                else {
+                    atualState = Task.HOLDING;
+                    printError(response.getBody());
+                    signInMenu();
                 }
                 break;
             default:
@@ -224,6 +248,9 @@ public class Client {
                 break;
             case WRONG_PASSWORD:
                 System.out.println("\nImpossible to sign in, wrong email or password...");
+                break;
+            case ERROR_CREATING_CHAT:
+                System.out.println("\nError creating chat...");
                 break;
             default:
                 break;

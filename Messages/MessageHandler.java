@@ -94,6 +94,7 @@ public class MessageHandler implements Runnable {
         Message response = null;
         try {
             response = (Message) inputStream.readObject();
+            System.out.println(14);
             handleResponse(response);
         } catch (IOException e) {
             System.out.println("Error reading message...");

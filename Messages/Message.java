@@ -14,7 +14,7 @@ import static Utilities.Constants.CRLF;
 public class Message implements Serializable {
 
     private String messageType;
-    private String senderId;
+    private BigInteger senderId;
     private String body;
 
     private Object object;
@@ -27,17 +27,15 @@ public class Message implements Serializable {
      */
     public Message(String messageType, BigInteger senderId, String ... body){
         this.messageType = messageType;
-        this.senderId = new String(senderId.toByteArray());
+        this.senderId = senderId;
         this.body = String.join(" ", body);
-        //createMessage(this.messageType,this.senderId,this.body);
     }
 
 
     public Message(String messageType, BigInteger senderId, Object obj){
         this.messageType = messageType;
-        this.senderId =  new String(senderId.toByteArray());
+        this.senderId =  senderId;
         this.object = obj;
-       // createMessage(this.messageType,this.senderId,this.object);
     }
 
     /**
@@ -67,7 +65,7 @@ public class Message implements Serializable {
      * Returns message senderId
      * @return senderId
      */
-    public String getSenderId() {
+    public BigInteger getSenderId() {
         return senderId;
     }
 

@@ -43,5 +43,6 @@ public class Constants {
     public static final String EMAIL_ALREADY_USED = "-1";
     public static final String EMAIL_NOT_FOUND = "-2";
     public static final String WRONG_PASSWORD = "-3";
+    public static final String ERROR_CREATING_CHAT = "-4";
 
 }

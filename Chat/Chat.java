@@ -11,11 +11,13 @@ import java.util.Set;
  * Created by mariajoaomirapaulo on 13/05/17.
  */
 public class Chat implements Serializable {
+
     //criador
     private BigInteger idChat;
     private String chatName;
     private Set<User> participants;
     private ArrayList<ChatMessage>  chatMessages;
+
 
     public Chat(BigInteger idChat) {
         this.idChat = idChat;
@@ -35,6 +37,10 @@ public class Chat implements Serializable {
 
     public String getChatName() {
         return chatName;
+    }
+
+    public BigInteger getIdChat() {
+        return idChat;
     }
 
 }
