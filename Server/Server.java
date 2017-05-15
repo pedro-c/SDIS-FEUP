@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
 import static Utilities.Constants.*;
 import static Utilities.Utilities.createHash;
 
@@ -32,7 +33,6 @@ public class Server extends Node {
     private Node predecessor = this;
 
     /**
-     *
      * @param args ServerId ServerPort KnownServerId KnownServer Port
      */
     public Server(String args[]) {
@@ -43,8 +43,8 @@ public class Server extends Node {
         initFingerTable();
         initServerSocket();
 
-        if(args.length>3){
-            Node knownNode = new Node(Integer.parseInt(args[3]),args[4],args[5]);
+        if (args.length > 3) {
+            Node knownNode = new Node(Integer.parseInt(args[3]), args[4], args[5]);
             joinNetwork(knownNode);
         }
 
@@ -52,7 +52,6 @@ public class Server extends Node {
     }
 
     /**
-     *
      * @param args [serverIp] [serverPort] [knownServerIp] [knownServerPort]
      */
     public static void main(String[] args) {
@@ -126,24 +125,24 @@ public class Server extends Node {
 
         long distance, position;
         Node successor = this;
-
-        for (int i = 1; i<fingerTable.size(); i++){
+        long previousId = MAX_NUMBER_OF_NODES;
+        for (int i = 1; i < fingerTable.size(); i++) {
             Node node = fingerTable.get(i);
 
-            distance = (long)Math.pow(2,(double)i-1);
+            distance = (long) Math.pow(2, (double) i - 1);
             position = this.getNodeId() + distance;
-            if(key > this.getNodeId()){
-                if(node.getNodeId() >= key)
+            if (key > this.getNodeId()) {
+                if (node.getNodeId() > key){
                     successor = node;
+                    break;
+                }
             }else{
-                if(key < node.getNodeId()){
-                    
+                if(node.getNodeId() < previousId){
+                    if(key<node.getNodeId()){
+                        successor=node;
+                    }
                 }
             }
-
-
-
-
 
 
         }
@@ -157,21 +156,20 @@ public class Server extends Node {
      * @param key 32-bit identifier
      * @return Predecessor node
      */
-    public Node predecessorLookUp(int key){
+    public Node predecessorLookUp(int key) {
         Node id = this;
         for (int i = 1; i < fingerTable.size(); i++) {
             id = fingerTable.get(i);
             if (id.getNodeId() > key && i > 1) {
-                return fingerTable.get(i-1);
-            }
-            else if (id.getNodeId() > key && i > 1) {
+                return fingerTable.get(i - 1);
+            } else if (id.getNodeId() > key && i > 1) {
                 return this;
             }
         }
         return id;
     }
 
-    public void updateFingerTable(Node newNode){
+    public void updateFingerTable(Node newNode) {
 
         long position;
         long distance;
@@ -179,30 +177,37 @@ public class Server extends Node {
         for (int i = 1; i < fingerTable.size(); i++) {
             Node node = fingerTable.get(i);
 
-            distance = (long)Math.pow(2,(double)i-1);
+            distance = (long) Math.pow(2, (double) i - 1);
             position = this.getNodeId() + distance;
-            if(node.getNodeId() == this.getNodeId() && newNode.getNodeId()>=position){
+            if (node.getNodeId() == this.getNodeId() && newNode.getNodeId() >= position) {
+                System.out.println("Case1");
                 fingerTable.set(i, newNode);
-            }else if(newNode.getNodeId()>=position && newNode.getNodeId()<node.getNodeId()){
+            } else if (newNode.getNodeId() >= position && newNode.getNodeId() < node.getNodeId()) {
+                System.out.println("Case2");
                 fingerTable.set(i, newNode);
-            }else if(newNode.getNodeId() < this.getNodeId()){
-                if(newNode.getNodeId() < node.getNodeId()){
-                    if(MAX_NUMBER_OF_NODES-position+newNode.getNodeId() >= 0 && MAX_NUMBER_OF_NODES-this.getNodeId()+node.getNodeId() > MAX_NUMBER_OF_NODES-this.getNodeId()+newNode.getNodeId()){
+            }else if (newNode.getNodeId() < this.getNodeId()) {
+                if (newNode.getNodeId() < node.getNodeId()) {
+                    if (MAX_NUMBER_OF_NODES - position + newNode.getNodeId() >= 0 && MAX_NUMBER_OF_NODES - this.getNodeId() + node.getNodeId() > MAX_NUMBER_OF_NODES - this.getNodeId() + newNode.getNodeId()) {
+                        if(node.getNodeId() < this.getNodeId() || node.getNodeId() == this.getNodeId()){
+                            fingerTable.set(i, newNode);
+                            System.out.println("Case3");
+                        }
+
+                    } else if (MAX_NUMBER_OF_NODES - position + newNode.getNodeId() >= 0 && node.getNodeId() == this.getNodeId()) {
                         fingerTable.set(i, newNode);
-                    }else if(MAX_NUMBER_OF_NODES-position+newNode.getNodeId() >= 0 && node.getNodeId() == this.getNodeId()){
-                        fingerTable.set(i, newNode);
+                        System.out.println("Case4");
                     }
                 }
             }
         }
     }
 
-    public void newNode(String[] info){
+    public void newNode(String[] info) {
         int newNodeKey = Integer.parseInt(info[0]);
         String newNodeIp = info[1];
         String newNodePort = info[2];
 
-        Node newNode = new Node(newNodeIp,newNodePort,newNodeKey);
+        Node newNode = new Node(newNodeIp, newNodePort, newNodeKey);
         updateFingerTable(newNode);
 
         printFingerTable();
@@ -215,12 +220,13 @@ public class Server extends Node {
 
     /**
      * Gets the position of the new node em relation to the peer
+     *
      * @param key key of the new node
      * @return 0 if the new node it's before, 1 if it's after
      */
-    public int getNewNodePosition(int key){
+    public int getNewNodePosition(int key) {
 
-        if(getNodeId() > key)
+        if (getNodeId() > key)
             return BEFORE;
 
         return AFTER;
@@ -318,29 +324,24 @@ public class Server extends Node {
         }
     }
 
-    public void setPredecessor(Node node){
-        this.predecessor=node;
-    }
-
     /**
      * Regists user
      *
      * @param email    user email
      * @param password user password
      */
-    public void addUser(String email, String password){
+    public void addUser(String email, String password) {
 
         System.out.println("Sign up with  " + email);
 
         BigInteger user_email = createHash(email);
 
-        if(users.containsKey(user_email)){
+        if (users.containsKey(user_email)) {
             System.out.println("Email already exists. Try to sign in instead of sign up...");
+        } else {
+            users.put(user_email, createHash(password));
+            System.out.println("Signed up with success!");
         }
-        else{
-           users.put(user_email,createHash(password));
-           System.out.println("Signed up with success!");
-       }
     }
 
     /**
@@ -375,14 +376,18 @@ public class Server extends Node {
         return predecessor;
     }
 
-    public void printFingerTable(){
+    public void setPredecessor(Node node) {
+        this.predecessor = node;
+    }
+
+    public void printFingerTable() {
         System.out.println("FINGERTABLE");
         System.out.println("-----------");
         System.out.println("Node ID: " + this.getNodeId());
         System.out.println("-----------");
         System.out.println("FINGERtableSize: " + fingerTable.size());
         for (int i = 1; i < fingerTable.size(); i++) {
-           System.out.println(i + "    "  + fingerTable.get(i).getNodeId());
+            System.out.println(i + "    " + fingerTable.get(i).getNodeId());
         }
         System.out.println("-----------");
     }
