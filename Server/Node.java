@@ -2,11 +2,12 @@ package Server;
 
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 import static Utilities.Utilities.createHash;
 import static Utilities.Utilities.get32bitHashValue;
 
-public class Node implements Serializable {
+public class Node implements Serializable{
 
     protected int nodeId;
     protected String nodeIp;

@@ -71,16 +71,14 @@ public class ConnectionHandler implements Runnable {
             case NEWNODE:
                 body = response.getBody().split(" ");
                 server.newNode(body);
-                //closeConnection();
                 break;
             case PREDECESSOR:
-                System.out.println("PREDECESSOR");
                 server.setPredecessor((Server) response.getObject());
-                //closeConnection();
                 break;
             case WELCOME_TO_DHT:
+                System.out.println("WELCOME");
                 server.joinedNetwork((ArrayList<Node>) response.getObject());
-                //closeConnection();
+                System.out.println("WELCOME");
                 break;
             default:
                 break;
