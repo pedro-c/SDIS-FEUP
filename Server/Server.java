@@ -92,7 +92,9 @@ public class Server extends Node {
         while (true) {
             try {
                 System.out.println("Listening...");
-                ConnectionHandler handler = new ConnectionHandler((SSLSocket) sslServerSocket.accept(), this);
+                SSLSocket socket = (SSLSocket) sslServerSocket.accept();
+                sslServerSocket.setNeedClientAuth(true);
+                ConnectionHandler handler = new ConnectionHandler(socket, this);
                 threadPool.submit(handler);
             } catch (IOException e) {
                 e.printStackTrace();
