@@ -73,7 +73,7 @@ public class ConnectionHandler implements Runnable {
                 server.newNode(body);
                 break;
             case PREDECESSOR:
-                server.setPredecessor((Server) response.getObject());
+                server.setPredecessor((Node) response.getObject());
                 break;
             case WELCOME_TO_DHT:
                 System.out.println("WELCOME");

@@ -188,18 +188,26 @@ public class Server extends Node implements Serializable{
             position = this.getNodeId() + distance;
             if (node.getNodeId() == this.getNodeId() && newNode.getNodeId() >= position) {
                 fingerTable.set(i, newNode);
+                System.out.println("1");
             } else if (newNode.getNodeId() >= position && newNode.getNodeId() < node.getNodeId()) {
                 fingerTable.set(i, newNode);
+                System.out.println("2");
             }else if (newNode.getNodeId() < this.getNodeId()) {
                 if (newNode.getNodeId() < node.getNodeId()) {
                     if (MAX_NUMBER_OF_NODES - position + newNode.getNodeId() >= 0 && MAX_NUMBER_OF_NODES - this.getNodeId() + node.getNodeId() > MAX_NUMBER_OF_NODES - this.getNodeId() + newNode.getNodeId()) {
                         if(node.getNodeId() < this.getNodeId() || node.getNodeId() == this.getNodeId()){
                             fingerTable.set(i, newNode);
+                            System.out.println("3");
                         }
 
                     } else if (MAX_NUMBER_OF_NODES - position + newNode.getNodeId() >= 0 && node.getNodeId() == this.getNodeId()) {
                         fingerTable.set(i, newNode);
+                        System.out.println("4");
                     }
+                }
+            }else if(newNode.getNodeId() > this.getNodeId() && newNode.getNodeId() >= position && node.getNodeId() < position){
+                if(MAX_NUMBER_OF_NODES - this.getNodeId() + node.getNodeId() < MAX_NUMBER_OF_NODES - this.getNodeId() + newNode.getNodeId()) {
+                    fingerTable.set(i, newNode);
                 }
             }
         }
@@ -228,7 +236,7 @@ public class Server extends Node implements Serializable{
 
         Node successor = serverLookUp(newNodeKey);
 
-        notifySuccessorOfItsPredecessor();
+        notifySuccessorOfItsPredecessor(newNode);
 
         if(successor == predecessor){
             sendWelcomeMessage(newNode);
@@ -273,11 +281,11 @@ public class Server extends Node implements Serializable{
 
     }
 
-    public void notifySuccessorOfItsPredecessor(){
+    public void notifySuccessorOfItsPredecessor(Node newNode){
 
         Node successor = fingerTable.get(1);
 
-        Message message = new Message(PREDECESSOR, new BigInteger(Integer.toString(this.getNodeId())), this);
+        Message message = new Message(PREDECESSOR, new BigInteger(Integer.toString(this.getNodeId())), newNode);
 
         MessageHandler handler = new MessageHandler(message, successor.getNodeIp(), successor.getNodePort(), this);
 
