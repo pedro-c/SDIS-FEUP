@@ -389,9 +389,7 @@ public class Server extends Node {
      * @param clientId
      */
     public void saveConnection(SSLSocket sslSocket, BigInteger clientId){
-        System.out.println("11");
         loggedInUsers.put(clientId,sslSocket);
-        System.out.println("12");
     }
 }
 

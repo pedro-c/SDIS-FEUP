@@ -61,7 +61,7 @@ public class ConnectionHandler implements Runnable {
         switch (response.getMessageType()) {
             case SIGNIN:
                  body = response.getBody().split(" ");
-                //server.saveConnection(response.getSenderId());
+                server.saveConnection(this.sslSocket, response.getSenderId());
                 return server.loginUser(body[0], body[1]);
             case SIGNUP:
                  body = response.getBody().split(" ");
