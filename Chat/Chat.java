@@ -16,6 +16,7 @@ public class Chat implements Serializable {
     private BigInteger idChat;
     private String chatName;
     private String creatorEmail;
+    //TODO: Faz sentido ter no client??
     private Set<User> participants;
     private String participant_email;
     private ArrayList<ChatMessage>  chatMessages;

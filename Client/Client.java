@@ -107,6 +107,14 @@ public class Client {
     }
 
     /**
+     * Opens chat
+     */
+    public void openChat(Chat chat){
+        String menu = "  " + chat.getChatName() + "\n" + "\n" + "\n" + "\n" + "Send a message to " + chat.getParticipant_email() + "\n" + "\n"+ "\n"+ "\n";
+        System.out.println(menu);
+    }
+
+    /**
      * Creates a new chat
      */
     public void createNewChat(){
@@ -207,7 +215,10 @@ public class Client {
      * @param chat
      */
     public void storeChat(Chat chat){
-        userChats.put(chat.getIdChat(),chat);
+        //TODO: Not working
+        //userChats.put(chat.getIdChat(),chat);
+        System.out.println(1);
+        openChat(chat);
     }
 
     /**
