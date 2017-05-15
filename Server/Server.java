@@ -289,11 +289,11 @@ public class Server extends Node {
 
         if(users.containsKey(user_email)){
             System.out.println("Email already exists. Try to sign in instead of sign up...");
-            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId), Constants.EMAIL_ALREADY_USED);
+            message = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId), EMAIL_ALREADY_USED);
         }
         else{
             users.put(user_email,new User(email,new BigInteger(password)));
-            message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
+            message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
             System.out.println("Signed up with success!");
         }
 
@@ -317,15 +317,15 @@ public class Server extends Node {
 
         if (users.get(user_email) == null) {
             System.out.println("Try to create an account. Your email was not found on the database...");
-            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId),Constants.EMAIL_NOT_FOUND);
+            message = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId),EMAIL_NOT_FOUND);
         }
         else if (!users.get(user_email).getPassword().equals(new BigInteger(password))) {
             System.out.println("Impossible to sign in, wrong email or password...");
-            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId),Constants.WRONG_PASSWORD);
+            message = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId),WRONG_PASSWORD);
         }
         else {
             System.out.println("Logged in with success!");
-            message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
+            message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
         }
 
         return message;
@@ -382,7 +382,6 @@ public class Server extends Node {
             message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId),chat);
         }
         return message;
-
     }
 
     /**

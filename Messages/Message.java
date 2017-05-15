@@ -35,7 +35,11 @@ public class Message implements Serializable {
     public Message(String messageType, BigInteger senderId, Object obj){
         this.messageType = messageType;
         this.senderId =  senderId;
-        this.object = obj;
+
+        if(obj instanceof String)
+            this.body = String.join(" ", (String)obj);
+        else
+            this.object = obj;
     }
 
     /**
@@ -93,4 +97,6 @@ public class Message implements Serializable {
         System.out.println("Message Type: " + message.getMessageType() + "\n");
         System.out.println("Body: " + message.getBody() + "\n");
     }
+
+        
 }

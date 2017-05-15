@@ -3,7 +3,6 @@ package Client;
 import Chat.Chat;
 import Messages.Message;
 import Messages.MessageHandler;
-import Utilities.Constants;
 
 import java.io.*;
 import java.math.BigInteger;
@@ -118,7 +117,7 @@ public class Client {
         Chat newChat = new Chat(generateChatId());
         if(chatName!=null)
             newChat.setChatName(chatName);
-        Message message = new Message(Constants.CREATE_CHAT, getClientId(), newChat);
+        Message message = new Message(CREATE_CHAT, getClientId(), newChat);
         MessageHandler handler = new MessageHandler(message, serverIp, Integer.toString(serverPort),this);
         threadPool.submit(handler);
 
@@ -139,7 +138,7 @@ public class Client {
     public void signInUser() {
         atualState = Task.WAITING_SIGNIN;
         String password = getCredentials();
-        Message message = new Message(Constants.SIGNIN, getClientId(), email, createHash(password).toString());
+        Message message = new Message(SIGNIN, getClientId(), email, createHash(password).toString());
         MessageHandler handler = new MessageHandler(message, serverIp, Integer.toString(serverPort), this);
         threadPool.submit(handler);
 
@@ -151,7 +150,7 @@ public class Client {
     public void signUpUser() {
         atualState = Task.WAITING_SIGNUP;
         String password = getCredentials();
-        Message message = new Message(Constants.SIGNUP, getClientId(), email, createHash(password).toString());
+        Message message = new Message(SIGNUP, getClientId(), email, createHash(password).toString());
         MessageHandler handler = null;
         handler = new MessageHandler(message, serverIp, Integer.toString(serverPort), this);
         threadPool.submit(handler);
@@ -209,7 +208,7 @@ public class Client {
         switch (atualState){
             case WAITING_SIGNIN:
             case WAITING_SIGNUP:
-                if(response.getMessageType().equals(Constants.CLIENT_SUCCESS)){
+                if(response.getMessageType().equals(CLIENT_SUCCESS)){
                     atualState = Task.SIGNED_IN;
                     signInMenu();
                 }
@@ -220,7 +219,7 @@ public class Client {
                 }
                 break;
             case WAITING_CREATE_CHAT:
-                if(response.getMessageType().equals(Constants.CLIENT_SUCCESS)){
+                if(response.getMessageType().equals(CLIENT_SUCCESS)){
                     storeChat((Chat) response.getObject());
                 }
                 else {

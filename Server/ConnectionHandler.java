@@ -43,6 +43,7 @@ public class ConnectionHandler implements Runnable {
      * Sends a message through a ssl socket
      */
     public void sendMessage(Message message) {
+        System.out.println("Sending message with type: " + message.getMessageType() + " and body " + message.getBody());
         try {
             serverOutputStream.writeObject(message);
         } catch (IOException e) {
@@ -56,7 +57,6 @@ public class ConnectionHandler implements Runnable {
      */
     public Message analyseResponse(Message response) {
         String[] body;
-        System.out.println(response.getMessageType());
 
         switch (response.getMessageType()) {
             case SIGNIN:
