@@ -125,7 +125,7 @@ public class Server extends Node {
 
         long distance, position;
         Node successor = this;
-        long previousId = MAX_NUMBER_OF_NODES;
+        long previousId = this.getNodeId();
         for (int i = 1; i < fingerTable.size(); i++) {
             Node node = fingerTable.get(i);
 
