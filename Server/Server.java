@@ -20,7 +20,6 @@ import java.util.concurrent.Executors;
 
 import static Utilities.Constants.*;
 import static Utilities.Utilities.createHash;
-import static Utilities.Utilities.deserializeObject;
 
 public class Server extends Node {
 
@@ -357,15 +356,15 @@ public class Server extends Node {
         }
     }
 
-    public Message createChat(String body){
+    /**
+     * Creates a new chat
+     * New chat
+     * @return Message to be sent to the client
+     */
+    public Message createChat(Chat chat){
         Message message = null;
 
-
-        //TODO: ERROR HERE
-
-        Chat newChat = null;
-        newChat = (Chat) deserializeObject(body.getBytes());
-        System.out.println(newChat.getChatName());
+        System.out.println(chat.getChatName());
 
         return message;
 

@@ -49,46 +49,4 @@ public class Utilities {
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         return timestamp.getTime();
     }
-
-    /**
-     * Serializes an object
-     * @param object
-     * @return
-     */
-    public static byte[] serializeObject(Object object){
-
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-
-        ObjectOutputStream oos = null;
-        try {
-            oos = new ObjectOutputStream(buffer);
-            oos.writeObject(object);
-            oos.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return buffer.toByteArray();
-    }
-
-    public static Object deserializeObject(byte[] data){
-
-        ByteArrayInputStream bis = new ByteArrayInputStream(data);
-        ObjectInputStream ois = null;
-
-        Object object = null;
-        try {
-            ois = new ObjectInputStream(bis);
-            try {
-                object = ois.readObject();
-                ois.close();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return object;
-    }
 }

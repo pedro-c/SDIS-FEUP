@@ -1,6 +1,7 @@
 package Server;
 
 import Messages.Message;
+import Chat.Chat;
 import Messages.MessageHandler;
 
 import javax.net.ssl.SSLSocket;
@@ -54,19 +55,20 @@ public class ConnectionHandler implements Runnable {
      * @param response
      */
     public Message analyseResponse(Message response) {
-
-        String[] body = response.getBody().split(" ");
-
+        String[] body;
         System.out.println(response.getMessageType());
 
         switch (response.getMessageType()) {
             case SIGNIN:
+                 body = response.getBody().split(" ");
                 return server.loginUser(body[0], body[1]);
             case SIGNUP:
+                 body = response.getBody().split(" ");
                 return server.addUser(body[0],body[1]);
             case CREATE_CHAT:
-                return server.createChat(response.getBody());
+                return server.createChat((Chat) response.getObject());
             case NEWNODE:
+                body = response.getBody().split(" ");
                 Node n = server.predecessorLookUp(Integer.parseInt(body[0]));
                 if(n.getNodeId() < Integer.parseInt(body[0])){
                     MessageHandler handler = new MessageHandler(new Message(PREDECESSOR, BigInteger.valueOf(server.getNodeId()),body[0],body[1],body[2]), body[1], body[2], server);

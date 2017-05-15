@@ -14,8 +14,6 @@ import java.util.concurrent.Executors;
 import static Utilities.Constants.*;
 import static Utilities.Utilities.createHash;
 import static Utilities.Utilities.getTimestamp;
-import static Utilities.Utilities.serializeObject;
-import static Utilities.Utilities.deserializeObject;
 
 public class Client {
 
@@ -115,7 +113,7 @@ public class Client {
         Chat newChat = new Chat(generateChatId());
         if(chatName!=null)
             newChat.setChatName(chatName);
-        Message message = new Message(Constants.CREATE_CHAT, getClientId(), new String(serializeObject(newChat)));
+        Message message = new Message(Constants.CREATE_CHAT, getClientId(), newChat);
         MessageHandler handler = new MessageHandler(message, serverIp, Integer.toString(serverPort),this);
         threadPool.submit(handler);
 

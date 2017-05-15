@@ -24,7 +24,7 @@ public class Constants {
     //CLIENT_ERROR SenderId code
     public static final String CLIENT_ERROR = "CLIENT_ERROR";
 
-    //CREATECHAT Chat
+    //CREATECHAT SenderId Chat
     public static final String CREATE_CHAT = "CREATECHAT";
 
     //Directories
