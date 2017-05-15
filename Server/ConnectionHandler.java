@@ -7,6 +7,7 @@ import Messages.MessageHandler;
 import javax.net.ssl.SSLSocket;
 import java.io.*;
 import java.math.BigInteger;
+import java.util.ArrayList;
 
 import static Utilities.Constants.*;
 
@@ -70,10 +71,16 @@ public class ConnectionHandler implements Runnable {
             case NEWNODE:
                 body = response.getBody().split(" ");
                 server.newNode(body);
-                closeConnection();
+                //closeConnection();
                 break;
             case PREDECESSOR:
-                server.setPredecessor((Node) response.getObject());
+                System.out.println("PREDECESSOR");
+                server.setPredecessor((Server) response.getObject());
+                //closeConnection();
+                break;
+            case WELCOME_TO_DHT:
+                server.joinedNetwork((ArrayList<Node>) response.getObject());
+                //closeConnection();
                 break;
             default:
                 break;

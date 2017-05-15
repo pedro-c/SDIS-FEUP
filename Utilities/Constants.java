@@ -12,6 +12,7 @@ public class Constants {
     public static final String NEWNODE = "NEWNODE"; //Format: [NEWNODE] [SenderID] [NodeID] [NodeIp] [NodePort]
     public static final String NEWNODE_ANSWER = "NEWNODE ANSWER";
     public static final String PREDECESSOR = "PREDECESSOR";
+    public static final String WELCOME_TO_DHT = "W_TO_DHT";
 
     //SIGNIN SenderId email password
     public static final String SUCCESSOR = "SUCCESSOR";

@@ -29,7 +29,7 @@ public class Message implements Serializable {
         this.messageType = messageType;
         this.senderId = new String(senderId.toByteArray());
         this.body = String.join(" ", body);
-        //createMessage(this.messageType,this.senderId,this.body);
+
     }
 
 
@@ -37,7 +37,6 @@ public class Message implements Serializable {
         this.messageType = messageType;
         this.senderId =  new String(senderId.toByteArray());
         this.object = obj;
-       // createMessage(this.messageType,this.senderId,this.object);
     }
 
     /**

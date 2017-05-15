@@ -4,8 +4,6 @@ import Messages.Message;
 import Chat.Chat;
 import Messages.MessageHandler;
 import Utilities.Constants;
-import com.sun.org.apache.xml.internal.security.algorithms.MessageDigestAlgorithm;
-import sun.security.provider.certpath.SunCertPathBuilder;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -15,7 +13,6 @@ import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -24,7 +21,7 @@ import java.util.concurrent.Executors;
 import static Utilities.Constants.*;
 import static Utilities.Utilities.createHash;
 
-public class Server extends Node {
+public class Server extends Node implements Serializable{
 
     /**
      * Key is the user id (hash from e-mail) and value is the 256-bit hashed user password
@@ -60,18 +57,12 @@ public class Server extends Node {
             Node knownNode = new Node(Integer.parseInt(args[3]), args[4], args[5]);
             joinNetwork(this,knownNode);
         }
-        loadServersInfo();
     }
 
     /**
      * @param args [serverIp] [serverPort] [knownServerIp] [knownServerPort]
      */
     public static void main(String[] args) {
-
-        if(args.length != 2){
-            throw new IllegalArgumentException("\nUsage : java Server.Server <serverIp> <serverPort>");
-        }
-
         Server server = new Server(args);
         server.listen();
     }
@@ -219,6 +210,14 @@ public class Server extends Node {
         }
     }
 
+    public void joinedNetwork(ArrayList<Node> successorFingerTable){
+
+        for(int i = 1; i<successorFingerTable.size(); i++){
+            updateFingerTable(successorFingerTable.get(i));
+        }
+
+    }
+
     public void newNode(String[] info) {
         int newNodeKey = Integer.parseInt(info[0]);
         String newNodeIp = info[1];
@@ -237,9 +236,9 @@ public class Server extends Node {
         notifySuccessorOfItsPredecessor();
 
         if(successor == predecessor){
-            //TODO: Send welcome message to new node
+            sendWelcomeMessage(newNode);
         }else if(newNode.getNodeId() > predecessor.getNodeId() && newNode.getNodeId() < this.getNodeId()){
-            //TODO: Send welcome message to new node
+            sendWelcomeMessage(newNode);
         }else if(successor == this){
             joinNetwork(newNode, fingerTable.get(MAX_FINGER_TABLE_SIZE));
         }else{
@@ -261,11 +260,24 @@ public class Server extends Node {
         return AFTER;
     }
 
+    public void sendWelcomeMessage(Node newNode){
+
+        Message message = new Message(WELCOME_TO_DHT, new BigInteger(Integer.toString(this.getNodeId())), this.fingerTable);
+
+        MessageHandler handler = new MessageHandler(message, newNode.getNodeIp(), newNode.getNodePort(), this);
+
+        handler.connectToServer();
+        handler.sendMessage(message);
+
+    }
+
     public void notifySuccessorOfItsPredecessor(){
 
         Node successor = fingerTable.get(1);
 
-        Message message = new Message(PREDECESSOR, new BigInteger(Integer.toString(this.getNodeId())), this.getNode());
+        Node temp = new Node(this.getNodeId(),this.getNodeIp(), this.getNodePort());
+
+        Message message = new Message(PREDECESSOR, new BigInteger(Integer.toString(this.getNodeId())), temp);
 
         MessageHandler handler = new MessageHandler(message, successor.getNodeIp(), successor.getNodePort(), this);
 
@@ -477,6 +489,7 @@ public class Server extends Node {
     }
 
     public void setPredecessor(Node node) {
+        updateFingerTable(node);
         this.predecessor = node;
         System.out.println("New predecessor: " + node.getNodeId());
     }
