@@ -235,7 +235,7 @@ public class Server extends Node implements Serializable{
 
         Node successor = serverLookUp(newNodeKey);
 
-        notifySuccessorOfItsPredecessor(newNode);
+        notifySuccessorOfItsPredecessor(successor);
 
 
         if(successor == predecessor){
@@ -275,6 +275,19 @@ public class Server extends Node implements Serializable{
         Message message = new Message(SUCCESSOR_FT, new BigInteger(Integer.toString(this.getNodeId())), fingerTable);
 
         MessageHandler handler = new MessageHandler(message, newNode.getNodeIp(), newNode.getNodePort(), this);
+
+        handler.connectToServer();
+        handler.sendMessage(message);
+
+    }
+
+    public void sendFingerTableToSuccessor(){
+        
+        Node successor = fingerTable.get(1);
+
+        Message message = new Message(SUCCESSOR_FT, new BigInteger(Integer.toString(this.getNodeId())), fingerTable);
+
+        MessageHandler handler = new MessageHandler(message, successor.getNodeIp(), successor.getNodePort(), this);
 
         handler.connectToServer();
         handler.sendMessage(message);
@@ -497,9 +510,13 @@ public class Server extends Node implements Serializable{
     }
 
     public void setPredecessor(Node node) {
-        updateFingerTable(node);
-        this.predecessor = node;
-        System.out.println("New predecessor: " + node.getNodeId());
+
+        if(this.predecessor != node){
+            updateFingerTable(node);
+            this.predecessor = node;
+            System.out.println("New predecessor: " + node.getNodeId());
+
+        }
     }
 
     public void printFingerTable() {
