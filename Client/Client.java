@@ -24,6 +24,7 @@ public class Client {
     private int serverPort;
     private String serverIp;
     private Hashtable<BigInteger, Chat> userChats;
+    private MessageHandler messageHandler;
 
     public enum Task {
         HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT
@@ -114,12 +115,22 @@ public class Client {
 
         System.out.println("Name: ");
         String chatName = console.readLine();
-        Chat newChat = new Chat(generateChatId());
+        System.out.println("Invite user to chat with you (email) : ");
+        String participantEmail = console.readLine();
+
+        while (participantEmail == null || participantEmail.equals(email)){
+            System.out.println("You must invite one user to chat with you (email). ");
+            participantEmail = console.readLine();
+        }
+
+        Chat newChat = new Chat (generateChatId(),email);
         if(chatName!=null)
             newChat.setChatName(chatName);
+        newChat.setParticipant_email(participantEmail);
+
         Message message = new Message(CREATE_CHAT, getClientId(), newChat);
-        MessageHandler handler = new MessageHandler(message, serverIp, Integer.toString(serverPort),this);
-        threadPool.submit(handler);
+        messageHandler.setMessage(message);
+        threadPool.submit(messageHandler);
 
     }
 
@@ -139,8 +150,8 @@ public class Client {
         atualState = Task.WAITING_SIGNIN;
         String password = getCredentials();
         Message message = new Message(SIGNIN, getClientId(), email, createHash(password).toString());
-        MessageHandler handler = new MessageHandler(message, serverIp, Integer.toString(serverPort), this);
-        threadPool.submit(handler);
+        messageHandler = new MessageHandler(message, serverIp, Integer.toString(serverPort), this);
+        threadPool.submit(messageHandler);
 
     }
 
@@ -151,9 +162,8 @@ public class Client {
         atualState = Task.WAITING_SIGNUP;
         String password = getCredentials();
         Message message = new Message(SIGNUP, getClientId(), email, createHash(password).toString());
-        MessageHandler handler = null;
-        handler = new MessageHandler(message, serverIp, Integer.toString(serverPort), this);
-        threadPool.submit(handler);
+        messageHandler = new MessageHandler(message, serverIp, Integer.toString(serverPort), this);
+        threadPool.submit(messageHandler);
     }
 
     /**
@@ -250,6 +260,9 @@ public class Client {
                 break;
             case ERROR_CREATING_CHAT:
                 System.out.println("\nError creating chat...");
+                break;
+            case INVALID_USER_EMAIL:
+                System.out.println("\nInvalid user email. Server couldn't find any user with that email ..");
                 break;
             default:
                 break;

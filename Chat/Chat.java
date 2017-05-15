@@ -15,12 +15,15 @@ public class Chat implements Serializable {
     //criador
     private BigInteger idChat;
     private String chatName;
+    private String creatorEmail;
     private Set<User> participants;
+    private String participant_email;
     private ArrayList<ChatMessage>  chatMessages;
 
 
-    public Chat(BigInteger idChat) {
+    public Chat(BigInteger idChat, String creatorEmail) {
         this.idChat = idChat;
+        this.creatorEmail = creatorEmail;
     }
 
     public void addParticipant(User user){
@@ -41,6 +44,14 @@ public class Chat implements Serializable {
 
     public BigInteger getIdChat() {
         return idChat;
+    }
+
+    public String getParticipant_email() {
+        return participant_email;
+    }
+
+    public void setParticipant_email(String participant_email) {
+        this.participant_email = participant_email;
     }
 
 }

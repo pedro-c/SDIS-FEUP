@@ -373,11 +373,19 @@ public class Server extends Node {
     public Message createChat(Chat chat){
         Message message = null;
 
+        //This email is valid? Server knows?
+        if(users.get(createHash(chat.getParticipant_email()))==null) {
+            System.out.println("Invalid user Email.");
+            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId), Constants.INVALID_USER_EMAIL);
+            return message;
+        }
+
         if(chats.get(chat.getIdChat())!=null){
             System.out.println("Error creating chat");
             message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId),Constants.ERROR_CREATING_CHAT);
         }
         else {
+            chat.addParticipant(users.get(createHash(chat.getParticipant_email())));
             chats.put(chat.getIdChat(),chat);
             message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId),chat);
         }

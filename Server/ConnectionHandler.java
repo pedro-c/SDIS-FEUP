@@ -58,6 +58,8 @@ public class ConnectionHandler implements Runnable {
     public Message analyseResponse(Message response) {
         String[] body;
 
+        System.out.println(response.getMessageType());
+
         switch (response.getMessageType()) {
             case SIGNIN:
                  body = response.getBody().split(" ");
