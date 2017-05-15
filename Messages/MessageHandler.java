@@ -125,19 +125,6 @@ public class MessageHandler implements Runnable {
             case CLIENT_ERROR:
                 client.verifyState(response);
                 break;
-            //SUCCESSOR NodeId NodeIp NodePort
-            case SUCCESSOR:
-                nodeInfo = response.getBody().split(" ");
-                Node successor = new Node(nodeInfo[1],nodeInfo[2],Integer.parseInt(nodeInfo[0]));
-                this.server.updateFingerTable(successor);
-                break;
-            //NEWNODE_ANSWER NodeId NodeIp NodePort
-            //Talk to the node with that ip an port
-            case NEWNODE_ANSWER:
-                nodeInfo = response.getBody().split(" ");
-                Node nextNode = new Node(nodeInfo[1],nodeInfo[2],Integer.parseInt(nodeInfo[0]));
-                this.server.joinNetwork(nextNode);
-                break;
             default:
                 break;
         }

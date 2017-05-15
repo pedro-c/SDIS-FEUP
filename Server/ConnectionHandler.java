@@ -68,11 +68,26 @@ public class ConnectionHandler implements Runnable {
             case CREATE_CHAT:
                 return server.createChat((Chat) response.getObject());
             case NEWNODE:
+                body = response.getBody().split(" ");
                 server.newNode(body);
+                closeConnection();
+                break;
+            case PREDECESSOR:
+                server.setPredecessor((Node) response.getObject());
+                break;
             default:
                 break;
         }
         return null;
+    }
+
+    public void closeConnection(){
+        try {
+            sslSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("Failed to close ssl connection");
+        }
     }
 
 

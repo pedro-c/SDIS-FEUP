@@ -6,16 +6,24 @@ import static Utilities.Utilities.get32bitHashValue;
 
 public class Node {
 
-    protected final int nodeId;
-    protected final String nodeIp;
-    protected final String nodePort;
+    protected int nodeId;
+    protected String nodeIp;
+    protected String nodePort;
 
+    /**
+     *  TESTING constructor giving node ID instead of getting from hash
+     *  (use second constructor on final version)
+     */
     public Node(int id, String ip, String port){
         this.nodeIp = ip;
         this.nodePort = port;
-        //this.nodeId = setNodeIdentifier();
-
         this.nodeId = id;
+    }
+
+    public Node(String ip, String port){
+        this.nodeIp = ip;
+        this.nodePort = port;
+        this.nodeId = setNodeIdentifier();
     }
 
     public Node(String ip, String port, int key){
@@ -57,6 +65,10 @@ public class Node {
      */
     public String getNodePort() {
         return nodePort;
+    }
+
+    public Node getNode(){
+        return this;
     }
 
     @Override
