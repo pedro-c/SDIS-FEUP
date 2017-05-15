@@ -1,8 +1,12 @@
 package Server;
 
 import Messages.Message;
+import Chat.Chat;
+import Messages.MessageHandler;
+
 import javax.net.ssl.SSLSocket;
 import java.io.*;
+import java.math.BigInteger;
 
 import static Utilities.Constants.*;
 
@@ -50,23 +54,25 @@ public class ConnectionHandler implements Runnable {
      * Analyses Responses
      * @param response
      */
-    public void analyseResponse(Message response) {
-        String[] body = response.getBody().split(" ");
-
-        System.out.println("Message received: " + response.getMessageType());
+    public Message analyseResponse(Message response) {
+        String[] body;
+        System.out.println(response.getMessageType());
 
         switch (response.getMessageType()) {
             case SIGNIN:
-                server.loginUser(body[0], body[1]);
-                break;
+                 body = response.getBody().split(" ");
+                return server.loginUser(body[0], body[1]);
             case SIGNUP:
-                server.addUser(body[0],body[1]);
-                break;
+                 body = response.getBody().split(" ");
+                return server.addUser(body[0],body[1]);
+            case CREATE_CHAT:
+                return server.createChat((Chat) response.getObject());
             case NEWNODE:
                 server.newNode(body);
             default:
                 break;
         }
+        return null;
     }
 
 
@@ -77,7 +83,8 @@ public class ConnectionHandler implements Runnable {
         Message message = null;
         try {
             message = (Message) serverInputStream.readObject();
-            analyseResponse(message);
+            Message responseMessage = analyseResponse(message);
+            sendMessage(responseMessage);
         } catch (IOException e) {
             System.out.println("Error reading message...");
         } catch (ClassNotFoundException e) {

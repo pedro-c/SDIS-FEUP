@@ -9,9 +9,7 @@ import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.net.InetAddress;
 
-import static Utilities.Constants.NEWNODE_ANSWER;
-import static Utilities.Constants.PREDECESSOR;
-import static Utilities.Constants.SUCCESSOR;
+import static Utilities.Constants.*;
 
 public class MessageHandler implements Runnable {
 
@@ -81,7 +79,6 @@ public class MessageHandler implements Runnable {
 
     /**
      * Sends a message through a ssl socket
-     *
      */
     public void sendMessage() {
         try {
@@ -108,7 +105,10 @@ public class MessageHandler implements Runnable {
         }
     }
 
-
+    /**
+     * Handles with the responses
+     * @param response
+     */
     public void handleResponse(Message response){
 
         String[] nodeInfo;
@@ -120,6 +120,10 @@ public class MessageHandler implements Runnable {
             case PREDECESSOR:
                 nodeInfo = response.getBody().split(" ");
                 this.server.setPredecessor(new Node(nodeInfo[1],nodeInfo[2],Integer.parseInt(nodeInfo[0])));
+                break;
+            case CLIENT_SUCCESS:
+            case CLIENT_ERROR:
+                client.verifyState(response);
                 break;
             //SUCCESSOR NodeId NodeIp NodePort
             case SUCCESSOR:
@@ -138,7 +142,6 @@ public class MessageHandler implements Runnable {
                 break;
         }
     }
-
 
     /**
      * Closes socket

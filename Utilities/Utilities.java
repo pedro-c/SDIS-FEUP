@@ -1,8 +1,13 @@
 package Utilities;
 
 import javax.xml.bind.DatatypeConverter;
+import java.io.*;
 import java.math.BigInteger;
 import java.security.MessageDigest;
+
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class Utilities {
 
@@ -38,5 +43,10 @@ public class Utilities {
 
     public static int get32bitHashValue(BigInteger bigInteger){
         return bigInteger.intValue();
+    }
+
+    public static long getTimestamp(){
+        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        return timestamp.getTime();
     }
 }

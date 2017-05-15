@@ -1,15 +1,21 @@
 package Server;
 
 import Messages.Message;
+import Chat.Chat;
 import Messages.MessageHandler;
+import Utilities.Constants;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.*;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -21,7 +27,10 @@ public class Server extends Node {
     /**
      * Key is the user id (hash from e-mail) and value is the 256-bit hashed user password
      */
-    private Hashtable<BigInteger, BigInteger> users;
+    private Hashtable<BigInteger, User> users;
+
+    private ArrayList<Node> serversInfo;
+
     /**
      * Key is an integer representing the m nodes and the value it's the server identifier
      * (32-bit integer hash from ip+port)
@@ -48,13 +57,27 @@ public class Server extends Node {
             joinNetwork(knownNode);
         }
 
+        createDir(DATA_DIRECTORY);
+        createDir(DATA_DIRECTORY + "/" + Integer.toString(nodeId));
+        createDir(usersPath);
+        createDir(chatsPath);
+
         users = new Hashtable<>();
+
+        serversInfo = new ArrayList<Node>();
+
+        loadServersInfo();
     }
 
     /**
      * @param args [serverIp] [serverPort] [knownServerIp] [knownServerPort]
      */
     public static void main(String[] args) {
+
+        if(args.length != 2){
+            throw new IllegalArgumentException("\nUsage : java Server.Server <serverIp> <serverPort>");
+        }
+
         Server server = new Server(args);
         server.listen();
     }
@@ -106,7 +129,7 @@ public class Server extends Node {
      */
     public void joinNetwork(Node knownNode) {
 
-        Message message = new Message(NEWNODE, new BigInteger(Integer.toString(this.getNodeId())), Integer.toString(predecessor.getNodeId()), predecessor.getNodeIp(), predecessor.getNodePort());
+        Message message = new Message(NEWNODE, BigInteger.valueOf(this.getNodeId()), Integer.toString(predecessor.getNodeId()), predecessor.getNodeIp(), predecessor.getNodePort());
 
         MessageHandler handler = new MessageHandler(message, knownNode.getNodeIp(), knownNode.getNodePort(), this);
 
@@ -330,18 +353,25 @@ public class Server extends Node {
      * @param email    user email
      * @param password user password
      */
-    public void addUser(String email, String password) {
+    public Message addUser(String email, String password){
 
         System.out.println("Sign up with  " + email);
 
         BigInteger user_email = createHash(email);
 
-        if (users.containsKey(user_email)) {
+        Message message;
+
+        if(users.containsKey(user_email)){
             System.out.println("Email already exists. Try to sign in instead of sign up...");
-        } else {
-            users.put(user_email, createHash(password));
+            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId), Constants.EMAIL_ALREADY_USED);
+        }
+        else{
+            users.put(user_email,new User(email,new BigInteger(password)));
+            message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
             System.out.println("Signed up with success!");
         }
+
+        return message;
     }
 
     /**
@@ -351,25 +381,76 @@ public class Server extends Node {
      * @param password user password
      * @return true if user authentication went well, false if don't
      */
-    public boolean loginUser(String email, String password) {
+    public Message loginUser(String email, String password) {
 
         System.out.println("Sign in with " + email);
 
         BigInteger user_email = createHash(email);
 
+        Message message;
+
         if (users.get(user_email) == null) {
             System.out.println("Try to create an account. Your email was not found on the database...");
-            return false;
+            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId),Constants.EMAIL_NOT_FOUND);
         }
-
-        if (!users.get(user_email).equals(createHash(password))) {
+        else if (!users.get(user_email).getPassword().equals(new BigInteger(password))) {
             System.out.println("Impossible to sign in, wrong email or password...");
-            return false;
+            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId),Constants.WRONG_PASSWORD);
+        }
+        else {
+            System.out.println("Logged in with success!");
+            message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
         }
 
-        System.out.println("Logged in with success!");
+        return message;
+    }
 
-        return true;
+    /**
+     * Create a directory
+     *
+     * @param path path of the directory to be created
+     */
+    private void createDir(String path) {
+
+        File file = new File(path);
+
+        if (file.mkdir()) {
+            System.out.println("Directory: " + path + " created");
+        }
+    }
+
+    /**
+     * Loads all servers from a file
+     */
+    private void loadServersInfo(){
+        try {
+            List<String> lines = Files.readAllLines(Paths.get(SERVERS_INFO));
+            for(String line : lines){
+                String infos[] = line.split(" ");
+                Node node = new Node(infos[0],infos[1]);
+
+                if(!serversInfo.contains(node) && nodeId != node.getNodeId()){
+                    System.out.println("Read server with ip: " + infos[0] + " and port " + infos[1]);
+                    serversInfo.add(node);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Creates a new chat
+     * New chat
+     * @return Message to be sent to the client
+     */
+    public Message createChat(Chat chat){
+        Message message = null;
+
+        System.out.println(chat.getChatName());
+
+        return message;
+
     }
 
     public Node getPredecessor() {
