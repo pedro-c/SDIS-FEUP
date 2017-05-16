@@ -10,7 +10,7 @@ public class User {
     private String email;
     private BigInteger password;
 
-    public User(String email, BigInteger password){
+    public User(String email, BigInteger password) {
         this.email = email;
         this.password = password;
     }

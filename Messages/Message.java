@@ -1,11 +1,8 @@
 package Messages;
 
-import Chat.Chat;
-
-import java.io.*;
+import java.io.Serializable;
 import java.math.BigInteger;
 
-import static Utilities.Constants.CREATE_CHAT;
 import static Utilities.Constants.CRLF;
 
 /**
@@ -21,35 +18,37 @@ public class Message implements Serializable {
 
     /**
      * Message Constructor
+     *
      * @param messageType
      * @param senderId
      * @param body
      */
-    public Message(String messageType, BigInteger senderId, String ... body){
+    public Message(String messageType, BigInteger senderId, String... body) {
         this.messageType = messageType;
         this.senderId = senderId;
         this.body = String.join(" ", body);
     }
 
 
-    public Message(String messageType, BigInteger senderId, Object obj){
+    public Message(String messageType, BigInteger senderId, Object obj) {
         this.messageType = messageType;
-        this.senderId =  senderId;
+        this.senderId = senderId;
 
-        if(obj instanceof String)
-            this.body = String.join(" ", (String)obj);
+        if (obj instanceof String)
+            this.body = String.join(" ", (String) obj);
         else
             this.object = obj;
     }
 
     /**
      * Creates Message with format[MessageType][SenderId][CRLF][Body][CRLF][CRLF]
+     *
      * @param messageType
      * @param senderId
      * @param body
      * @return
      */
-    public byte[] createMessage(String messageType, String senderId, String body){
+    public byte[] createMessage(String messageType, String senderId, String body) {
 
         return (String.join(" ", messageType) + " "
                 + String.join(" ", senderId) + " "
@@ -57,8 +56,10 @@ public class Message implements Serializable {
                 + String.join(" ", body) + " "
                 + CRLF + CRLF).getBytes();
     }
+
     /**
      * Returns message type
+     *
      * @return messageType
      */
     public String getMessageType() {
@@ -67,6 +68,7 @@ public class Message implements Serializable {
 
     /**
      * Returns message senderId
+     *
      * @return senderId
      */
     public BigInteger getSenderId() {
@@ -75,6 +77,7 @@ public class Message implements Serializable {
 
     /**
      * Returns message body
+     *
      * @return body
      */
     public String getBody() {
@@ -83,6 +86,7 @@ public class Message implements Serializable {
 
     /**
      * Returns Chat
+     *
      * @return
      */
     public Object getObject() {
@@ -92,11 +96,11 @@ public class Message implements Serializable {
     /**
      * Prints message content
      */
-    public void printMessage(Message message){
+    public void printMessage(Message message) {
 
         System.out.println("Message Type: " + message.getMessageType() + "\n");
         System.out.println("Body: " + message.getBody() + "\n");
     }
 
-        
+
 }

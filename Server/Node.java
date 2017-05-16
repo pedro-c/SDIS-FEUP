@@ -1,19 +1,41 @@
 package Server;
 
 
+import java.io.Serializable;
+
 import static Utilities.Utilities.createHash;
 import static Utilities.Utilities.get32bitHashValue;
 
-public class Node {
+public class Node implements Serializable {
 
-    protected final int nodeId;
-    protected final String nodeIp;
-    protected final String nodePort;
+    protected int nodeId;
+    protected String nodeIp;
+    protected String nodePort;
 
-    public Node(String ip, String port){
+    /**
+     * TESTING constructor giving node ID instead of getting from hash
+     * (use second constructor on final version)
+     */
+    public Node(int id, String ip, String port) {
+        this.nodeIp = ip;
+        this.nodePort = port;
+        this.nodeId = id;
+    }
+
+    public Node(String ip, String port) {
         this.nodeIp = ip;
         this.nodePort = port;
         this.nodeId = setNodeIdentifier();
+    }
+
+    public Node(String ip, String port, int key) {
+        this.nodeIp = ip;
+        this.nodePort = port;
+        this.nodeId = key;
+    }
+
+    public Node() {
+
     }
 
     /**
@@ -21,7 +43,7 @@ public class Node {
      * er ip and server port
      */
     public int setNodeIdentifier() {
-        return get32bitHashValue(createHash(nodeIp +nodePort));
+        return Math.abs(get32bitHashValue(createHash(nodeIp + nodePort)));
     }
 
     /**
@@ -32,7 +54,6 @@ public class Node {
     }
 
     /**
-     *
      * @return Returns node ip address
      */
     public String getNodeIp() {
@@ -41,10 +62,15 @@ public class Node {
 
     /**
      * Get node port
+     *
      * @return node port
      */
     public String getNodePort() {
         return nodePort;
+    }
+
+    public Node getNode() {
+        return this;
     }
 
     @Override
@@ -59,9 +85,10 @@ public class Node {
 
         final Node node = (Node) o;
 
-        if(nodeId == ((Node) o).getNodeId())
+        if (nodeId == ((Node) o).getNodeId())
             return true;
 
         return false;
     }
+
 }

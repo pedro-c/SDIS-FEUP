@@ -1,12 +1,11 @@
 package Server;
 
-import Messages.Message;
 import Chat.Chat;
-import Messages.MessageHandler;
+import Messages.Message;
 
 import javax.net.ssl.SSLSocket;
 import java.io.*;
-import java.math.BigInteger;
+import java.util.ArrayList;
 
 import static Utilities.Constants.*;
 
@@ -23,6 +22,7 @@ public class ConnectionHandler implements Runnable {
 
     /**
      * Handles new SSL Connections to the server
+     *
      * @param socket
      * @param server
      */
@@ -53,6 +53,7 @@ public class ConnectionHandler implements Runnable {
 
     /**
      * Analyses Responses
+     *
      * @param response
      */
     public Message analyseResponse(Message response) {
@@ -62,36 +63,57 @@ public class ConnectionHandler implements Runnable {
 
         switch (response.getMessageType()) {
             case SIGNIN:
-                 body = response.getBody().split(" ");
-                server.saveConnection(this.sslSocket, response.getSenderId());
-                return server.loginUser(body[0], body[1]);
+                body = response.getBody().split(" ");
+                System.out.println("REQUEST ID: " + response.getSenderId().intValue());
+                if (server.isResponsibleFor(response.getSenderId())) {
+                    server.saveConnection(this.sslSocket, response.getSenderId());
+                    return server.loginUser(body[0], body[1]);
+                } else {
+                    System.out.println("REDIRECTING ID: " + response.getSenderId().intValue());
+                    server.redirect(response);
+                }
             case SIGNUP:
-                 body = response.getBody().split(" ");
-                 server.saveConnection(this.sslSocket, response.getSenderId());
-                return server.addUser(body[0],body[1]);
+                body = response.getBody().split(" ");
+                System.out.println("REQUEST ID: " + response.getSenderId().intValue());
+                if (server.isResponsibleFor(response.getSenderId())) {
+                    server.saveConnection(this.sslSocket, response.getSenderId());
+                    return server.addUser(body[0], body[1]);
+                } else {
+                    System.out.println("REDIRECTING ID: " + response.getSenderId().intValue());
+                    server.redirect(response);
+                }
             case CREATE_CHAT:
                 return server.createChat((Chat) response.getObject());
             case NEWNODE:
                 body = response.getBody().split(" ");
-                Node n = server.predecessorLookUp(Integer.parseInt(body[0]));
-                if(n.getNodeId() < Integer.parseInt(body[0])){
-                    MessageHandler handler = new MessageHandler(new Message(PREDECESSOR, BigInteger.valueOf(server.getNodeId()),body[0],body[1],body[2]), body[1], body[2], server);
-                    handler.sendMessage();
-                    handler.closeSocket();
-                }else{
-                    MessageHandler handler = new MessageHandler(new Message(NEWNODE,BigInteger.valueOf(server.getNodeId()),body[0],body[1],body[2]), body[1], body[2], server);
-                    handler.sendMessage();
-                    handler.closeSocket();
-                }
-                try {
-                    sslSocket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                server.newNode(body);
+                server.printFingerTable();
+                break;
+            case PREDECESSOR:
+                Node temp = (Node) response.getObject();
+                server.setPredecessor(temp);
+                server.sendFingerTableToSuccessor();
+                server.printFingerTable();
+                break;
+            case SUCCESSOR_FT:
+                ArrayList<Node> ft = (ArrayList<Node>) response.getObject();
+                server.updateFingerTableFromSuccessor(ft);
+                server.setPredecessor(ft.get(0));
+                server.printFingerTable();
+                break;
             default:
                 break;
         }
         return null;
+    }
+
+    public void closeConnection() {
+        try {
+            sslSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("Failed to close ssl connection");
+        }
     }
 
 
