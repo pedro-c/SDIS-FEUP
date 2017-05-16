@@ -2,6 +2,8 @@ package Server;
 
 import java.math.BigInteger;
 
+import static Utilities.Utilities.createHash;
+
 /**
  * Created by mariajoaomirapaulo on 13/05/17.
  */
@@ -21,5 +23,9 @@ public class User {
 
     public BigInteger getPassword() {
         return password;
+    }
+
+    public BigInteger getUserId(){
+        return createHash(email);
     }
 }

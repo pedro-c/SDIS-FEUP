@@ -59,9 +59,10 @@ public class ConnectionHandler implements Runnable {
     public Message analyseResponse(Message response) {
         String[] body;
 
-        System.out.println(response.getMessageType());
+        System.out.println("Message received: " + response.getMessageType());
 
         switch (response.getMessageType()) {
+            //Client messages
             case SIGNIN:
                 body = response.getBody().split(" ");
                 System.out.println("REQUEST ID: " + response.getSenderId());
@@ -86,6 +87,8 @@ public class ConnectionHandler implements Runnable {
                 return server.signOutUser(response.getSenderId());
             case CREATE_CHAT:
                 return server.createChat((Chat) response.getObject());
+
+            //Server messages
             case NEWNODE:
                 body = response.getBody().split(" ");
                 server.newNode(body);
@@ -103,6 +106,8 @@ public class ConnectionHandler implements Runnable {
                 server.setPredecessor(ft.get(0));
                 server.printFingerTable();
                 break;
+            case BACKUP_USER:
+                return server.backupInfo(response);
             default:
                 break;
         }

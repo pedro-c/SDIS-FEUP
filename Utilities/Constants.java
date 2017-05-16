@@ -33,6 +33,15 @@ public class Constants {
     //SIGNOUT SenderId userId
     public static final String SIGNOUT = "SIGNOUT";
 
+    //BACKUP_USER SenderId email passwordHash
+    public static final String BACKUP_USER = "BACKUP_USER";
+
+    //SERVER_SUCCESS SenderId code
+    public static final String SERVER_SUCCESS = "SERVER_SUCCESS";
+
+    //SERVER_ERROR SenderId code
+    public static final String SERVER_ERROR = "SERVER_ERROR";
+
     //Directories
     public static final String USER_DIRECTORY = "users";
     public static final String CHAT_DIRECTORY = "chats";
@@ -52,5 +61,6 @@ public class Constants {
     public static final String WRONG_PASSWORD = "-3";
     public static final String ERROR_CREATING_CHAT = "-4";
     public static final String INVALID_USER_EMAIL = "-5";
+    public static final String USER_ADDED = "1";
 
 }

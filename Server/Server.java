@@ -30,14 +30,20 @@ public class Server extends Node implements Serializable {
     //Logged in users
     private ConcurrentHashMap<BigInteger, SSLSocket> loggedInUsers;
 
+    private ConcurrentHashMap<BigInteger, User> backups;
+
     /**
      * Key is an integer representing the m nodes and the value it's the server identifier
      * (32-bit integer hash from ip+port)
      */
     private ArrayList<Node> fingerTable = new ArrayList<Node>();
+
     transient private SSLServerSocket sslServerSocket;
+
     transient private SSLServerSocketFactory sslServerSocketFactory;
+
     transient private ExecutorService threadPool = Executors.newFixedThreadPool(MAX_NUMBER_OF_REQUESTS);
+
     private Node predecessor = this;
 
     /**
@@ -70,6 +76,7 @@ public class Server extends Node implements Serializable {
 
         chats = new ConcurrentHashMap<BigInteger, ServerChat>();
         loggedInUsers = new ConcurrentHashMap<BigInteger, SSLSocket>();
+        backups = new ConcurrentHashMap<BigInteger, User>();
     }
 
     /**
@@ -392,6 +399,7 @@ public class Server extends Node implements Serializable {
             users.put(user_email, new User(email, new BigInteger(password)));
             message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
             System.out.println("Signed up with success!");
+            sendInfoToBackup(new Message(BACKUP_USER, BigInteger.valueOf(nodeId), email, password));
         }
 
         return message;
@@ -513,6 +521,11 @@ public class Server extends Node implements Serializable {
         return fingerTable;
     }
 
+    /**
+     * Function used to sign out users, this user is removed from the logged-in users arraylist
+     * @param userId id of the user
+     * @return message
+     */
     public Message signOutUser(BigInteger userId){
         if(loggedInUsers.containsKey(userId)){
             loggedInUsers.remove(userId);
@@ -520,6 +533,72 @@ public class Server extends Node implements Serializable {
         }
 
         return (new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId)));
+    }
+
+    /**
+     * This function gets the next successor from the finger table that is different from itself
+     * @return the successor
+     */
+    public Node getSuccessor(){
+
+        for(Node node : fingerTable){
+            if(node.getNodeId() != nodeId)
+                return node;
+        }
+
+        return null;
+    }
+
+    /**
+     * Replicates info to his successor
+     * @param message message with all the info to be backed up
+     */
+    public void sendInfoToBackup(Message message){
+
+        Node successor = getSuccessor();
+
+        if(successor == null)
+            return;
+
+        MessageHandler handler = new MessageHandler(message, successor.getNodeIp(),
+                successor.getNodePort(), this);
+
+        threadPool.submit(handler);
+    }
+
+    public Message backupInfo(Message message){
+
+        Message response = null;
+        String[] body;
+
+        switch (message.getMessageType()){
+            case BACKUP_USER:
+                body = message.getBody().split(" ");
+                User user = new User(body[0], new BigInteger(body[1]));
+                backups.put(user.getUserId(),user);
+                response = new Message(SERVER_SUCCESS, BigInteger.valueOf(this.getNodeId()),USER_ADDED.toString());
+                break;
+            default:
+                break;
+        }
+
+        return response;
+    }
+
+    public void verifyState(Message response){
+
+        String body[] = response.getBody().split(" ");
+
+        if(body.length == 0)
+            return;
+
+        switch (body[0]){
+            case USER_ADDED:
+                System.out.println("Node with id " + response.getSenderId() + " backed up user");
+                break;
+            default:
+                break;
+        }
     }
 }
 

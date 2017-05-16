@@ -74,6 +74,7 @@ public class MessageHandler implements Runnable {
     public void sendMessage(Message message) {
         try {
             outputStream.writeObject(message);
+            System.out.println("Sending message with type: " + message.getMessageType() + " and body " + message.getBody());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -85,6 +86,7 @@ public class MessageHandler implements Runnable {
     public void sendMessage() {
         try {
             outputStream.writeObject(message);
+            System.out.println("Sending message with type: " + message.getMessageType() + " and body " + message.getBody());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -128,6 +130,8 @@ public class MessageHandler implements Runnable {
             case CLIENT_ERROR:
                 client.verifyState(response);
                 break;
+            case SERVER_SUCCESS:
+                server.verifyState(response);
             default:
                 break;
         }
