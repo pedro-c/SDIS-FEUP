@@ -23,12 +23,12 @@ public class Chat implements Serializable {
         this.participants = new HashSet<>();
     }
 
-    public void setChatName(String chatName) {
-        this.chatName = chatName;
-    }
-
     public String getChatName() {
         return chatName;
+    }
+
+    public void setChatName(String chatName) {
+        this.chatName = chatName;
     }
 
     public BigInteger getIdChat() {
@@ -43,7 +43,7 @@ public class Chat implements Serializable {
         this.participant_email = participant_email;
     }
 
-    public void addParticipant(String email){
+    public void addParticipant(String email) {
         participants.add(email);
     }
 

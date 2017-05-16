@@ -1,12 +1,10 @@
 package Server;
 
-import Messages.Message;
 import Chat.Chat;
-import Messages.MessageHandler;
+import Messages.Message;
 
 import javax.net.ssl.SSLSocket;
 import java.io.*;
-import java.math.BigInteger;
 import java.util.ArrayList;
 
 import static Utilities.Constants.*;
@@ -24,6 +22,7 @@ public class ConnectionHandler implements Runnable {
 
     /**
      * Handles new SSL Connections to the server
+     *
      * @param socket
      * @param server
      */
@@ -54,6 +53,7 @@ public class ConnectionHandler implements Runnable {
 
     /**
      * Analyses Responses
+     *
      * @param response
      */
     public Message analyseResponse(Message response) {
@@ -63,22 +63,22 @@ public class ConnectionHandler implements Runnable {
 
         switch (response.getMessageType()) {
             case SIGNIN:
-                 body = response.getBody().split(" ");
+                body = response.getBody().split(" ");
                 System.out.println("REQUEST ID: " + response.getSenderId().intValue());
-                 if(server.isResponsibleFor(response.getSenderId())) {
-                     server.saveConnection(this.sslSocket, response.getSenderId());
-                     return server.loginUser(body[0], body[1]);
-                 }else{
-                     System.out.println("REDIRECTING ID: " + response.getSenderId().intValue());
-                     server.redirect(response);
-                 }
-            case SIGNUP:
-                 body = response.getBody().split(" ");
-                System.out.println("REQUEST ID: " + response.getSenderId().intValue());
-                if(server.isResponsibleFor(response.getSenderId())) {
+                if (server.isResponsibleFor(response.getSenderId())) {
                     server.saveConnection(this.sslSocket, response.getSenderId());
-                    return server.addUser(body[0],body[1]);
-                }else{
+                    return server.loginUser(body[0], body[1]);
+                } else {
+                    System.out.println("REDIRECTING ID: " + response.getSenderId().intValue());
+                    server.redirect(response);
+                }
+            case SIGNUP:
+                body = response.getBody().split(" ");
+                System.out.println("REQUEST ID: " + response.getSenderId().intValue());
+                if (server.isResponsibleFor(response.getSenderId())) {
+                    server.saveConnection(this.sslSocket, response.getSenderId());
+                    return server.addUser(body[0], body[1]);
+                } else {
                     System.out.println("REDIRECTING ID: " + response.getSenderId().intValue());
                     server.redirect(response);
                 }
@@ -107,7 +107,7 @@ public class ConnectionHandler implements Runnable {
         return null;
     }
 
-    public void closeConnection(){
+    public void closeConnection() {
         try {
             sslSocket.close();
         } catch (IOException e) {

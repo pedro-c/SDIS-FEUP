@@ -1,10 +1,9 @@
 package Server;
 
-import Messages.Message;
 import Chat.Chat;
+import Messages.Message;
 import Messages.MessageHandler;
 import Utilities.Constants;
-import com.sun.org.apache.xml.internal.security.algorithms.MessageDigestAlgorithm;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -23,7 +22,7 @@ import java.util.concurrent.Executors;
 import static Utilities.Constants.*;
 import static Utilities.Utilities.createHash;
 
-public class Server extends Node implements Serializable{
+public class Server extends Node implements Serializable {
 
     /**
      * Key is the user id (hash from e-mail) and value is the 256-bit hashed user password
@@ -60,7 +59,7 @@ public class Server extends Node implements Serializable{
         initServerSocket();
         if (args.length > 2) {
             Node knownNode = new Node(args[2], args[3]);
-            joinNetwork(this,knownNode);
+            joinNetwork(this, knownNode);
         }
 
         //creating directories
@@ -161,14 +160,14 @@ public class Server extends Node implements Serializable{
             distance = (long) Math.pow(2, (double) i - 1);
             position = this.getNodeId() + distance;
             if (key > this.getNodeId()) {
-                if (node.getNodeId() > key){
+                if (node.getNodeId() > key) {
                     successor = node;
                     break;
                 }
-            }else{
-                if(node.getNodeId() < previousId){
-                    if(key<node.getNodeId()){
-                        successor=node;
+            } else {
+                if (node.getNodeId() < previousId) {
+                    if (key < node.getNodeId()) {
+                        successor = node;
                     }
                 }
             }
@@ -179,13 +178,13 @@ public class Server extends Node implements Serializable{
         return successor;
     }
 
-    public boolean isResponsibleFor(BigInteger resquestId){
+    public boolean isResponsibleFor(BigInteger resquestId) {
 
         int tempId = resquestId.intValue();
 
         Node n = serverLookUp(tempId);
 
-        if(n.getNodeId() == this.getNodeId())
+        if (n.getNodeId() == this.getNodeId())
             return true;
 
 
@@ -193,7 +192,7 @@ public class Server extends Node implements Serializable{
     }
 
 
-    public void redirect(Message request){
+    public void redirect(Message request) {
 
         int tempId = request.getSenderId().intValue();
 
@@ -242,10 +241,10 @@ public class Server extends Node implements Serializable{
             } else if (newNode.getNodeId() >= position && newNode.getNodeId() < node.getNodeId()) {
                 fingerTable.set(i, newNode);
                 System.out.println("2");
-            }else if (newNode.getNodeId() < this.getNodeId()) {
+            } else if (newNode.getNodeId() < this.getNodeId()) {
                 if (newNode.getNodeId() < node.getNodeId()) {
                     if (MAX_NUMBER_OF_NODES - position + newNode.getNodeId() >= 0 && MAX_NUMBER_OF_NODES - this.getNodeId() + node.getNodeId() > MAX_NUMBER_OF_NODES - this.getNodeId() + newNode.getNodeId()) {
-                        if(node.getNodeId() < this.getNodeId() || node.getNodeId() == this.getNodeId()){
+                        if (node.getNodeId() < this.getNodeId() || node.getNodeId() == this.getNodeId()) {
                             fingerTable.set(i, newNode);
                             System.out.println("3");
                         }
@@ -255,18 +254,18 @@ public class Server extends Node implements Serializable{
                         System.out.println("4");
                     }
                 }
-            }else if(newNode.getNodeId() > this.getNodeId() && newNode.getNodeId() >= position && node.getNodeId() < position){
-                if(MAX_NUMBER_OF_NODES - this.getNodeId() + node.getNodeId() < MAX_NUMBER_OF_NODES - this.getNodeId() + newNode.getNodeId()) {
+            } else if (newNode.getNodeId() > this.getNodeId() && newNode.getNodeId() >= position && node.getNodeId() < position) {
+                if (MAX_NUMBER_OF_NODES - this.getNodeId() + node.getNodeId() < MAX_NUMBER_OF_NODES - this.getNodeId() + newNode.getNodeId()) {
                     fingerTable.set(i, newNode);
                 }
             }
         }
     }
 
-    public void updateFingerTableFromSuccessor(ArrayList<Node> successorFingerTable){
+    public void updateFingerTableFromSuccessor(ArrayList<Node> successorFingerTable) {
 
         System.out.println(successorFingerTable.size());
-        for(int i = 0; i<successorFingerTable.size(); i++){
+        for (int i = 0; i < successorFingerTable.size(); i++) {
             updateFingerTable(successorFingerTable.get(i));
         }
 
@@ -287,23 +286,23 @@ public class Server extends Node implements Serializable{
 
         notifySuccessorOfItsPredecessor(successor, newNode);
 
-        if(successor.getNodeId() == fingerTable.get(1).getNodeId()){
+        if (successor.getNodeId() == fingerTable.get(1).getNodeId()) {
             sendFingerTableToSuccessor();
         }
 
-        if(successor.getNodeId() == predecessor.getNodeId()){
+        if (successor.getNodeId() == predecessor.getNodeId()) {
             sendFingerTableToPredecessor(newNode);
             System.out.println("Case1");
-        }else if(newNode.getNodeId() > predecessor.getNodeId() && newNode.getNodeId() < this.getNodeId()){
+        } else if (newNode.getNodeId() > predecessor.getNodeId() && newNode.getNodeId() < this.getNodeId()) {
             sendFingerTableToPredecessor(newNode);
             System.out.println("Case2");
-        }else if(successor.getNodeId() == this.getNodeId() && fingerTable.get(MAX_FINGER_TABLE_SIZE).getNodeId() != this.getNodeId()){
+        } else if (successor.getNodeId() == this.getNodeId() && fingerTable.get(MAX_FINGER_TABLE_SIZE).getNodeId() != this.getNodeId()) {
             joinNetwork(newNode, fingerTable.get(MAX_FINGER_TABLE_SIZE));
             System.out.println("Case3");
         }
 
-        if(this.predecessor.getNodeId() == this.getNodeId())
-            this.predecessor=newNode;
+        if (this.predecessor.getNodeId() == this.getNodeId())
+            this.predecessor = newNode;
     }
 
     /**
@@ -320,7 +319,7 @@ public class Server extends Node implements Serializable{
         return AFTER;
     }
 
-    public void sendFingerTableToPredecessor(Node newNode){
+    public void sendFingerTableToPredecessor(Node newNode) {
 
         this.setPredecessor(newNode);
 
@@ -333,7 +332,7 @@ public class Server extends Node implements Serializable{
 
     }
 
-    public void sendFingerTableToSuccessor(){
+    public void sendFingerTableToSuccessor() {
 
         Node successor = fingerTable.get(1);
 
@@ -346,7 +345,7 @@ public class Server extends Node implements Serializable{
 
     }
 
-    public void notifySuccessorOfItsPredecessor(Node successor, Node newNode){
+    public void notifySuccessorOfItsPredecessor(Node successor, Node newNode) {
 
         Message message = new Message(PREDECESSOR, new BigInteger(Integer.toString(this.getNodeId())), newNode);
 
@@ -455,7 +454,7 @@ public class Server extends Node implements Serializable{
      * @param email    user email
      * @param password user password
      */
-    public Message addUser(String email, String password){
+    public Message addUser(String email, String password) {
 
         System.out.println("Sign up with  " + email);
 
@@ -463,12 +462,11 @@ public class Server extends Node implements Serializable{
 
         Message message;
 
-        if(users.containsKey(user_email)){
+        if (users.containsKey(user_email)) {
             System.out.println("Email already exists. Try to sign in instead of sign up...");
             message = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId), EMAIL_ALREADY_USED);
-        }
-        else{
-            users.put(user_email,new User(email,new BigInteger(password)));
+        } else {
+            users.put(user_email, new User(email, new BigInteger(password)));
             message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
             System.out.println("Signed up with success!");
         }
@@ -493,13 +491,11 @@ public class Server extends Node implements Serializable{
 
         if (users.get(user_email) == null) {
             System.out.println("Try to create an account. Your email was not found on the database...");
-            message = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId),EMAIL_NOT_FOUND);
-        }
-        else if (!users.get(user_email).getPassword().equals(new BigInteger(password))) {
+            message = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId), EMAIL_NOT_FOUND);
+        } else if (!users.get(user_email).getPassword().equals(new BigInteger(password))) {
             System.out.println("Impossible to sign in, wrong email or password...");
-            message = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId),WRONG_PASSWORD);
-        }
-        else {
+            message = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId), WRONG_PASSWORD);
+        } else {
             System.out.println("Logged in with success!");
             message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
         }
@@ -524,14 +520,14 @@ public class Server extends Node implements Serializable{
     /**
      * Loads all servers from a file
      */
-    private void loadServersInfo(){
+    private void loadServersInfo() {
         try {
             List<String> lines = Files.readAllLines(Paths.get(SERVERS_INFO));
-            for(String line : lines){
+            for (String line : lines) {
                 String infos[] = line.split(" ");
-                Node node = new Node(infos[0],infos[1]);
+                Node node = new Node(infos[0], infos[1]);
 
-                if(!serversInfo.contains(node) && nodeId != node.getNodeId()){
+                if (!serversInfo.contains(node) && nodeId != node.getNodeId()) {
                     System.out.println("Read server with ip: " + infos[0] + " and port " + infos[1]);
                     serversInfo.add(node);
                 }
@@ -544,31 +540,30 @@ public class Server extends Node implements Serializable{
     /**
      * Creates a new chat
      * New chat
+     *
      * @return Message to be sent to the client
      */
-    public Message createChat(Chat chat){
+    public Message createChat(Chat chat) {
         Message message = null;
 
         //TODO: FALAR COM OS SERVIDORES
 
         //This email is valid? Server knows?
-        if(users.get(createHash(chat.getParticipant_email()))==null) {
+        if (users.get(createHash(chat.getParticipant_email())) == null) {
             System.out.println("Invalid user Email.");
             message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId), Constants.INVALID_USER_EMAIL);
-        }
-        else if(chats.get(chat.getIdChat())!=null){
+        } else if (chats.get(chat.getIdChat()) != null) {
             System.out.println("Error creating chat");
-            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId),Constants.ERROR_CREATING_CHAT);
-        }
-        else {
+            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId), Constants.ERROR_CREATING_CHAT);
+        } else {
 
-            ServerChat newChat = new ServerChat(chat.getIdChat(),chat.getParticipant_email());
+            ServerChat newChat = new ServerChat(chat.getIdChat(), chat.getParticipant_email());
             System.out.println("Created chat with success");
             newChat.addParticipant(users.get(createHash(chat.getParticipant_email())));
             System.out.println("Added participants with success");
-            chats.put(newChat.getIdChat(),newChat);
+            chats.put(newChat.getIdChat(), newChat);
             System.out.println("Stored chat with success");
-            message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId),chat);
+            message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId), chat);
         }
 
         return message;
@@ -576,11 +571,12 @@ public class Server extends Node implements Serializable{
 
     /**
      * Saves client connection
+     *
      * @param sslSocket
      * @param clientId
      */
-    public void saveConnection(SSLSocket sslSocket, BigInteger clientId){
-        loggedInUsers.put(clientId,sslSocket);
+    public void saveConnection(SSLSocket sslSocket, BigInteger clientId) {
+        loggedInUsers.put(clientId, sslSocket);
     }
 
     public Node getPredecessor() {
@@ -589,7 +585,7 @@ public class Server extends Node implements Serializable{
 
     public void setPredecessor(Node node) {
 
-        if(this.predecessor.getNodeId() != node.getNodeId()){
+        if (this.predecessor.getNodeId() != node.getNodeId()) {
             updateFingerTable(node);
             this.predecessor = node;
             System.out.println("New predecessor: " + node.getNodeId());
@@ -610,7 +606,7 @@ public class Server extends Node implements Serializable{
         System.out.println("-----------");
     }
 
-    public ArrayList<Node> getFingerTable(){
+    public ArrayList<Node> getFingerTable() {
         return fingerTable;
     }
 }

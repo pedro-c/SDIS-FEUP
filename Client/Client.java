@@ -4,7 +4,7 @@ import Chat.Chat;
 import Messages.Message;
 import Messages.MessageHandler;
 
-import java.io.*;
+import java.io.Console;
 import java.math.BigInteger;
 import java.util.Hashtable;
 import java.util.Scanner;
@@ -25,12 +25,21 @@ public class Client {
     private String serverIp;
     private Hashtable<BigInteger, Chat> userChats;
     private MessageHandler messageHandler;
-
-    public enum Task {
-        HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT
-    }
-
     private Task atualState;
+
+    /**
+     * Client
+     */
+    public Client(String serverIp, int serverPort) {
+
+        this.serverPort = serverPort;
+        this.serverIp = serverIp;
+        this.userChats = new Hashtable<BigInteger, Chat>();
+        this.atualState = Task.HOLDING;
+
+        scannerIn = new Scanner(System.in);
+
+    }
 
     public static void main(String[] args) {
 
@@ -48,20 +57,6 @@ public class Client {
 
         Client client = new Client(serverIp, serverPort);
         client.mainMenu();
-    }
-
-    /**
-     * Client
-     */
-    public Client(String serverIp, int serverPort) {
-
-        this.serverPort = serverPort;
-        this.serverIp = serverIp;
-        this.userChats = new Hashtable<BigInteger, Chat>();
-        this.atualState = Task.HOLDING;
-
-        scannerIn = new Scanner(System.in);
-
     }
 
     /**
@@ -110,15 +105,15 @@ public class Client {
     /**
      * Opens chat
      */
-    public void openChat(Chat chat){
-        String menu = "\n"+ "\n"+ "Chat:  " + chat.getChatName() + "\n" + "\n" + "Send a message to " + chat.getParticipant_email() + "\n" + "\n"+ "\n"+ "\n";
+    public void openChat(Chat chat) {
+        String menu = "\n" + "\n" + "Chat:  " + chat.getChatName() + "\n" + "\n" + "Send a message to " + chat.getParticipant_email() + "\n" + "\n" + "\n" + "\n";
         System.out.println(menu);
     }
 
     /**
      * Creates a new chat
      */
-    public void createNewChat(){
+    public void createNewChat() {
         Console console = System.console();
         atualState = Task.WAITING_CREATE_CHAT;
 
@@ -127,13 +122,13 @@ public class Client {
         System.out.println("Invite user to chat with you (email) : ");
         String participantEmail = console.readLine();
 
-        while (participantEmail == null || participantEmail.equals(email)){
+        while (participantEmail == null || participantEmail.equals(email)) {
             System.out.println("You must invite one user to chat with you (email). ");
             participantEmail = console.readLine();
         }
 
-        Chat newChat = new Chat (generateChatId(),email);
-        if(chatName!=null)
+        Chat newChat = new Chat(generateChatId(), email);
+        if (chatName != null)
             newChat.setChatName(chatName);
         newChat.setParticipant_email(participantEmail);
 
@@ -145,12 +140,12 @@ public class Client {
 
     /**
      * Generates Chat id with creation date and user_id : CREATION_DATE + USER_CREATOR_ID
+     *
      * @return BigInteger chat Id
      */
-    public BigInteger generateChatId(){
+    public BigInteger generateChatId() {
         return createHash(String.valueOf(getTimestamp()) + email);
     }
-
 
     /**
      * Sends a sign in message throw a ssl socket
@@ -210,39 +205,38 @@ public class Client {
         return createHash(email);
     }
 
-
     /**
      * Stores a chat
+     *
      * @param chat
      */
-    public void storeChat(Chat chat){
-        userChats.put(chat.getIdChat(),chat);
+    public void storeChat(Chat chat) {
+        userChats.put(chat.getIdChat(), chat);
         openChat(chat);
     }
 
     /**
      * Acts according off the actual state
+     *
      * @param response response message
      */
-    public void verifyState(Message response){
-        switch (atualState){
+    public void verifyState(Message response) {
+        switch (atualState) {
             case WAITING_SIGNIN:
             case WAITING_SIGNUP:
-                if(response.getMessageType().equals(CLIENT_SUCCESS)){
+                if (response.getMessageType().equals(CLIENT_SUCCESS)) {
                     atualState = Task.SIGNED_IN;
                     signInMenu();
-                }
-                else {
+                } else {
                     atualState = Task.HOLDING;
                     printError(response.getBody());
                     mainMenu();
                 }
                 break;
             case WAITING_CREATE_CHAT:
-                if(response.getMessageType().equals(CLIENT_SUCCESS)){
+                if (response.getMessageType().equals(CLIENT_SUCCESS)) {
                     storeChat((Chat) response.getObject());
-                }
-                else {
+                } else {
                     atualState = Task.HOLDING;
                     printError(response.getBody());
                     signInMenu();
@@ -255,10 +249,11 @@ public class Client {
 
     /**
      * Prints the error that comes from the server
+     *
      * @param code error code
      */
-    public void printError(String code){
-        switch (code){
+    public void printError(String code) {
+        switch (code) {
             case EMAIL_ALREADY_USED:
                 System.out.println("\nEmail already exists. Try to sign in instead of sign up...");
                 break;
@@ -277,5 +272,9 @@ public class Client {
             default:
                 break;
         }
+    }
+
+    public enum Task {
+        HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT
     }
 }

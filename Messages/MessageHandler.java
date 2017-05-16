@@ -1,12 +1,14 @@
 package Messages;
 
 import Client.Client;
-import Server.Server;
 import Server.Node;
+import Server.Server;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
-import java.io.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 
 import static Utilities.Constants.*;
@@ -35,7 +37,7 @@ public class MessageHandler implements Runnable {
     public MessageHandler(Message message, String ip, String port, Client client) {
 
         this.ip = ip;
-        this.port =  Integer.parseInt(port);
+        this.port = Integer.parseInt(port);
         this.client = client;
         this.message = message;
     }
@@ -43,7 +45,7 @@ public class MessageHandler implements Runnable {
     public void run() {
         connectToServer();
         sendMessage(message);
-        while(true){
+        while (true) {
             receiveResponse();
         }
     }
@@ -68,7 +70,6 @@ public class MessageHandler implements Runnable {
 
     /**
      * Sends a message through a ssl socket
-     *
      */
     public void sendMessage(Message message) {
         try {
@@ -92,7 +93,7 @@ public class MessageHandler implements Runnable {
     /**
      * Reads a message response from the socket and calls the handler function
      */
-    public void receiveResponse(){
+    public void receiveResponse() {
         Message response = null;
         try {
             response = (Message) inputStream.readObject();
@@ -108,19 +109,20 @@ public class MessageHandler implements Runnable {
 
     /**
      * Handles with the responses
+     *
      * @param response
      */
-    public void handleResponse(Message response){
+    public void handleResponse(Message response) {
 
         String[] nodeInfo;
 
         System.out.println("Message received: " + response.getMessageType());
 
-        switch (response.getMessageType()){
+        switch (response.getMessageType()) {
             //PREDECESSOR NodeId NodeIp NodePort
             case PREDECESSOR:
                 nodeInfo = response.getBody().split(" ");
-                this.server.setPredecessor(new Node(nodeInfo[1],nodeInfo[2],Integer.parseInt(nodeInfo[0])));
+                this.server.setPredecessor(new Node(nodeInfo[1], nodeInfo[2], Integer.parseInt(nodeInfo[0])));
                 break;
             case CLIENT_SUCCESS:
             case CLIENT_ERROR:

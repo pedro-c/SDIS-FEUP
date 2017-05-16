@@ -25,7 +25,7 @@ public class ServerChat {
         this.creatorEmail = creatorEmail;
     }
 
-    public void addParticipant(User user){
+    public void addParticipant(User user) {
         participants.add(user);
     }
 

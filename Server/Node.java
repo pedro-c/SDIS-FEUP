@@ -2,40 +2,39 @@ package Server;
 
 
 import java.io.Serializable;
-import java.util.ArrayList;
 
 import static Utilities.Utilities.createHash;
 import static Utilities.Utilities.get32bitHashValue;
 
-public class Node implements Serializable{
+public class Node implements Serializable {
 
     protected int nodeId;
     protected String nodeIp;
     protected String nodePort;
 
     /**
-     *  TESTING constructor giving node ID instead of getting from hash
-     *  (use second constructor on final version)
+     * TESTING constructor giving node ID instead of getting from hash
+     * (use second constructor on final version)
      */
-    public Node(int id, String ip, String port){
+    public Node(int id, String ip, String port) {
         this.nodeIp = ip;
         this.nodePort = port;
         this.nodeId = id;
     }
 
-    public Node(String ip, String port){
+    public Node(String ip, String port) {
         this.nodeIp = ip;
         this.nodePort = port;
         this.nodeId = setNodeIdentifier();
     }
 
-    public Node(String ip, String port, int key){
+    public Node(String ip, String port, int key) {
         this.nodeIp = ip;
         this.nodePort = port;
         this.nodeId = key;
     }
 
-    public Node(){
+    public Node() {
 
     }
 
@@ -44,7 +43,7 @@ public class Node implements Serializable{
      * er ip and server port
      */
     public int setNodeIdentifier() {
-        return Math.abs(get32bitHashValue(createHash(nodeIp +nodePort)));
+        return Math.abs(get32bitHashValue(createHash(nodeIp + nodePort)));
     }
 
     /**
@@ -55,7 +54,6 @@ public class Node implements Serializable{
     }
 
     /**
-     *
      * @return Returns node ip address
      */
     public String getNodeIp() {
@@ -64,13 +62,14 @@ public class Node implements Serializable{
 
     /**
      * Get node port
+     *
      * @return node port
      */
     public String getNodePort() {
         return nodePort;
     }
 
-    public Node getNode(){
+    public Node getNode() {
         return this;
     }
 
@@ -86,7 +85,7 @@ public class Node implements Serializable{
 
         final Node node = (Node) o;
 
-        if(nodeId == ((Node) o).getNodeId())
+        if (nodeId == ((Node) o).getNodeId())
             return true;
 
         return false;
