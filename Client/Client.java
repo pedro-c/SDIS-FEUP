@@ -11,7 +11,7 @@ import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static Client.Client.Task.CREATING_CHAT;
+import static Client.Client.Task.*;
 import static Utilities.Constants.*;
 import static Utilities.Utilities.createHash;
 import static Utilities.Utilities.getTimestamp;
@@ -94,8 +94,7 @@ public class Client {
             case 2:
                 break;
             case 3:
-                atualState = Task.HOLDING;
-                mainMenu();
+                signOut();
                 break;
             default:
                 System.exit(0);
@@ -225,10 +224,10 @@ public class Client {
             case WAITING_SIGNIN:
             case WAITING_SIGNUP:
                 if (response.getMessageType().equals(CLIENT_SUCCESS)) {
-                    atualState = Task.SIGNED_IN;
+                    atualState = SIGNED_IN;
                     signInMenu();
                 } else {
-                    atualState = Task.HOLDING;
+                    atualState = HOLDING;
                     printError(response.getBody());
                     mainMenu();
                 }
@@ -237,10 +236,15 @@ public class Client {
                 if (response.getMessageType().equals(CLIENT_SUCCESS)) {
                     storeChat((Chat) response.getObject());
                 } else {
-                    atualState = Task.HOLDING;
+                    atualState = HOLDING;
                     printError(response.getBody());
                     signInMenu();
                 }
+                break;
+            case WAITING_SIGNOUT:
+                atualState = HOLDING;
+                System.out.println("\nSigned out!!");
+                mainMenu();
                 break;
             default:
                 break;
@@ -274,7 +278,21 @@ public class Client {
         }
     }
 
+    /**
+     * Signs out the user
+     */
+    public void signOut(){
+        atualState = WAITING_SIGNOUT;
+
+        BigInteger clientId = getClientId();
+
+        Message message = new Message(SIGNOUT, clientId, clientId.toString());
+        messageHandler = new MessageHandler(message, serverIp, Integer.toString(serverPort), this);
+        threadPool.submit(messageHandler);
+    }
+
     public enum Task {
-        HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT
+        HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
+        WAITING_SIGNOUT
     }
 }

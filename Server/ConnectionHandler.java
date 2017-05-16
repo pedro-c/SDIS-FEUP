@@ -82,6 +82,8 @@ public class ConnectionHandler implements Runnable {
                     System.out.println("REDIRECTING ID: " + response.getSenderId());
                     server.redirect(response);
                 }
+            case SIGNOUT:
+                return server.signOutUser(response.getSenderId());
             case CREATE_CHAT:
                 return server.createChat((Chat) response.getObject());
             case NEWNODE:

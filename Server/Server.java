@@ -512,5 +512,14 @@ public class Server extends Node implements Serializable {
     public ArrayList<Node> getFingerTable() {
         return fingerTable;
     }
+
+    public Message signOutUser(BigInteger userId){
+        if(loggedInUsers.containsKey(userId)){
+            loggedInUsers.remove(userId);
+            System.out.println("Signed out user with id: " + userId);
+        }
+
+        return (new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId)));
+    }
 }
 

@@ -30,6 +30,9 @@ public class Constants {
     //CREATECHAT SenderId Chat
     public static final String CREATE_CHAT = "CREATECHAT";
 
+    //SIGNOUT SenderId userId
+    public static final String SIGNOUT = "SIGNOUT";
+
     //Directories
     public static final String USER_DIRECTORY = "users";
     public static final String CHAT_DIRECTORY = "chats";
