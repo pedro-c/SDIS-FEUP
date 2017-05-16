@@ -216,7 +216,7 @@ public class Server extends Node implements Serializable{
     public void updateFingerTableFromSuccessor(ArrayList<Node> successorFingerTable){
 
         System.out.println(successorFingerTable.size());
-        for(int i = 1; i<successorFingerTable.size(); i++){
+        for(int i = 0; i<successorFingerTable.size(); i++){
             updateFingerTable(successorFingerTable.get(i));
         }
 
@@ -235,24 +235,24 @@ public class Server extends Node implements Serializable{
 
         Node successor = serverLookUp(newNodeKey);
 
-        notifySuccessorOfItsPredecessor(successor);
+        notifySuccessorOfItsPredecessor(successor, newNode);
 
+        if(successor.getNodeId() == fingerTable.get(1).getNodeId()){
+            sendFingerTableToSuccessor();
+        }
 
-        if(successor == predecessor){
+        if(successor.getNodeId() == predecessor.getNodeId()){
             sendFingerTableToPredecessor(newNode);
             System.out.println("Case1");
         }else if(newNode.getNodeId() > predecessor.getNodeId() && newNode.getNodeId() < this.getNodeId()){
             sendFingerTableToPredecessor(newNode);
             System.out.println("Case2");
-        }else if(successor == this && fingerTable.get(MAX_FINGER_TABLE_SIZE).getNodeId() != this.getNodeId()){
+        }else if(successor.getNodeId() == this.getNodeId() && fingerTable.get(MAX_FINGER_TABLE_SIZE).getNodeId() != this.getNodeId()){
             joinNetwork(newNode, fingerTable.get(MAX_FINGER_TABLE_SIZE));
             System.out.println("Case3");
-        }else if(successor != this){
-            joinNetwork(newNode,successor);
-            System.out.println("Case4");
         }
 
-        if(this.predecessor == this)
+        if(this.predecessor.getNodeId() == this.getNodeId())
             this.predecessor=newNode;
     }
 
@@ -272,6 +272,8 @@ public class Server extends Node implements Serializable{
 
     public void sendFingerTableToPredecessor(Node newNode){
 
+        this.setPredecessor(newNode);
+
         Message message = new Message(SUCCESSOR_FT, new BigInteger(Integer.toString(this.getNodeId())), fingerTable);
 
         MessageHandler handler = new MessageHandler(message, newNode.getNodeIp(), newNode.getNodePort(), this);
@@ -282,7 +284,7 @@ public class Server extends Node implements Serializable{
     }
 
     public void sendFingerTableToSuccessor(){
-        
+
         Node successor = fingerTable.get(1);
 
         Message message = new Message(SUCCESSOR_FT, new BigInteger(Integer.toString(this.getNodeId())), fingerTable);
@@ -294,9 +296,7 @@ public class Server extends Node implements Serializable{
 
     }
 
-    public void notifySuccessorOfItsPredecessor(Node newNode){
-
-        Node successor = fingerTable.get(1);
+    public void notifySuccessorOfItsPredecessor(Node successor, Node newNode){
 
         Message message = new Message(PREDECESSOR, new BigInteger(Integer.toString(this.getNodeId())), newNode);
 
@@ -511,7 +511,7 @@ public class Server extends Node implements Serializable{
 
     public void setPredecessor(Node node) {
 
-        if(this.predecessor != node){
+        if(this.predecessor.getNodeId() != node.getNodeId()){
             updateFingerTable(node);
             this.predecessor = node;
             System.out.println("New predecessor: " + node.getNodeId());
@@ -523,12 +523,17 @@ public class Server extends Node implements Serializable{
         System.out.println("FINGERTABLE");
         System.out.println("-----------");
         System.out.println("Node ID: " + this.getNodeId());
+        System.out.println("Predecessor: " + this.predecessor.getNodeId());
         System.out.println("-----------");
         System.out.println("FINGERtableSize: " + fingerTable.size());
         for (int i = 1; i < fingerTable.size(); i++) {
             System.out.println(i + "    " + fingerTable.get(i).getNodeId());
         }
         System.out.println("-----------");
+    }
+
+    public ArrayList<Node> getFingerTable(){
+        return fingerTable;
     }
 }
 
