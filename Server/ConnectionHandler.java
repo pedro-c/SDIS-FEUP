@@ -78,7 +78,9 @@ public class ConnectionHandler implements Runnable {
                 server.sendFingerTableToSuccessor();
                 break;
             case SUCCESSOR_FT:
-                server.updateFingerTableFromSuccessor((ArrayList<Node>) response.getObject());
+                ArrayList<Node> ft = (ArrayList<Node>) response.getObject();
+                server.updateFingerTableFromSuccessor(ft);
+                server.setPredecessor(ft.get(0));
                 break;
             default:
                 break;
