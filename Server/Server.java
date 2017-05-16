@@ -66,7 +66,7 @@ public class Server extends Node {
 
         serversInfo = new ArrayList<Node>();
         chats = new ConcurrentHashMap<BigInteger, Chat>();
-        loggedInUsers = new ConcurrentHashMap<>();
+        loggedInUsers = new ConcurrentHashMap<BigInteger, SSLSocket>();
 
         loadServersInfo();
     }
@@ -109,8 +109,6 @@ public class Server extends Node {
         sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         try {
             sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(Integer.parseInt(this.getNodePort()));
-            // TODO: Not working
-            // sslServerSocket.setNeedClientAuth(true);
             sslServerSocket.setEnabledCipherSuites(sslServerSocket.getSupportedCipherSuites());
 
         } catch (IOException e) {
@@ -374,6 +372,7 @@ public class Server extends Node {
         Message message = null;
 
         //TODO: FALAR COM OS SERVIDORES
+
         //This email is valid? Server knows?
         if(users.get(createHash(chat.getParticipant_email()))==null) {
             System.out.println("Invalid user Email.");
@@ -384,7 +383,6 @@ public class Server extends Node {
             message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId),Constants.ERROR_CREATING_CHAT);
         }
         else {
-            System.out.println(0);
             //TODO: Adicionar participantes
            // chat.addParticipant(users.get(createHash(chat.getParticipant_email())));
             chats.put(chat.getIdChat(),chat);

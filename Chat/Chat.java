@@ -12,27 +12,20 @@ import java.util.Set;
  */
 public class Chat implements Serializable {
 
-    //criador
+
     private BigInteger idChat;
     private String chatName;
     private String creatorEmail;
-    //TODO: Faz sentido ter no client??
-    private Set<User> participants;
     private String participant_email;
-    private ArrayList<ChatMessage>  chatMessages;
 
+    //TODO: Faz sentido ter no client??
+   // private Set<User> participants;
+
+    //private ArrayList<ChatMessage>chatMessages;
 
     public Chat(BigInteger idChat, String creatorEmail) {
         this.idChat = idChat;
         this.creatorEmail = creatorEmail;
-    }
-
-    public void addParticipant(User user){
-        participants.add(user);
-    }
-
-    public void removeParticipant(User user){
-        participants.remove(user);
     }
 
     public void setChatName(String chatName) {

@@ -57,10 +57,11 @@ public class Client {
 
         this.serverPort = serverPort;
         this.serverIp = serverIp;
-
+        this.userChats = new Hashtable<BigInteger, Chat>();
         this.atualState = Task.HOLDING;
 
         scannerIn = new Scanner(System.in);
+
     }
 
     /**
@@ -215,8 +216,7 @@ public class Client {
      * @param chat
      */
     public void storeChat(Chat chat){
-        //TODO: Not working
-        //userChats.put(chat.getIdChat(),chat);
+        userChats.put(chat.getIdChat(),chat);
         System.out.println(1);
         openChat(chat);
     }
