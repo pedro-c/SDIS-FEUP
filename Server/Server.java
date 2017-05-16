@@ -4,7 +4,6 @@ import Messages.Message;
 import Chat.Chat;
 import Messages.MessageHandler;
 import Utilities.Constants;
-import com.sun.org.apache.bcel.internal.generic.IF_ACMPEQ;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -30,7 +29,7 @@ public class Server extends Node {
      */
     private Hashtable<BigInteger, User> users;
     private ArrayList<Node> serversInfo;
-    private ConcurrentHashMap<BigInteger, Chat> chats;
+    private ConcurrentHashMap<BigInteger, ServerChat> chats;
 
     //Logged in users
     private ConcurrentHashMap<BigInteger, SSLSocket> loggedInUsers;
@@ -65,7 +64,7 @@ public class Server extends Node {
         users = new Hashtable<>();
 
         serversInfo = new ArrayList<Node>();
-        chats = new ConcurrentHashMap<BigInteger, Chat>();
+        chats = new ConcurrentHashMap<BigInteger, ServerChat>();
         loggedInUsers = new ConcurrentHashMap<BigInteger, SSLSocket>();
 
         loadServersInfo();
@@ -383,10 +382,13 @@ public class Server extends Node {
             message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId),Constants.ERROR_CREATING_CHAT);
         }
         else {
-            //TODO: Adicionar participantes
-           // chat.addParticipant(users.get(createHash(chat.getParticipant_email())));
-            chats.put(chat.getIdChat(),chat);
+
+            ServerChat newChat = new ServerChat(chat.getIdChat(),chat.getParticipant_email());
             System.out.println("Created chat with success");
+            newChat.addParticipant(users.get(createHash(chat.getParticipant_email())));
+            System.out.println("Added participants with success");
+            chats.put(newChat.getIdChat(),newChat);
+            System.out.println("Stored chat with success");
             message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId),chat);
         }
 
