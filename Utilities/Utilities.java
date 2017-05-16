@@ -42,7 +42,7 @@ public class Utilities {
     }
 
     public static int get32bitHashValue(BigInteger bigInteger){
-        return bigInteger.intValue();
+        return Math.abs(bigInteger.intValue());
     }
 
     public static long getTimestamp(){

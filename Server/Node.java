@@ -44,7 +44,7 @@ public class Node implements Serializable{
      * er ip and server port
      */
     public int setNodeIdentifier() {
-        return get32bitHashValue(createHash(nodeIp +nodePort));
+        return Math.abs(get32bitHashValue(createHash(nodeIp +nodePort)));
     }
 
     /**

@@ -64,12 +64,24 @@ public class ConnectionHandler implements Runnable {
         switch (response.getMessageType()) {
             case SIGNIN:
                  body = response.getBody().split(" ");
-                server.saveConnection(this.sslSocket, response.getSenderId());
-                return server.loginUser(body[0], body[1]);
+                System.out.println("REQUEST ID: " + response.getSenderId().intValue());
+                 if(server.isResponsibleFor(response.getSenderId())) {
+                     server.saveConnection(this.sslSocket, response.getSenderId());
+                     return server.loginUser(body[0], body[1]);
+                 }else{
+                     System.out.println("REDIRECTING ID: " + response.getSenderId().intValue());
+                     server.redirect(response);
+                 }
             case SIGNUP:
                  body = response.getBody().split(" ");
-                 server.saveConnection(this.sslSocket, response.getSenderId());
-                return server.addUser(body[0],body[1]);
+                System.out.println("REQUEST ID: " + response.getSenderId().intValue());
+                if(server.isResponsibleFor(response.getSenderId())) {
+                    server.saveConnection(this.sslSocket, response.getSenderId());
+                    return server.addUser(body[0],body[1]);
+                }else{
+                    System.out.println("REDIRECTING ID: " + response.getSenderId().intValue());
+                    server.redirect(response);
+                }
             case CREATE_CHAT:
                 return server.createChat((Chat) response.getObject());
             case NEWNODE:

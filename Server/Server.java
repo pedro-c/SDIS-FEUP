@@ -4,6 +4,7 @@ import Messages.Message;
 import Chat.Chat;
 import Messages.MessageHandler;
 import Utilities.Constants;
+import com.sun.org.apache.xml.internal.security.algorithms.MessageDigestAlgorithm;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -48,7 +49,7 @@ public class Server extends Node implements Serializable{
      * @param args ServerId ServerPort KnownServerId KnownServer Port
      */
     public Server(String args[]) {
-        super(Integer.parseInt(args[0]), args[1], args[2]);
+        super(args[0], args[1]);
         users = new Hashtable<>();
         serversInfo = new ArrayList<Node>();
 
@@ -57,8 +58,8 @@ public class Server extends Node implements Serializable{
         initFingerTable();
         printFingerTable();
         initServerSocket();
-        if (args.length > 3) {
-            Node knownNode = new Node(Integer.parseInt(args[3]), args[4], args[5]);
+        if (args.length > 2) {
+            Node knownNode = new Node(args[2], args[3]);
             joinNetwork(this,knownNode);
         }
 
@@ -77,7 +78,7 @@ public class Server extends Node implements Serializable{
         chats = new ConcurrentHashMap<BigInteger, ServerChat>();
         loggedInUsers = new ConcurrentHashMap<BigInteger, SSLSocket>();
 
-        loadServersInfo();
+        //loadServersInfo();
     }
 
     /**
@@ -176,6 +177,33 @@ public class Server extends Node implements Serializable{
         }
         System.out.println("Successor of " + key + " : " + successor.getNodeId());
         return successor;
+    }
+
+    public boolean isResponsibleFor(BigInteger resquestId){
+
+        int tempId = resquestId.intValue();
+
+        Node n = serverLookUp(tempId);
+
+        if(n.getNodeId() == this.getNodeId())
+            return true;
+
+
+        return false;
+    }
+
+
+    public void redirect(Message request){
+
+        int tempId = request.getSenderId().intValue();
+
+        Node n = serverLookUp(tempId);
+
+        MessageHandler redirect = new MessageHandler(request, n.getNodeIp(), n.getNodePort(), this);
+
+        redirect.connectToServer();
+        redirect.sendMessage();
+
     }
 
     /**
