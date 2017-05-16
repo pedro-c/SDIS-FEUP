@@ -451,7 +451,7 @@ public class Server extends Node implements Serializable {
      * @param email    user email
      * @param password user password
      */
-    public Message addUser(String email, String password) {
+    public void addUser(String email, String password) {
 
         System.out.println("Sign up with  " + email);
 
@@ -468,7 +468,9 @@ public class Server extends Node implements Serializable {
             System.out.println("Signed up with success!");
         }
 
-        return message;
+        MessageHandler handler = new MessageHandler(message, message.getClientAddress(),message.getClientPort(),this);
+        threadPool.submit(handler);
+
     }
 
     /**

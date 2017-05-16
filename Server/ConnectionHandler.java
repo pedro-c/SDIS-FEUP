@@ -69,7 +69,6 @@ public class ConnectionHandler implements Runnable {
                     //server.saveConnection(this.sslSocket, response.getSenderId());
                     server.loginUser(body[0], body[1]);
                     closeConnection();
-                    break;
                 } else {
                     System.out.println("REDIRECTING ID: " + response.getSenderId().intValue());
                     if(response.getClientPort()==-1 || response.getClientAddress()==null){
@@ -79,16 +78,20 @@ public class ConnectionHandler implements Runnable {
                     server.redirect(response);
                     closeConnection();
                 }
+                break;
             case SIGNUP:
                 body = response.getBody().split(" ");
                 System.out.println("REQUEST ID: " + response.getSenderId().intValue());
                 if (server.isResponsibleFor(response.getSenderId())) {
                     server.saveConnection(this.sslSocket, response.getSenderId());
-                    return server.addUser(body[0], body[1]);
+                    server.addUser(body[0], body[1]);
+                    closeConnection();
                 } else {
                     System.out.println("REDIRECTING ID: " + response.getSenderId().intValue());
                     server.redirect(response);
+                    closeConnection();
                 }
+                break;
             case CREATE_CHAT:
                 if(server.isResponsibleFor(response.getSenderId()))
                     server.createChat((Chat) response.getObject());
@@ -96,6 +99,7 @@ public class ConnectionHandler implements Runnable {
                     System.out.println("REDIRECTING ID: " + response.getSenderId().intValue());
                     server.redirect(response);
                 }
+                break;
             case NEWNODE:
                 body = response.getBody().split(" ");
                 server.newNode(body);
