@@ -172,7 +172,7 @@ public class Server extends Node implements Serializable {
 
     public boolean isResponsibleFor(BigInteger resquestId) {
 
-        int tempId = resquestId.intValue();
+        int tempId = Math.abs(resquestId.intValue());
 
         Node n = serverLookUp(tempId);
 
@@ -186,7 +186,7 @@ public class Server extends Node implements Serializable {
 
     public void redirect(Message request) {
 
-        int tempId = request.getSenderId().intValue();
+        int tempId = Math.abs(request.getSenderId().intValue());
 
         Node n = serverLookUp(tempId);
 
