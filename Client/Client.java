@@ -48,7 +48,6 @@ public class Client {
         }
 
         String serverIp = args[0];
-
         int serverPort = Integer.parseInt(args[1]);
 
         if (serverPort < 0 && serverPort > 65535) {
@@ -154,7 +153,7 @@ public class Client {
         atualState = Task.WAITING_SIGNIN;
         String password = getCredentials();
         Message message = new Message(SIGNIN, getClientId(), email, createHash(password).toString());
-        messageHandler = new MessageHandler(message, serverIp, Integer.toString(serverPort), this);
+        messageHandler = new MessageHandler(message, serverIp, serverPort, this);
         threadPool.submit(messageHandler);
 
     }
@@ -166,7 +165,7 @@ public class Client {
         atualState = Task.WAITING_SIGNUP;
         String password = getCredentials();
         Message message = new Message(SIGNUP, getClientId(), email, createHash(password).toString());
-        messageHandler = new MessageHandler(message, serverIp, Integer.toString(serverPort), this);
+        messageHandler = new MessageHandler(message, serverIp, serverPort, this);
         threadPool.submit(messageHandler);
     }
 
@@ -276,5 +275,21 @@ public class Client {
 
     public enum Task {
         HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT
+    }
+
+    /**
+     * Sets server port
+     * @param serverPort
+     */
+    public void setServerPort(int serverPort) {
+        this.serverPort = serverPort;
+    }
+
+    /**
+     * Sets server ip
+     * @param serverIp
+     */
+    public void setServerIp(String serverIp) {
+        this.serverIp = serverIp;
     }
 }

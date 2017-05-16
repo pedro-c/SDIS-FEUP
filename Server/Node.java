@@ -2,6 +2,8 @@ package Server;
 
 
 import java.io.Serializable;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import static Utilities.Utilities.createHash;
 import static Utilities.Utilities.get32bitHashValue;
@@ -10,25 +12,15 @@ public class Node implements Serializable {
 
     protected int nodeId;
     protected String nodeIp;
-    protected String nodePort;
+    protected int nodePort;
 
-    /**
-     * TESTING constructor giving node ID instead of getting from hash
-     * (use second constructor on final version)
-     */
-    public Node(int id, String ip, String port) {
-        this.nodeIp = ip;
-        this.nodePort = port;
-        this.nodeId = id;
-    }
-
-    public Node(String ip, String port) {
+    public Node(String ip, int port) {
         this.nodeIp = ip;
         this.nodePort = port;
         this.nodeId = setNodeIdentifier();
     }
 
-    public Node(String ip, String port, int key) {
+    public Node(String ip, int port, int key) {
         this.nodeIp = ip;
         this.nodePort = port;
         this.nodeId = key;
@@ -43,7 +35,7 @@ public class Node implements Serializable {
      * er ip and server port
      */
     public int setNodeIdentifier() {
-        return Math.abs(get32bitHashValue(createHash(nodeIp + nodePort)));
+        return Math.abs(get32bitHashValue(createHash(nodeIp+ Integer.toString(nodePort))));
     }
 
     /**
@@ -65,7 +57,7 @@ public class Node implements Serializable {
      *
      * @return node port
      */
-    public String getNodePort() {
+    public int getNodePort() {
         return nodePort;
     }
 

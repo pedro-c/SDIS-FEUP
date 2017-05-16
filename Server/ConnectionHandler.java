@@ -51,6 +51,7 @@ public class ConnectionHandler implements Runnable {
         }
     }
 
+
     /**
      * Analyses Responses
      *
@@ -58,7 +59,6 @@ public class ConnectionHandler implements Runnable {
      */
     public Message analyseResponse(Message response) {
         String[] body;
-
         System.out.println(response.getMessageType());
 
         switch (response.getMessageType()) {
@@ -66,11 +66,18 @@ public class ConnectionHandler implements Runnable {
                 body = response.getBody().split(" ");
                 System.out.println("REQUEST ID: " + response.getSenderId().intValue());
                 if (server.isResponsibleFor(response.getSenderId())) {
-                    server.saveConnection(this.sslSocket, response.getSenderId());
-                    return server.loginUser(body[0], body[1]);
+                    //server.saveConnection(this.sslSocket, response.getSenderId());
+                    server.loginUser(body[0], body[1]);
+                    closeConnection();
+                    break;
                 } else {
                     System.out.println("REDIRECTING ID: " + response.getSenderId().intValue());
+                    if(response.getClientPort()==-1 || response.getClientAddress()==null){
+                        response.setClientAddress(sslSocket.getInetAddress().toString());
+                        response.setClientPort(sslSocket.getPort());
+                    }
                     server.redirect(response);
+                    closeConnection();
                 }
             case SIGNUP:
                 body = response.getBody().split(" ");
@@ -83,7 +90,12 @@ public class ConnectionHandler implements Runnable {
                     server.redirect(response);
                 }
             case CREATE_CHAT:
-                return server.createChat((Chat) response.getObject());
+                if(server.isResponsibleFor(response.getSenderId()))
+                    server.createChat((Chat) response.getObject());
+                else {
+                    System.out.println("REDIRECTING ID: " + response.getSenderId().intValue());
+                    server.redirect(response);
+                }
             case NEWNODE:
                 body = response.getBody().split(" ");
                 server.newNode(body);

@@ -3,7 +3,6 @@ package Server;
 import Chat.Chat;
 import Messages.Message;
 import Messages.MessageHandler;
-import Utilities.Constants;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -29,7 +28,6 @@ public class Server extends Node implements Serializable {
      */
     private Hashtable<BigInteger, User> users;
     private ArrayList<Node> serversInfo;
-    private ConcurrentHashMap<BigInteger, ServerChat> chats;
 
     //Logged in users
     private ConcurrentHashMap<BigInteger, SSLSocket> loggedInUsers;
@@ -48,7 +46,7 @@ public class Server extends Node implements Serializable {
      * @param args ServerId ServerPort KnownServerId KnownServer Port
      */
     public Server(String args[]) {
-        super(args[0], args[1]);
+        super(args[0], Integer.parseInt(args[1]));
         users = new Hashtable<>();
         serversInfo = new ArrayList<Node>();
 
@@ -58,7 +56,7 @@ public class Server extends Node implements Serializable {
         printFingerTable();
         initServerSocket();
         if (args.length > 2) {
-            Node knownNode = new Node(args[2], args[3]);
+            Node knownNode = new Node(args[2], Integer.parseInt(args[3]));
             joinNetwork(this, knownNode);
         }
 
@@ -74,7 +72,6 @@ public class Server extends Node implements Serializable {
         users = new Hashtable<>();
 
         serversInfo = new ArrayList<Node>();
-        chats = new ConcurrentHashMap<BigInteger, ServerChat>();
         loggedInUsers = new ConcurrentHashMap<BigInteger, SSLSocket>();
 
         //loadServersInfo();
@@ -84,7 +81,8 @@ public class Server extends Node implements Serializable {
      * @param args [serverIp] [serverPort] [knownServerIp] [knownServerPort]
      */
     public static void main(String[] args) {
-        Server server = new Server(args);
+        Server server = null;
+        server = new Server(args);
         server.listen();
     }
 
@@ -111,7 +109,7 @@ public class Server extends Node implements Serializable {
     public void initServerSocket() {
         sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         try {
-            sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(Integer.parseInt(this.getNodePort()));
+            sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(getNodePort());
             sslServerSocket.setEnabledCipherSuites(sslServerSocket.getSupportedCipherSuites());
 
         } catch (IOException e) {
@@ -135,7 +133,7 @@ public class Server extends Node implements Serializable {
      */
     public void joinNetwork(Node newNode, Node knownNode) {
 
-        Message message = new Message(NEWNODE, BigInteger.valueOf(this.getNodeId()), Integer.toString(newNode.getNodeId()), newNode.getNodeIp(), newNode.getNodePort());
+        Message message = new Message(NEWNODE, BigInteger.valueOf(this.getNodeId()), Integer.toString(newNode.getNodeId()), newNode.getNodeIp().toString(), Integer.toString(newNode.getNodePort()));
 
         MessageHandler handler = new MessageHandler(message, knownNode.getNodeIp(), knownNode.getNodePort(), this);
 
@@ -197,7 +195,6 @@ public class Server extends Node implements Serializable {
         int tempId = request.getSenderId().intValue();
 
         Node n = serverLookUp(tempId);
-
         MessageHandler redirect = new MessageHandler(request, n.getNodeIp(), n.getNodePort(), this);
 
         redirect.connectToServer();
@@ -275,7 +272,7 @@ public class Server extends Node implements Serializable {
     public void newNode(String[] info) {
         int newNodeKey = Integer.parseInt(info[0]);
         String newNodeIp = info[1];
-        String newNodePort = info[2];
+        int newNodePort = Integer.parseInt(info[2]);
 
         Node newNode = new Node(newNodeIp, newNodePort, newNodeKey);
         updateFingerTable(newNode);
@@ -481,7 +478,7 @@ public class Server extends Node implements Serializable {
      * @param password user password
      * @return true if user authentication went well, false if don't
      */
-    public Message loginUser(String email, String password) {
+    public void loginUser(String email, String password) {
 
         System.out.println("Sign in with " + email);
 
@@ -499,8 +496,9 @@ public class Server extends Node implements Serializable {
             System.out.println("Logged in with success!");
             message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
         }
+        MessageHandler handler = new MessageHandler(message, message.getClientAddress(),message.getClientPort(),this);
+        threadPool.submit(handler);
 
-        return message;
     }
 
     /**
@@ -525,7 +523,7 @@ public class Server extends Node implements Serializable {
             List<String> lines = Files.readAllLines(Paths.get(SERVERS_INFO));
             for (String line : lines) {
                 String infos[] = line.split(" ");
-                Node node = new Node(infos[0], infos[1]);
+                Node node = new Node(infos[0], Integer.parseInt(infos[1]));
 
                 if (!serversInfo.contains(node) && nodeId != node.getNodeId()) {
                     System.out.println("Read server with ip: " + infos[0] + " and port " + infos[1]);
@@ -546,8 +544,7 @@ public class Server extends Node implements Serializable {
     public Message createChat(Chat chat) {
         Message message = null;
 
-        //TODO: FALAR COM OS SERVIDORES
-
+/*
         //This email is valid? Server knows?
         if (users.get(createHash(chat.getParticipant_email())) == null) {
             System.out.println("Invalid user Email.");
@@ -565,7 +562,7 @@ public class Server extends Node implements Serializable {
             System.out.println("Stored chat with success");
             message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId), chat);
         }
-
+*/
         return message;
     }
 

@@ -40,7 +40,7 @@ public class Constants {
 
     //Numbers
     //TODO: CHANGE max finger table size to 32 on final version
-    public static final int MAX_FINGER_TABLE_SIZE = 5;
+    public static final int MAX_FINGER_TABLE_SIZE = 32;
     public static final int MAX_NUMBER_OF_REQUESTS = 10;
     public static final int AFTER = 10;
     public static final int BEFORE = 20;

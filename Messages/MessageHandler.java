@@ -26,18 +26,18 @@ public class MessageHandler implements Runnable {
 
     private Message message;
 
-    public MessageHandler(Message message, String ip, String port, Server server) {
+    public MessageHandler(Message message, String ip, int port, Server server) {
 
         this.ip = ip;
-        this.port = Integer.parseInt(port);
+        this.port = port;
         this.server = server;
         this.message = message;
     }
 
-    public MessageHandler(Message message, String ip, String port, Client client) {
+    public MessageHandler(Message message, String ip, int port, Client client) {
 
         this.ip = ip;
-        this.port = Integer.parseInt(port);
+        this.port = port;
         this.client = client;
         this.message = message;
     }
@@ -57,7 +57,7 @@ public class MessageHandler implements Runnable {
 
         try {
             sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-            sslSocket = (SSLSocket) sslSocketFactory.createSocket(InetAddress.getByName(ip), port);
+            sslSocket = (SSLSocket) sslSocketFactory.createSocket(ip, port);
             sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
             outputStream = new ObjectOutputStream(sslSocket.getOutputStream());
             inputStream = new ObjectInputStream(sslSocket.getInputStream());
@@ -122,9 +122,13 @@ public class MessageHandler implements Runnable {
             //PREDECESSOR NodeId NodeIp NodePort
             case PREDECESSOR:
                 nodeInfo = response.getBody().split(" ");
-                this.server.setPredecessor(new Node(nodeInfo[1], nodeInfo[2], Integer.parseInt(nodeInfo[0])));
+                this.server.setPredecessor(new Node(nodeInfo[1], Integer.parseInt(nodeInfo[2]), Integer.parseInt(nodeInfo[0])));
                 break;
             case CLIENT_SUCCESS:
+                client.setServerIp(sslSocket.getInetAddress().toString());
+                client.setServerPort(sslSocket.getPort());
+                client.verifyState(response);
+                break;
             case CLIENT_ERROR:
                 client.verifyState(response);
                 break;

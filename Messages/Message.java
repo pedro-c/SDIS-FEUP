@@ -1,5 +1,4 @@
 package Messages;
-
 import java.io.Serializable;
 import java.math.BigInteger;
 
@@ -12,6 +11,8 @@ public class Message implements Serializable {
 
     private String messageType;
     private BigInteger senderId;
+    private String clientAddress;
+    private int clientPort;
     private String body;
 
     private Object object;
@@ -27,12 +28,14 @@ public class Message implements Serializable {
         this.messageType = messageType;
         this.senderId = senderId;
         this.body = String.join(" ", body);
+        this.clientPort = -1;
+        this.clientAddress = null;
     }
 
 
     public Message(String messageType, BigInteger senderId, Object obj) {
         this.messageType = messageType;
-        this.senderId = senderId;
+        this.clientPort = clientPort;
 
         if (obj instanceof String)
             this.body = String.join(" ", (String) obj);
@@ -93,6 +96,37 @@ public class Message implements Serializable {
         return object;
     }
 
+    /**
+     * Get client InetAddress
+     * @return
+     */
+    public String getClientAddress() {
+        return clientAddress;
+    }
+
+    /**
+     * Get client port
+     * @return
+     */
+    public int getClientPort() {
+        return clientPort;
+    }
+
+    /**
+     * Set client address
+     * @param clientAddress
+     */
+    public void setClientAddress(String clientAddress) {
+        this.clientAddress = clientAddress;
+    }
+
+    /**
+     * Set client port
+     * @param clientPort
+     */
+    public void setClientPort(int clientPort) {
+        this.clientPort = clientPort;
+    }
     /**
      * Prints message content
      */
