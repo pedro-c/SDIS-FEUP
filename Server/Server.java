@@ -15,6 +15,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,8 +28,12 @@ public class Server extends Node implements Serializable{
      * Key is the user id (hash from e-mail) and value is the 256-bit hashed user password
      */
     private Hashtable<BigInteger, User> users;
-
     private ArrayList<Node> serversInfo;
+    private ConcurrentHashMap<BigInteger, ServerChat> chats;
+
+    //Logged in users
+    private ConcurrentHashMap<BigInteger, SSLSocket> loggedInUsers;
+
     /**
      * Key is an integer representing the m nodes and the value it's the server identifier
      * (32-bit integer hash from ip+port)
@@ -56,6 +61,23 @@ public class Server extends Node implements Serializable{
             Node knownNode = new Node(Integer.parseInt(args[3]), args[4], args[5]);
             joinNetwork(this,knownNode);
         }
+
+        //creating directories
+        String usersPath = DATA_DIRECTORY + "/" + nodeId + "/" + USER_DIRECTORY;
+        String chatsPath = DATA_DIRECTORY + "/" + nodeId + "/" + CHAT_DIRECTORY;
+
+        createDir(DATA_DIRECTORY);
+        createDir(DATA_DIRECTORY + "/" + Integer.toString(nodeId));
+        createDir(usersPath);
+        createDir(chatsPath);
+
+        users = new Hashtable<>();
+
+        serversInfo = new ArrayList<Node>();
+        chats = new ConcurrentHashMap<BigInteger, ServerChat>();
+        loggedInUsers = new ConcurrentHashMap<BigInteger, SSLSocket>();
+
+        loadServersInfo();
     }
 
     /**
@@ -73,7 +95,9 @@ public class Server extends Node implements Serializable{
         while (true) {
             try {
                 System.out.println("Listening...");
-                ConnectionHandler handler = new ConnectionHandler((SSLSocket) sslServerSocket.accept(), this);
+                SSLSocket socket = (SSLSocket) sslServerSocket.accept();
+                sslServerSocket.setNeedClientAuth(true);
+                ConnectionHandler handler = new ConnectionHandler(socket, this);
                 threadPool.submit(handler);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -88,8 +112,6 @@ public class Server extends Node implements Serializable{
         sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         try {
             sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(Integer.parseInt(this.getNodePort()));
-            // TODO: Not working
-            // sslServerSocket.setNeedClientAuth(true);
             sslServerSocket.setEnabledCipherSuites(sslServerSocket.getSupportedCipherSuites());
 
         } catch (IOException e) {
@@ -415,11 +437,11 @@ public class Server extends Node implements Serializable{
 
         if(users.containsKey(user_email)){
             System.out.println("Email already exists. Try to sign in instead of sign up...");
-            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId), Constants.EMAIL_ALREADY_USED);
+            message = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId), EMAIL_ALREADY_USED);
         }
         else{
             users.put(user_email,new User(email,new BigInteger(password)));
-            message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
+            message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
             System.out.println("Signed up with success!");
         }
 
@@ -443,15 +465,15 @@ public class Server extends Node implements Serializable{
 
         if (users.get(user_email) == null) {
             System.out.println("Try to create an account. Your email was not found on the database...");
-            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId),Constants.EMAIL_NOT_FOUND);
+            message = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId),EMAIL_NOT_FOUND);
         }
         else if (!users.get(user_email).getPassword().equals(new BigInteger(password))) {
             System.out.println("Impossible to sign in, wrong email or password...");
-            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId),Constants.WRONG_PASSWORD);
+            message = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId),WRONG_PASSWORD);
         }
         else {
             System.out.println("Logged in with success!");
-            message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
+            message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
         }
 
         return message;
@@ -499,10 +521,38 @@ public class Server extends Node implements Serializable{
     public Message createChat(Chat chat){
         Message message = null;
 
-        System.out.println(chat.getChatName());
+        //TODO: FALAR COM OS SERVIDORES
+
+        //This email is valid? Server knows?
+        if(users.get(createHash(chat.getParticipant_email()))==null) {
+            System.out.println("Invalid user Email.");
+            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId), Constants.INVALID_USER_EMAIL);
+        }
+        else if(chats.get(chat.getIdChat())!=null){
+            System.out.println("Error creating chat");
+            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId),Constants.ERROR_CREATING_CHAT);
+        }
+        else {
+
+            ServerChat newChat = new ServerChat(chat.getIdChat(),chat.getParticipant_email());
+            System.out.println("Created chat with success");
+            newChat.addParticipant(users.get(createHash(chat.getParticipant_email())));
+            System.out.println("Added participants with success");
+            chats.put(newChat.getIdChat(),newChat);
+            System.out.println("Stored chat with success");
+            message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId),chat);
+        }
 
         return message;
+    }
 
+    /**
+     * Saves client connection
+     * @param sslSocket
+     * @param clientId
+     */
+    public void saveConnection(SSLSocket sslSocket, BigInteger clientId){
+        loggedInUsers.put(clientId,sslSocket);
     }
 
     public Node getPredecessor() {

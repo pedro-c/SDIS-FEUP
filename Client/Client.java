@@ -3,14 +3,15 @@ package Client;
 import Chat.Chat;
 import Messages.Message;
 import Messages.MessageHandler;
-import Utilities.Constants;
 
 import java.io.*;
 import java.math.BigInteger;
+import java.util.Hashtable;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static Client.Client.Task.CREATING_CHAT;
 import static Utilities.Constants.*;
 import static Utilities.Utilities.createHash;
 import static Utilities.Utilities.getTimestamp;
@@ -22,9 +23,11 @@ public class Client {
     private ExecutorService threadPool = Executors.newFixedThreadPool(MAX_NUMBER_OF_REQUESTS);
     private int serverPort;
     private String serverIp;
+    private Hashtable<BigInteger, Chat> userChats;
+    private MessageHandler messageHandler;
 
     public enum Task {
-        HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN
+        HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT
     }
 
     private Task atualState;
@@ -54,10 +57,11 @@ public class Client {
 
         this.serverPort = serverPort;
         this.serverIp = serverIp;
-
+        this.userChats = new Hashtable<BigInteger, Chat>();
         this.atualState = Task.HOLDING;
 
         scannerIn = new Scanner(System.in);
+
     }
 
     /**
@@ -89,6 +93,7 @@ public class Client {
         int option = scannerIn.nextInt();
         switch (option) {
             case 1:
+                atualState = CREATING_CHAT;
                 createNewChat();
                 break;
             case 2:
@@ -103,19 +108,38 @@ public class Client {
     }
 
     /**
+     * Opens chat
+     */
+    public void openChat(Chat chat){
+        String menu = "\n"+ "\n"+ "Chat:  " + chat.getChatName() + "\n" + "\n" + "Send a message to " + chat.getParticipant_email() + "\n" + "\n"+ "\n"+ "\n";
+        System.out.println(menu);
+    }
+
+    /**
      * Creates a new chat
      */
     public void createNewChat(){
         Console console = System.console();
+        atualState = Task.WAITING_CREATE_CHAT;
 
         System.out.println("Name: ");
         String chatName = console.readLine();
-        Chat newChat = new Chat(generateChatId());
+        System.out.println("Invite user to chat with you (email) : ");
+        String participantEmail = console.readLine();
+
+        while (participantEmail == null || participantEmail.equals(email)){
+            System.out.println("You must invite one user to chat with you (email). ");
+            participantEmail = console.readLine();
+        }
+
+        Chat newChat = new Chat (generateChatId(),email);
         if(chatName!=null)
             newChat.setChatName(chatName);
-        Message message = new Message(Constants.CREATE_CHAT, getClientId(), newChat);
-        MessageHandler handler = new MessageHandler(message, serverIp, Integer.toString(serverPort),this);
-        threadPool.submit(handler);
+        newChat.setParticipant_email(participantEmail);
+
+        Message message = new Message(CREATE_CHAT, getClientId(), newChat);
+        messageHandler.setMessage(message);
+        threadPool.submit(messageHandler);
 
     }
 
@@ -134,9 +158,9 @@ public class Client {
     public void signInUser() {
         atualState = Task.WAITING_SIGNIN;
         String password = getCredentials();
-        Message message = new Message(Constants.SIGNIN, getClientId(), email, createHash(password).toString());
-        MessageHandler handler = new MessageHandler(message, serverIp, Integer.toString(serverPort), this);
-        threadPool.submit(handler);
+        Message message = new Message(SIGNIN, getClientId(), email, createHash(password).toString());
+        messageHandler = new MessageHandler(message, serverIp, Integer.toString(serverPort), this);
+        threadPool.submit(messageHandler);
 
     }
 
@@ -146,10 +170,9 @@ public class Client {
     public void signUpUser() {
         atualState = Task.WAITING_SIGNUP;
         String password = getCredentials();
-        Message message = new Message(Constants.SIGNUP, getClientId(), email, createHash(password).toString());
-        MessageHandler handler = null;
-        handler = new MessageHandler(message, serverIp, Integer.toString(serverPort), this);
-        threadPool.submit(handler);
+        Message message = new Message(SIGNUP, getClientId(), email, createHash(password).toString());
+        messageHandler = new MessageHandler(message, serverIp, Integer.toString(serverPort), this);
+        threadPool.submit(messageHandler);
     }
 
     /**
@@ -187,6 +210,16 @@ public class Client {
         return createHash(email);
     }
 
+
+    /**
+     * Stores a chat
+     * @param chat
+     */
+    public void storeChat(Chat chat){
+        userChats.put(chat.getIdChat(),chat);
+        openChat(chat);
+    }
+
     /**
      * Acts according off the actual state
      * @param response response message
@@ -195,7 +228,7 @@ public class Client {
         switch (atualState){
             case WAITING_SIGNIN:
             case WAITING_SIGNUP:
-                if(response.getMessageType().equals(Constants.CLIENT_SUCCESS)){
+                if(response.getMessageType().equals(CLIENT_SUCCESS)){
                     atualState = Task.SIGNED_IN;
                     signInMenu();
                 }
@@ -203,6 +236,16 @@ public class Client {
                     atualState = Task.HOLDING;
                     printError(response.getBody());
                     mainMenu();
+                }
+                break;
+            case WAITING_CREATE_CHAT:
+                if(response.getMessageType().equals(CLIENT_SUCCESS)){
+                    storeChat((Chat) response.getObject());
+                }
+                else {
+                    atualState = Task.HOLDING;
+                    printError(response.getBody());
+                    signInMenu();
                 }
                 break;
             default:
@@ -224,6 +267,12 @@ public class Client {
                 break;
             case WRONG_PASSWORD:
                 System.out.println("\nImpossible to sign in, wrong email or password...");
+                break;
+            case ERROR_CREATING_CHAT:
+                System.out.println("\nError creating chat...");
+                break;
+            case INVALID_USER_EMAIL:
+                System.out.println("\nInvalid user email. Server couldn't find any user with that email ..");
                 break;
             default:
                 break;

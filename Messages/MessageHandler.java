@@ -21,6 +21,7 @@ public class MessageHandler implements Runnable {
     private SSLSocketFactory sslSocketFactory;
     private ObjectInputStream inputStream;
     private ObjectOutputStream outputStream;
+
     private Message message;
 
     public MessageHandler(Message message, String ip, String port, Server server) {
@@ -140,6 +141,10 @@ public class MessageHandler implements Runnable {
             System.out.println("Error closing ssl socket...");
             e.printStackTrace();
         }
+    }
+
+    public void setMessage(Message message) {
+        this.message = message;
     }
 
 }

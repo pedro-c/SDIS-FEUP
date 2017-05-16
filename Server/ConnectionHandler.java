@@ -16,7 +16,7 @@ import static Utilities.Constants.*;
  */
 public class ConnectionHandler implements Runnable {
 
-    private SSLSocket sslSocket;
+    public SSLSocket sslSocket;
     private BufferedReader in;
     private ObjectInputStream serverInputStream;
     private ObjectOutputStream serverOutputStream;
@@ -44,6 +44,7 @@ public class ConnectionHandler implements Runnable {
      * Sends a message through a ssl socket
      */
     public void sendMessage(Message message) {
+        System.out.println("Sending message with type: " + message.getMessageType() + " and body " + message.getBody());
         try {
             serverOutputStream.writeObject(message);
         } catch (IOException e) {
@@ -57,14 +58,17 @@ public class ConnectionHandler implements Runnable {
      */
     public Message analyseResponse(Message response) {
         String[] body;
+
         System.out.println(response.getMessageType());
 
         switch (response.getMessageType()) {
             case SIGNIN:
                  body = response.getBody().split(" ");
+                server.saveConnection(this.sslSocket, response.getSenderId());
                 return server.loginUser(body[0], body[1]);
             case SIGNUP:
                  body = response.getBody().split(" ");
+                 server.saveConnection(this.sslSocket, response.getSenderId());
                 return server.addUser(body[0],body[1]);
             case CREATE_CHAT:
                 return server.createChat((Chat) response.getObject());

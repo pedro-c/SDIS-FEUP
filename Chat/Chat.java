@@ -1,32 +1,26 @@
 package Chat;
 
-import Server.User;
-
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Created by mariajoaomirapaulo on 13/05/17.
- */
+
 public class Chat implements Serializable {
-    //criador
+
     private BigInteger idChat;
     private String chatName;
-    private Set<User> participants;
-    private ArrayList<ChatMessage>  chatMessages;
+    private String creatorEmail;
+    private String participant_email;
+    private Set<String> participants;
+    private ArrayList<ChatMessage> chatMessages;
 
-    public Chat(BigInteger idChat) {
+    public Chat(BigInteger idChat, String creatorEmail) {
         this.idChat = idChat;
-    }
-
-    public void addParticipant(User user){
-        participants.add(user);
-    }
-
-    public void removeParticipant(User user){
-        participants.remove(user);
+        this.creatorEmail = creatorEmail;
+        this.chatMessages = new ArrayList<ChatMessage>();
+        this.participants = new HashSet<>();
     }
 
     public void setChatName(String chatName) {
@@ -35,6 +29,22 @@ public class Chat implements Serializable {
 
     public String getChatName() {
         return chatName;
+    }
+
+    public BigInteger getIdChat() {
+        return idChat;
+    }
+
+    public String getParticipant_email() {
+        return participant_email;
+    }
+
+    public void setParticipant_email(String participant_email) {
+        this.participant_email = participant_email;
+    }
+
+    public void addParticipant(String email){
+        participants.add(email);
     }
 
 }
