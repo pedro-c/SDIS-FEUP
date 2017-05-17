@@ -56,6 +56,14 @@ public class MessageHandler implements Runnable {
         connectToServer();
         sendMessage(message);
         while (true) {
+            System.out.println("Reading response...");
+            receiveResponse();
+        }
+    }
+
+    public void listen() {
+        while (true) {
+            System.out.println("Reading response...");
             receiveResponse();
         }
     }
@@ -106,7 +114,7 @@ public class MessageHandler implements Runnable {
     public void receiveResponse() {
         Message response = null;
         try {
-            System.out.println("Trying to receive message ... ");
+            System.out.println("Trying to receive message...");
             response = (Message) inputStream.readObject();
             handleResponse(response);
         } catch (IOException e) {
@@ -137,8 +145,7 @@ public class MessageHandler implements Runnable {
                 break;
             case CLIENT_SUCCESS:
                 if (client != null) {
-                    System.out.println("AQUIIII  1");
-                    System.out.println("client" + client.getClientId());
+            //        System.out.println("client" + client.getClientId());
                     client.setServerIp(response.getInitialServerAddress());
                     client.setServerPort(response.getInitialServerPort());
                     client.verifyState(response);
@@ -153,6 +160,14 @@ public class MessageHandler implements Runnable {
             default:
                 break;
         }
+
+
+        System.out.println("I'm blocked on signinMenu, waiting for an user input");
+        if(client.getAtualState() == Client.Task.SIGNED_IN || client.getAtualState() == Client.Task.SIGNED_IN){
+            System.out.println("VOU OUVIR");
+            listen();
+        }
+
     }
 
     /**

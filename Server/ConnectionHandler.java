@@ -72,6 +72,7 @@ public class ConnectionHandler implements Runnable {
                 System.out.println("REQUEST ID: " + Integer.remainderUnsigned(response.getSenderId().intValue(), 128));
                 if (server.isResponsibleFor(response.getSenderId())) {
                     System.out.println("I'm the RESPONSIBLE server");
+                    server.saveConnection(sslSocket,response.getSenderId());
                     Message message = server.loginUser(body[0], body[1]);
                     message.setInitialServerAddress(server.getNodeIp());
                     message.setInitialServerPort(server.getNodePort());
@@ -79,9 +80,7 @@ public class ConnectionHandler implements Runnable {
                 } else {
                     System.out.println("REDIRECTING ID: " + Integer.remainderUnsigned(response.getSenderId().intValue(), 128));
                     Node n = server.redirect(response);
-
                     MessageHandler redirect = new MessageHandler(response, n.getNodeIp(), n.getNodePort(), this);
-
                     redirect.connectToServer();
                     redirect.sendMessage();
                     redirect.receiveResponse();
@@ -92,6 +91,7 @@ public class ConnectionHandler implements Runnable {
                 System.out.println("REQUEST ID: " + Integer.remainderUnsigned(response.getSenderId().intValue(), 128));
                 if (server.isResponsibleFor(response.getSenderId())) {
                     System.out.println("I'm the RESPONSIBLE server");
+                    server.saveConnection(sslSocket,response.getSenderId());
                     Message message = server.addUser(body[0], body[1]);
                     message.setInitialServerAddress(server.getNodeIp());
                     message.setInitialServerPort(server.getNodePort());
@@ -99,20 +99,38 @@ public class ConnectionHandler implements Runnable {
                 } else {
                     System.out.println("REDIRECTING ID: " + Integer.remainderUnsigned(response.getSenderId().intValue(), 128));
                     Node n = server.redirect(response);
-
                     MessageHandler redirect = new MessageHandler(response, n.getNodeIp(), n.getNodePort(), this);
-
                     redirect.connectToServer();
                     redirect.sendMessage();
                     redirect.receiveResponse();
                 }
                 break;
             case CREATE_CHAT:
-                if (server.isResponsibleFor(response.getSenderId()))
-                    server.createChat((Chat) response.getObject());
+                if (server.isResponsibleFor(response.getSenderId())){
+                    System.out.println("I'm the RESPONSIBLE server");
+                    return server.createChat((Chat) response.getObject());
+                }
                 else {
                     System.out.println("REDIRECTING ID: " + response.getSenderId().intValue());
-                    server.redirect(response);
+                    Node n = server.redirect(response);
+                    MessageHandler redirect = new MessageHandler(response, n.getNodeIp(), n.getNodePort(), this);
+                    redirect.connectToServer();
+                    redirect.sendMessage();
+                    redirect.receiveResponse();
+                }
+                break;
+            case INVITE_USER:
+                if (server.isResponsibleFor(response.getSenderId())){
+                    System.out.println("I'm the RESPONSIBLE server");
+                    server.createParticipantChat((ServerChat) response.getObject());
+                }
+                else{
+                    System.out.println("REDIRECTING ID: " + response.getSenderId().intValue());
+                    Node n = server.redirect(response);
+                    MessageHandler redirect = new MessageHandler(response, n.getNodeIp(), n.getNodePort(), this);
+                    redirect.connectToServer();
+                    redirect.sendMessage();
+                    redirect.receiveResponse();
                 }
                 break;
             case NEWNODE:
@@ -156,8 +174,7 @@ public class ConnectionHandler implements Runnable {
         try {
             message = (Message) serverInputStream.readObject();
             Message responseMessage = analyseResponse(message);
-            server.saveConnection(sslSocket, responseMessage.getSenderId());
-            System.out.println("Mandando...");
+            System.out.println("Sending...");
             sendMessage(responseMessage);
         } catch (IOException e) {
             System.out.println("Error reading message...");

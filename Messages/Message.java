@@ -38,6 +38,7 @@ public class Message implements Serializable {
         this.messageType = messageType;
         this.initialServerPort = -1;
         this.initialServerAddress = null;
+        this.senderId = senderId;
 
         if (obj instanceof String)
             this.body = String.join(" ", (String) obj);

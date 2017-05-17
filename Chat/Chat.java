@@ -23,9 +23,7 @@ public class Chat implements Serializable {
         this.participants = new HashSet<>();
     }
 
-    public String getCreatorEmail() {
-        return creatorEmail;
-    }
+    public String getCreatorEmail() {return creatorEmail;}
 
     public String getChatName() {
         return chatName;

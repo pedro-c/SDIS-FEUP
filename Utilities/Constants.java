@@ -14,6 +14,9 @@ public class Constants {
     public static final String PREDECESSOR = "PREDECESSOR";
     public static final String SUCCESSOR_FT = "SUCCESSOR_FT";
 
+    //INVITE_USER SenderId Chat password
+    public static final String INVITE_USER = "INVITE_USER";
+
     //SIGNIN SenderId email password
     public static final String SUCCESSOR = "SUCCESSOR";
     public static final String SIGNIN = "SIGNIN";
@@ -28,7 +31,9 @@ public class Constants {
     public static final String CLIENT_ERROR = "CLIENT_ERROR";
 
     //CREATECHAT SenderId Chat
+    //CLIENT_SUCCESS SenderId chatId
     public static final String CREATE_CHAT = "CREATECHAT";
+    public static final String NEW_CHAT_INVITATION = "NEW_CHAT_INVITATION";
 
     //SIGNOUT SenderId userId
     public static final String SIGNOUT = "SIGNOUT";

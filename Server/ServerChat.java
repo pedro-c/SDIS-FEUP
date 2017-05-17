@@ -2,19 +2,16 @@ package Server;
 
 import Chat.ChatMessage;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Created by mariajoaomirapaulo on 16/05/17.
- */
-public class ServerChat {
+public class ServerChat implements Serializable {
 
     private Set<User> participants;
     private BigInteger idChat;
-    //private User creator;
     private String creatorEmail;
     private ArrayList<ChatMessage> chatMessages;
 
@@ -24,7 +21,6 @@ public class ServerChat {
         this.participants = new HashSet<User>();
         this.creatorEmail = creatorEmail;
     }
-
     public void addParticipant(User user) {
         participants.add(user);
     }
@@ -33,5 +29,7 @@ public class ServerChat {
         return idChat;
     }
 
-
+    public String getCreatorEmail() {
+        return creatorEmail;
+    }
 }

@@ -27,6 +27,11 @@ public class Server extends Node implements Serializable {
      * Key is the user id (hash from e-mail) and value is the 256-bit hashed user password
      */
     private Hashtable<BigInteger, User> users;
+    private ArrayList<Node> serversInfo;
+
+    //Logged in users
+    private ConcurrentHashMap<BigInteger, SSLSocket> loggedInUsers;
+
     /**
      * Key is an integer representing the m nodes and the value it's the server identifier
      * (32-bit integer hash from ip+port)
@@ -69,9 +74,7 @@ public class Server extends Node implements Serializable {
         createDir(chatsPath);
 
         users = new Hashtable<>();
-
-        chats = new ConcurrentHashMap<BigInteger, ServerChat>();
-        loggedInUsers = new ConcurrentHashMap<>();
+        loggedInUsers = new ConcurrentHashMap<BigInteger, SSLSocket>();
         serversInfo = new ArrayList<Node>();
     }
 
@@ -149,6 +152,14 @@ public class Server extends Node implements Serializable {
 
         return dht.nodeLookUp(tempId);
     }
+
+    public Node redirect(BigInteger senderId) {
+
+        int tempId = Math.abs(senderId.intValue());
+
+        return serverLookUp(tempId);
+    }
+
 
     /**
      * Function called when a new node message arrives to the server and forwards it to the correct server
@@ -257,7 +268,8 @@ public class Server extends Node implements Serializable {
             System.out.println("Email already exists. Try to sign in instead of sign up...");
             message = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId), EMAIL_ALREADY_USED);
         } else {
-            users.put(user_email, new User(email, new BigInteger(password)));
+            User newUser = new User(email, new BigInteger(password));
+            users.put(user_email,newUser);
             message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
             System.out.println("Signed up with success!");
         }
@@ -315,28 +327,67 @@ public class Server extends Node implements Serializable {
      * @return Message to be sent to the client
      */
     public Message createChat(Chat chat) {
+
+        ServerChat newChat = new ServerChat(chat.getIdChat(), chat.getCreatorEmail());
+        users.get(createHash(chat.getCreatorEmail())).addChat(newChat);
+        Message message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId), newChat.getIdChat().toString());
+
+        ServerChat chat1 = new ServerChat(chat.getIdChat(), chat.getParticipant_email());
+
+        if (isResponsibleFor(createHash(chat.getParticipant_email()))){
+            users.get(createHash(chat.getParticipant_email())).addChat(chat1);
+            //TODO: INVITE PARTICIPANT
+            System.out.println("Added participant with success");
+        }
+        else {
+            Node n = redirect(createHash(chat.getParticipant_email()));
+
+            Message message1 = new Message(Constants.INVITE_USER, BigInteger.valueOf(nodeId), chat1);
+            MessageHandler redirect = new MessageHandler(message1, n.getNodeIp(), n.getNodePort(), this);
+            System.out.println("Nada a ver comigo...XAU");
+            threadPool.submit(redirect);
+        }
+
+
+        return message;
+    }
+
+    public Message createParticipantChat(ServerChat chat){
+
         Message message = null;
 
-/*
-        //This email is valid? Server knows?
-        if (users.get(createHash(chat.getParticipant_email())) == null) {
-            System.out.println("Invalid user Email.");
-            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId), Constants.INVALID_USER_EMAIL);
-        } else if (chats.get(chat.getIdChat()) != null) {
-            System.out.println("Error creating chat");
-            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId), Constants.ERROR_CREATING_CHAT);
-        } else {
+        ServerChat newChat = new ServerChat(chat.getIdChat(), chat.getCreatorEmail());
 
-            ServerChat newChat = new ServerChat(chat.getIdChat(), chat.getParticipant_email());
-            System.out.println("Created chat with success");
-            newChat.addParticipant(users.get(createHash(chat.getParticipant_email())));
-            System.out.println("Added participants with success");
-            chats.put(newChat.getIdChat(), newChat);
-            System.out.println("Stored chat with success");
-            message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId), chat);
+        User user = users.get(createHash(chat.getCreatorEmail()));
+        if(user != null){
+            user.addChat(newChat);
+            printLoggedInUsers();
+            System.out.println(user.getUserId());
+            if(loggedInUsers.get(user.getUserId())!=null){
+                message = new Message(Constants.NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId),newChat);
+                SSLSocket socket = loggedInUsers.get(user.getUserId());
+                //TODO: BLOCKING
+                writeToSocket(socket,message);
+                System.out.println(5);
+            }
         }
-*/
+        else{
+            System.out.println("User not registry");
+        }
         return message;
+    }
+
+    public void writeToSocket(SSLSocket sslSocket, Message message){
+        ObjectOutputStream outputStream = null;
+        ObjectInputStream inputStream = null;
+
+        try {
+             outputStream = new ObjectOutputStream(sslSocket.getOutputStream());
+             inputStream = new ObjectInputStream(sslSocket.getInputStream());
+             outputStream.writeObject(message);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -347,8 +398,12 @@ public class Server extends Node implements Serializable {
      */
     public void saveConnection(SSLSocket sslSocket, BigInteger clientId) {
         loggedInUsers.put(clientId, sslSocket);
+        printLoggedInUsers();
     }
 
+    public void printLoggedInUsers(){
+       loggedInUsers.forEach( (k,v)-> System.out.println("LOGGED IN : " + k));
+    }
 
     public Message signOutUser(BigInteger userId) {
         if (loggedInUsers.containsKey(userId)) {
