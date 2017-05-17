@@ -468,7 +468,7 @@ public class Server extends Node implements Serializable {
             System.out.println("Signed up with success!");
         }
 
-        MessageHandler handler = new MessageHandler(message, message.getClientAddress(),message.getClientPort(),this);
+        MessageHandler handler = new MessageHandler(message, message.getInitialServerAddress(),message.getInitialServerPort(),this);
         threadPool.submit(handler);
 
     }
@@ -498,7 +498,7 @@ public class Server extends Node implements Serializable {
             System.out.println("Logged in with success!");
             message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
         }
-        MessageHandler handler = new MessageHandler(message, message.getClientAddress(),message.getClientPort(),this);
+        MessageHandler handler = new MessageHandler(message, message.getInitialServerAddress(),message.getInitialServerPort(),this);
         threadPool.submit(handler);
 
     }
