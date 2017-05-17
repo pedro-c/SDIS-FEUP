@@ -136,9 +136,9 @@ public class MessageHandler implements Runnable {
                 this.server.setPredecessor(new Node(nodeInfo[1], Integer.parseInt(nodeInfo[2]), Integer.parseInt(nodeInfo[0])));
                 break;
             case CLIENT_SUCCESS:
-                if(server==null){
+                if(client != null){
                     System.out.println("AQUIIII  1");
-                    System.out.println("client" + client);
+                    System.out.println("client" + client.getClientId());
                     client.setServerIp(response.getInitialServerAddress());
                     client.setServerPort(response.getInitialServerPort());
                     client.verifyState(response);
