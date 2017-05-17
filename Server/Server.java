@@ -191,6 +191,14 @@ public class Server extends Node implements Serializable {
         return serverLookUp(tempId);
     }
 
+    public Node redirect(BigInteger senderId) {
+
+        int tempId = Math.abs(senderId.intValue());
+
+        return serverLookUp(tempId);
+    }
+
+
     /**
      * This functions updates the server finger table with the new node info
      *
@@ -445,17 +453,26 @@ public class Server extends Node implements Serializable {
      */
     public Message createChat(Chat chat) {
 
-        ServerChat newChat = new ServerChat(chat.getIdChat(), chat.getParticipant_email());
+        ServerChat newChat = new ServerChat(chat.getIdChat(), chat.getCreatorEmail());
         users.get(createHash(chat.getCreatorEmail())).addChat(newChat);
 
         Message message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId), newChat.getIdChat().toString());
+
+        ServerChat chat1 = new ServerChat(chat.getIdChat(), chat.getParticipant_email());
 
         if (isResponsibleFor(createHash(chat.getParticipant_email()))){
             users.get(createHash(chat.getParticipant_email())).addChat(newChat);
             System.out.println("Added participant with success");
         }
         else {
-            System.out.println("Nada a ver comigo");
+            Node n = redirect(createHash(chat.getParticipant_email()));
+
+            Message message1 = new Message(Constants.INVITE_USER, BigInteger.valueOf(nodeId), chat1);
+            System.out.println("Mensagem criada");
+            MessageHandler redirect = new MessageHandler(message1, n.getNodeIp(), n.getNodePort(), this);
+            System.out.println("Nada a ver comigo...XAU");
+
+            threadPool.submit(redirect);
         }
 
         return message;

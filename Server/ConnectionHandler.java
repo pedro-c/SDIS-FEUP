@@ -121,6 +121,11 @@ public class ConnectionHandler implements Runnable {
                     redirect.receiveResponse();
                 }
                 break;
+            case INVITE_USER:
+                if (server.isResponsibleFor(response.getSenderId())){
+                    System.out.println("I'm the RESPONSIBLE server");
+                }
+                break;
             case NEWNODE:
                 body = response.getBody().split(" ");
                 server.newNode(body);

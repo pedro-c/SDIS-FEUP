@@ -14,6 +14,9 @@ public class Constants {
     public static final String PREDECESSOR = "PREDECESSOR";
     public static final String SUCCESSOR_FT = "SUCCESSOR_FT";
 
+    //INVITE_USER SenderId Chat password
+    public static final String INVITE_USER = "INVITE_USER";
+
     //SIGNIN SenderId email password
     public static final String SUCCESSOR = "SUCCESSOR";
     public static final String SIGNIN = "SIGNIN";
