@@ -394,7 +394,8 @@ public class Server extends Node implements Serializable {
             System.out.println("Email already exists. Try to sign in instead of sign up...");
             message = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId), EMAIL_ALREADY_USED);
         } else {
-            users.put(user_email, new User(email, new BigInteger(password)));
+            User newUser = new User(email, new BigInteger(password));
+            users.put(user_email,newUser);
             message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
             System.out.println("Signed up with success!");
         }
@@ -481,23 +482,40 @@ public class Server extends Node implements Serializable {
 
         Message message = null;
 
+        System.out.println(1);
         ServerChat newChat = new ServerChat(chat.getIdChat(), chat.getCreatorEmail());
 
         User user = users.get(createHash(chat.getCreatorEmail()));
-
         if(user != null){
             user.addChat(newChat);
-
+            System.out.println(2);
             if(loggedInUsers.contains(user)){
+                System.out.println(3);
                 message = new Message(Constants.NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId),newChat);
+                SSLSocket socket = loggedInUsers.get(user.getUserId());
                 //TODO: Falta enviar para o CLIENTE
+                System.out.println(4);
+                writeToSocket(socket,message);
+                System.out.println(5);
             }
         }
         else{
             System.out.println("User not registry");
         }
-        
         return message;
+    }
+
+    public void writeToSocket(SSLSocket sslSocket, Message message){
+        ObjectOutputStream outputStream = null;
+        ObjectInputStream inputStream = null;
+
+        try {
+             outputStream = new ObjectOutputStream(sslSocket.getOutputStream());
+             inputStream = new ObjectInputStream(sslSocket.getInputStream());
+             outputStream.writeObject(message);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
