@@ -38,7 +38,7 @@ public class Utilities {
     }
 
     public static int get32bitHashValue(BigInteger bigInteger) {
-        return Math.abs(bigInteger.intValue());
+        return Integer.remainderUnsigned(Math.abs(bigInteger.intValue()),128);
     }
 
     public static long getTimestamp() {

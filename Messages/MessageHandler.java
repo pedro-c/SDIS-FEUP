@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
+import Server.ConnectionHandler;
 
 import static Utilities.Constants.*;
 
@@ -23,6 +24,7 @@ public class MessageHandler implements Runnable {
     private SSLSocketFactory sslSocketFactory;
     private ObjectInputStream inputStream;
     private ObjectOutputStream outputStream;
+    private ConnectionHandler connectionHandler;
 
     private Message message;
 
@@ -40,6 +42,15 @@ public class MessageHandler implements Runnable {
         this.port = port;
         this.client = client;
         this.message = message;
+    }
+
+    public MessageHandler(Message message, String ip, int port, ConnectionHandler connectionHandler) {
+
+        this.ip = ip;
+        this.port = port;
+        this.client = client;
+        this.message = message;
+        this.connectionHandler = connectionHandler;
     }
 
     public void run() {
@@ -95,6 +106,7 @@ public class MessageHandler implements Runnable {
     public void receiveResponse() {
         Message response = null;
         try {
+            System.out.println("Trying to receive message ... ");
             response = (Message) inputStream.readObject();
             handleResponse(response);
         } catch (IOException e) {
@@ -115,7 +127,7 @@ public class MessageHandler implements Runnable {
 
         String[] nodeInfo;
 
-        System.out.println("Message received: " + response.getMessageType());
+        System.out.println("MH Message received: " + response.getMessageType());
 
         switch (response.getMessageType()) {
             //PREDECESSOR NodeId NodeIp NodePort
@@ -125,13 +137,15 @@ public class MessageHandler implements Runnable {
                 break;
             case CLIENT_SUCCESS:
                 if(server==null){
-                    client.setServerIp(sslSocket.getInetAddress().toString());
-                    client.setServerPort(sslSocket.getPort());
+                    System.out.println("AQUIIII  1");
+                    System.out.println("client" + client);
+                    client.setServerIp(response.getInitialServerAddress());
+                    client.setServerPort(response.getInitialServerPort());
                     client.verifyState(response);
                 }
                 else{
                     System.out.println("Sending message back to initiator server");
-                    sendMessage(response);
+                    connectionHandler.sendMessage(response);
                 }
                 break;
             case CLIENT_ERROR:

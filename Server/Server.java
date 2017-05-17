@@ -30,7 +30,7 @@ public class Server extends Node implements Serializable {
     private ArrayList<Node> serversInfo;
 
     //Logged in users
-    private ConcurrentHashMap<BigInteger, SSLSocket> loggedInUsers;
+    private ConcurrentHashMap<BigInteger, SSLSocket> pendingRequests;
 
     /**
      * Key is an integer representing the m nodes and the value it's the server identifier
@@ -72,7 +72,7 @@ public class Server extends Node implements Serializable {
         users = new Hashtable<>();
 
         serversInfo = new ArrayList<Node>();
-        loggedInUsers = new ConcurrentHashMap<BigInteger, SSLSocket>();
+        pendingRequests = new ConcurrentHashMap<BigInteger, SSLSocket>();
 
         //loadServersInfo();
     }
@@ -149,6 +149,8 @@ public class Server extends Node implements Serializable {
      */
     public Node serverLookUp(int key) {
 
+        key = Integer.remainderUnsigned(key,128);
+
         long distance, position;
         Node successor = this;
         long previousId = this.getNodeId();
@@ -185,21 +187,15 @@ public class Server extends Node implements Serializable {
         if (n.getNodeId() == this.getNodeId())
             return true;
 
-
         return false;
     }
 
 
-    public void redirect(Message request) {
+    public Node redirect(Message request) {
 
         int tempId = request.getSenderId().intValue();
 
-        Node n = serverLookUp(tempId);
-        MessageHandler redirect = new MessageHandler(request, n.getNodeIp(), n.getNodePort(), this);
-
-        redirect.connectToServer();
-        redirect.sendMessage();
-        redirect.receiveResponse();
+        return serverLookUp(tempId);
     }
 
     /**
@@ -572,7 +568,16 @@ public class Server extends Node implements Serializable {
      * @param clientId
      */
     public void saveConnection(SSLSocket sslSocket, BigInteger clientId) {
-        loggedInUsers.put(clientId, sslSocket);
+        pendingRequests.put(clientId, sslSocket);
+    }
+
+    /**
+     * Gets client connection
+     *
+     * @param clientId
+     */
+    public SSLSocket getConnection(BigInteger clientId) {
+        return pendingRequests.get(clientId);
     }
 
     public Node getPredecessor() {
