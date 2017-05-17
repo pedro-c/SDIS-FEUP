@@ -2,6 +2,7 @@ package Server;
 
 import Chat.Chat;
 import Messages.Message;
+import Messages.MessageHandler;
 
 import javax.net.ssl.SSLSocket;
 import java.io.*;
@@ -43,6 +44,8 @@ public class ConnectionHandler implements Runnable {
      * Sends a message through a ssl socket
      */
     public void sendMessage(Message message) {
+
+        System.out.println("CH sending message...");
         System.out.println("Sending message with type: " + message.getMessageType() + " and body " + message.getBody());
         try {
             serverOutputStream.writeObject(message);
@@ -51,6 +54,7 @@ public class ConnectionHandler implements Runnable {
         }
     }
 
+
     /**
      * Analyses Responses
      *
@@ -58,34 +62,60 @@ public class ConnectionHandler implements Runnable {
      */
     public Message analyseResponse(Message response) {
         String[] body;
-
         System.out.println(response.getMessageType());
+
+        System.out.println("CH receiving message...");
 
         switch (response.getMessageType()) {
             case SIGNIN:
                 body = response.getBody().split(" ");
-                System.out.println("REQUEST ID: " + response.getSenderId());
+                System.out.println("REQUEST ID: " + Integer.remainderUnsigned(response.getSenderId().intValue(),128));
                 if (server.isResponsibleFor(response.getSenderId())) {
-                    server.saveConnection(this.sslSocket, response.getSenderId());
-                    return server.loginUser(body[0], body[1]);
-                } else {
-                    System.out.println("REDIRECTING ID: " + response.getSenderId());
-                    server.redirect(response);
+                    System.out.println("I'm the RESPONSIBLE server");
+                    Message message = server.loginUser(body[0], body[1]);
+                    message.setInitialServerAddress(server.getNodeIp());
+                    message.setInitialServerPort(server.getNodePort());
+                    return message;
                 }
+                else {
+                    System.out.println("REDIRECTING ID: " + Integer.remainderUnsigned(response.getSenderId().intValue(),128));
+                    Node n = server.redirect(response);
+
+                    MessageHandler redirect = new MessageHandler(response, n.getNodeIp(), n.getNodePort(), this);
+
+                    redirect.connectToServer();
+                    redirect.sendMessage();
+                    redirect.receiveResponse();
+                }
+                break;
             case SIGNUP:
                 body = response.getBody().split(" ");
-                System.out.println("REQUEST ID: " + response.getSenderId());
+                System.out.println("REQUEST ID: " + Integer.remainderUnsigned(response.getSenderId().intValue(),128));
                 if (server.isResponsibleFor(response.getSenderId())) {
-                    server.saveConnection(this.sslSocket, response.getSenderId());
-                    return server.addUser(body[0], body[1]);
+                    System.out.println("I'm the RESPONSIBLE server");
+                    Message message = server.addUser(body[0], body[1]);
+                    message.setInitialServerAddress(server.getNodeIp());
+                    message.setInitialServerPort(server.getNodePort());
+                    return message;
                 } else {
-                    System.out.println("REDIRECTING ID: " + response.getSenderId());
+                    System.out.println("REDIRECTING ID: " + Integer.remainderUnsigned(response.getSenderId().intValue(),128));
+                    Node n = server.redirect(response);
+
+                    MessageHandler redirect = new MessageHandler(response, n.getNodeIp(), n.getNodePort(), this);
+
+                    redirect.connectToServer();
+                    redirect.sendMessage();
+                    redirect.receiveResponse();
+                }
+                break;
+            case CREATE_CHAT:
+                if(server.isResponsibleFor(response.getSenderId()))
+                    server.createChat((Chat) response.getObject());
+                else {
+                    System.out.println("REDIRECTING ID: " + response.getSenderId().intValue());
                     server.redirect(response);
                 }
-            case SIGNOUT:
-                return server.signOutUser(response.getSenderId());
-            case CREATE_CHAT:
-                return server.createChat((Chat) response.getObject());
+                break;
             case NEWNODE:
                 body = response.getBody().split(" ");
                 server.newNode(body);
@@ -127,6 +157,8 @@ public class ConnectionHandler implements Runnable {
         try {
             message = (Message) serverInputStream.readObject();
             Message responseMessage = analyseResponse(message);
+            server.saveConnection(sslSocket,responseMessage.getSenderId());
+            System.out.println("Mandando...");
             sendMessage(responseMessage);
         } catch (IOException e) {
             System.out.println("Error reading message...");

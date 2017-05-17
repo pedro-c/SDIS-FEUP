@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
+import Server.ConnectionHandler;
 
 import static Utilities.Constants.*;
 
@@ -23,23 +24,33 @@ public class MessageHandler implements Runnable {
     private SSLSocketFactory sslSocketFactory;
     private ObjectInputStream inputStream;
     private ObjectOutputStream outputStream;
+    private ConnectionHandler connectionHandler;
 
     private Message message;
 
-    public MessageHandler(Message message, String ip, String port, Server server) {
+    public MessageHandler(Message message, String ip, int port, Server server) {
 
         this.ip = ip;
-        this.port = Integer.parseInt(port);
+        this.port = port;
         this.server = server;
         this.message = message;
     }
 
-    public MessageHandler(Message message, String ip, String port, Client client) {
+    public MessageHandler(Message message, String ip, int port, Client client) {
 
         this.ip = ip;
-        this.port = Integer.parseInt(port);
+        this.port = port;
         this.client = client;
         this.message = message;
+    }
+
+    public MessageHandler(Message message, String ip, int port, ConnectionHandler connectionHandler) {
+
+        this.ip = ip;
+        this.port = port;
+        this.client = client;
+        this.message = message;
+        this.connectionHandler = connectionHandler;
     }
 
     public void run() {
@@ -57,7 +68,7 @@ public class MessageHandler implements Runnable {
 
         try {
             sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-            sslSocket = (SSLSocket) sslSocketFactory.createSocket(InetAddress.getByName(ip), port);
+            sslSocket = (SSLSocket) sslSocketFactory.createSocket(ip, port);
             sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
             outputStream = new ObjectOutputStream(sslSocket.getOutputStream());
             inputStream = new ObjectInputStream(sslSocket.getInputStream());
@@ -89,13 +100,13 @@ public class MessageHandler implements Runnable {
             e.printStackTrace();
         }
     }
-
     /**
      * Reads a message response from the socket and calls the handler function
      */
     public void receiveResponse() {
         Message response = null;
         try {
+            System.out.println("Trying to receive message ... ");
             response = (Message) inputStream.readObject();
             handleResponse(response);
         } catch (IOException e) {
@@ -116,15 +127,27 @@ public class MessageHandler implements Runnable {
 
         String[] nodeInfo;
 
-        System.out.println("Message received: " + response.getMessageType());
+        System.out.println("MH Message received: " + response.getMessageType());
 
         switch (response.getMessageType()) {
             //PREDECESSOR NodeId NodeIp NodePort
             case PREDECESSOR:
                 nodeInfo = response.getBody().split(" ");
-                this.server.setPredecessor(new Node(nodeInfo[1], nodeInfo[2], Integer.parseInt(nodeInfo[0])));
+                this.server.setPredecessor(new Node(nodeInfo[1], Integer.parseInt(nodeInfo[2]), Integer.parseInt(nodeInfo[0])));
                 break;
             case CLIENT_SUCCESS:
+                if(client != null){
+                    System.out.println("AQUIIII  1");
+                    System.out.println("client" + client.getClientId());
+                    client.setServerIp(response.getInitialServerAddress());
+                    client.setServerPort(response.getInitialServerPort());
+                    client.verifyState(response);
+                }
+                else{
+                    System.out.println("Sending message back to initiator server");
+                    connectionHandler.sendMessage(response);
+                }
+                break;
             case CLIENT_ERROR:
                 client.verifyState(response);
                 break;
