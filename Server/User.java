@@ -1,11 +1,9 @@
 package Server;
 
-import java.math.BigInteger;
-import Chat.*;
+import Chat.Chat;
 
-import java.util.HashSet;
+import java.math.BigInteger;
 import java.util.Hashtable;
-import java.util.Set;
 
 /**
  * Created by mariajoaomirapaulo on 13/05/17.
@@ -31,11 +29,11 @@ public class User {
         return password;
     }
 
-    public void addChat(Chat chat){
-        chats.put(chat.getIdChat(),chat);
+    public void addChat(Chat chat) {
+        chats.put(chat.getIdChat(), chat);
     }
 
-    public Chat getChat(Chat chat){
+    public Chat getChat(Chat chat) {
         return chats.get(chat.getIdChat());
     }
 }

@@ -30,13 +30,13 @@ public class Constants {
     //CREATECHAT SenderId Chat
     public static final String CREATE_CHAT = "CREATECHAT";
 
+    //SIGNOUT SenderId userId
+    public static final String SIGNOUT = "SIGNOUT";
+
     //Directories
     public static final String USER_DIRECTORY = "users";
     public static final String CHAT_DIRECTORY = "chats";
     public static final String DATA_DIRECTORY = "data";
-
-    //Files
-    public static final String SERVERS_INFO = "servers.info";
 
     //Numbers
     //TODO: CHANGE max finger table size to 32 on final version

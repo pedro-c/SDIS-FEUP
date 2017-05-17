@@ -1,6 +1,7 @@
 package Messages;
 
 import Client.Client;
+import Server.ConnectionHandler;
 import Server.Node;
 import Server.Server;
 
@@ -9,8 +10,6 @@ import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.InetAddress;
-import Server.ConnectionHandler;
 
 import static Utilities.Constants.*;
 
@@ -100,6 +99,7 @@ public class MessageHandler implements Runnable {
             e.printStackTrace();
         }
     }
+
     /**
      * Reads a message response from the socket and calls the handler function
      */
@@ -136,14 +136,13 @@ public class MessageHandler implements Runnable {
                 this.server.setPredecessor(new Node(nodeInfo[1], Integer.parseInt(nodeInfo[2]), Integer.parseInt(nodeInfo[0])));
                 break;
             case CLIENT_SUCCESS:
-                if(client != null){
+                if (client != null) {
                     System.out.println("AQUIIII  1");
                     System.out.println("client" + client.getClientId());
                     client.setServerIp(response.getInitialServerAddress());
                     client.setServerPort(response.getInitialServerPort());
                     client.verifyState(response);
-                }
-                else{
+                } else {
                     System.out.println("Sending message back to initiator server");
                     connectionHandler.sendMessage(response);
                 }

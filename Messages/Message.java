@@ -1,4 +1,5 @@
 package Messages;
+
 import java.io.Serializable;
 import java.math.BigInteger;
 
@@ -108,6 +109,7 @@ public class Message implements Serializable {
 
     /**
      * Get initial server address
+     *
      * @return
      */
     public String getInitialServerAddress() {
@@ -116,6 +118,7 @@ public class Message implements Serializable {
 
     /**
      * Set initial server address
+     *
      * @param initialServerAddress
      */
     public void setInitialServerAddress(String initialServerAddress) {
@@ -124,6 +127,7 @@ public class Message implements Serializable {
 
     /**
      * Get initial server port
+     *
      * @return
      */
     public int getInitialServerPort() {
@@ -132,6 +136,7 @@ public class Message implements Serializable {
 
     /**
      * Set initial server port
+     *
      * @param initialServerPort
      */
     public void setInitialServerPort(int initialServerPort) {

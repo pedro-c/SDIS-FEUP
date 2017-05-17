@@ -9,11 +9,8 @@ import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.*;
 import java.math.BigInteger;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,9 +25,10 @@ public class Server extends Node implements Serializable {
      */
     private Hashtable<BigInteger, User> users;
     private ArrayList<Node> serversInfo;
+    private ConcurrentHashMap<BigInteger, ServerChat> chats;
 
     //Logged in users
-    private ConcurrentHashMap<BigInteger, SSLSocket> pendingRequests;
+    private ConcurrentHashMap<BigInteger, SSLSocket> loggedInUsers;
 
     /**
      * Key is an integer representing the m nodes and the value it's the server identifier
@@ -48,7 +46,6 @@ public class Server extends Node implements Serializable {
     public Server(String args[]) {
         super(args[0], Integer.parseInt(args[1]));
         users = new Hashtable<>();
-        serversInfo = new ArrayList<Node>();
 
         System.out.println("Server ID: " + this.getNodeId());
 
@@ -71,10 +68,9 @@ public class Server extends Node implements Serializable {
 
         users = new Hashtable<>();
 
+        chats = new ConcurrentHashMap<BigInteger, ServerChat>();
+        loggedInUsers = new ConcurrentHashMap<BigInteger, SSLSocket>();
         serversInfo = new ArrayList<Node>();
-        pendingRequests = new ConcurrentHashMap<BigInteger, SSLSocket>();
-
-        //loadServersInfo();
     }
 
     /**
@@ -149,7 +145,7 @@ public class Server extends Node implements Serializable {
      */
     public Node serverLookUp(int key) {
 
-        key = Integer.remainderUnsigned(key,128);
+        key = Integer.remainderUnsigned(key, 128);
 
         long distance, position;
         Node successor = this;
@@ -180,7 +176,7 @@ public class Server extends Node implements Serializable {
 
     public boolean isResponsibleFor(BigInteger resquestId) {
 
-        int tempId = resquestId.intValue();
+        int tempId = Math.abs(resquestId.intValue());
 
         Node n = serverLookUp(tempId);
 
@@ -193,31 +189,16 @@ public class Server extends Node implements Serializable {
 
     public Node redirect(Message request) {
 
-        int tempId = request.getSenderId().intValue();
+        int tempId = Math.abs(request.getSenderId().intValue());
 
         return serverLookUp(tempId);
     }
 
     /**
-     * Looks up in the finger table which server has the closest smallest key comparing to the key we want to lookup
-     * and returns its predecessor
+     * This functions updates the server finger table with the new node info
      *
-     * @param key 32-bit identifier
-     * @return Predecessor node
+     * @param newNode new node on the distributed hash table
      */
-    public Node predecessorLookUp(int key) {
-        Node id = this;
-        for (int i = 1; i < fingerTable.size(); i++) {
-            id = fingerTable.get(i);
-            if (id.getNodeId() > key && i > 1) {
-                return fingerTable.get(i - 1);
-            } else if (id.getNodeId() > key && i > 1) {
-                return this;
-            }
-        }
-        return id;
-    }
-
     public void updateFingerTable(Node newNode) {
 
         long position;
@@ -255,6 +236,11 @@ public class Server extends Node implements Serializable {
         }
     }
 
+    /**
+     * Receives the successor finger table and updates is own finger table
+     *
+     * @param successorFingerTable successor finger table
+     */
     public void updateFingerTableFromSuccessor(ArrayList<Node> successorFingerTable) {
 
         System.out.println(successorFingerTable.size());
@@ -265,6 +251,11 @@ public class Server extends Node implements Serializable {
         printFingerTable();
     }
 
+    /**
+     * Function called when a new node message arrives to the server and forwards it to the correct server
+     *
+     * @param info ip, port and id from the new server
+     */
     public void newNode(String[] info) {
         int newNodeKey = Integer.parseInt(info[0]);
         String newNodeIp = info[1];
@@ -381,67 +372,6 @@ public class Server extends Node implements Serializable {
     }
 
     /**
-     * Gets servers info from .config file and loads the finger table with closest preceding servers
-     */
-    public void loadServersInfoFromDisk() {
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(".config"))) {
-            String line = reader.readLine();
-
-            while (line != null) {
-                String[] nodeInfo = line.split(":");
-                String nodeId = nodeInfo[2];
-                String nodeIp = nodeInfo[0];
-                String nodePort = nodeInfo[1];
-                if (!nodeIp.equals(this.getNodeIp())) {
-                    int id = Integer.parseInt(nodeId);
-                    for (int i = 0; i < fingerTable.size(); i++) {
-
-
-                        /**
-                         * successor formula = succ(serverId+2^(i-1))
-                         *
-                         * successor is a possible node responsible for the values between
-                         * the current and the successor.
-                         *
-                         * serverId equals to this node position in the circle
-                         */
-                        int succ = (int) (this.getNodeId() + Math.pow(2, (i - 1)));
-                        /**
-                         * if successor number is bigger than the circle size (max number of nodes)
-                         * it starts counting from the beginning
-                         * by removing this node position (serverId) from formula
-                         */
-                        if (succ > Math.pow(2, MAX_FINGER_TABLE_SIZE)) {
-                            succ = (int) (Math.pow(2, (i - 1)));
-                        }
-                        /**
-                         * if the successor is smaller than the value of the node we are readingee
-                         * from the config file this means that the node we are reading might be
-                         * responsible for the keys in between.
-                         * If there isn't another node responsible
-                         * for this interval or the node we are reading has a smaller value
-                         * than the node that used to be responsible for this interval,
-                         * than the node we are reading is now the node responsible
-                         */
-                        if (succ < id) {
-                            if (fingerTable.get(i) == null) {
-                                //fingerTable.add(new Node(nodeIp, nodePort));
-                            } else if (id < fingerTable.get(i).getNodeId()) {
-                                //fingerTable.add(new Node(nodeIp, nodePort));
-                            }
-                        }
-                    }
-                }
-
-                line = reader.readLine();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
      * Regists user
      *
      * @param email    user email
@@ -511,26 +441,6 @@ public class Server extends Node implements Serializable {
     }
 
     /**
-     * Loads all servers from a file
-     */
-    private void loadServersInfo() {
-        try {
-            List<String> lines = Files.readAllLines(Paths.get(SERVERS_INFO));
-            for (String line : lines) {
-                String infos[] = line.split(" ");
-                Node node = new Node(infos[0], Integer.parseInt(infos[1]));
-
-                if (!serversInfo.contains(node) && nodeId != node.getNodeId()) {
-                    System.out.println("Read server with ip: " + infos[0] + " and port " + infos[1]);
-                    serversInfo.add(node);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
      * Creates a new chat
      * New chat
      *
@@ -568,17 +478,9 @@ public class Server extends Node implements Serializable {
      * @param clientId
      */
     public void saveConnection(SSLSocket sslSocket, BigInteger clientId) {
-        pendingRequests.put(clientId, sslSocket);
+        loggedInUsers.put(clientId, sslSocket);
     }
 
-    /**
-     * Gets client connection
-     *
-     * @param clientId
-     */
-    public SSLSocket getConnection(BigInteger clientId) {
-        return pendingRequests.get(clientId);
-    }
 
     public Node getPredecessor() {
         return predecessor;
@@ -609,6 +511,15 @@ public class Server extends Node implements Serializable {
 
     public ArrayList<Node> getFingerTable() {
         return fingerTable;
+    }
+
+    public Message signOutUser(BigInteger userId) {
+        if (loggedInUsers.containsKey(userId)) {
+            loggedInUsers.remove(userId);
+            System.out.println("Signed out user with id: " + userId);
+        }
+
+        return (new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId)));
     }
 }
 
