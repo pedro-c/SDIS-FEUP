@@ -3,6 +3,8 @@ package Client;
 import Chat.Chat;
 import Messages.Message;
 import Messages.MessageHandler;
+import Server.Server;
+import Server.ServerChat;
 
 import java.io.Console;
 import java.math.BigInteger;
@@ -31,14 +33,12 @@ public class Client {
      * Client
      */
     public Client(String serverIp, int serverPort) {
-
         this.serverPort = serverPort;
         this.serverIp = serverIp;
         this.userChats = new Hashtable<BigInteger, Chat>();
         this.atualState = Task.HOLDING;
 
         scannerIn = new Scanner(System.in);
-
     }
 
     public static void main(String[] args) {
@@ -130,6 +130,10 @@ public class Client {
             newChat.setChatName(chatName);
         newChat.setParticipant_email(participantEmail);
 
+        userChats.put(newChat.getIdChat(),newChat);
+
+        System.out.println(newChat.getIdChat());
+
         Message message = new Message(CREATE_CHAT, getClientId(), newChat);
         messageHandler.setMessage(message);
         threadPool.submit(messageHandler);
@@ -204,16 +208,6 @@ public class Client {
     }
 
     /**
-     * Stores a chat
-     *
-     * @param chat
-     */
-    public void storeChat(Chat chat) {
-        userChats.put(chat.getIdChat(), chat);
-        openChat(chat);
-    }
-
-    /**
      * Acts according off the actual state
      *
      * @param response response message
@@ -233,7 +227,9 @@ public class Client {
                 break;
             case WAITING_CREATE_CHAT:
                 if (response.getMessageType().equals(CLIENT_SUCCESS)) {
-                    storeChat((Chat) response.getObject());
+                    System.out.println(response.getBody());
+                    Chat chat = userChats.get(new BigInteger(response.getBody()));
+                    openChat(chat);
                 } else {
                     atualState = HOLDING;
                     printError(response.getBody());

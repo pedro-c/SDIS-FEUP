@@ -12,13 +12,13 @@ public class User {
 
     private String email;
     private BigInteger password;
-    private Hashtable<BigInteger, Chat> chats;
+    private Hashtable<BigInteger, ServerChat> chats;
 
 
     public User(String email, BigInteger password) {
         this.email = email;
         this.password = password;
-        chats = new Hashtable<BigInteger, Chat>();
+        chats = new Hashtable<BigInteger, ServerChat>();
     }
 
     public String getEmail() {
@@ -29,11 +29,7 @@ public class User {
         return password;
     }
 
-    public void addChat(Chat chat) {
+    public void addChat(ServerChat chat) {
         chats.put(chat.getIdChat(), chat);
-    }
-
-    public Chat getChat(Chat chat) {
-        return chats.get(chat.getIdChat());
     }
 }

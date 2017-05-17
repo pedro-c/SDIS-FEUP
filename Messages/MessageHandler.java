@@ -106,7 +106,7 @@ public class MessageHandler implements Runnable {
     public void receiveResponse() {
         Message response = null;
         try {
-            System.out.println("Trying to receive message ... ");
+            System.out.println("Trying to receive message...");
             response = (Message) inputStream.readObject();
             handleResponse(response);
         } catch (IOException e) {
@@ -137,8 +137,7 @@ public class MessageHandler implements Runnable {
                 break;
             case CLIENT_SUCCESS:
                 if (client != null) {
-                    System.out.println("AQUIIII  1");
-                    System.out.println("client" + client.getClientId());
+            //        System.out.println("client" + client.getClientId());
                     client.setServerIp(response.getInitialServerAddress());
                     client.setServerPort(response.getInitialServerPort());
                     client.verifyState(response);

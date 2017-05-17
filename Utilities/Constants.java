@@ -28,6 +28,7 @@ public class Constants {
     public static final String CLIENT_ERROR = "CLIENT_ERROR";
 
     //CREATECHAT SenderId Chat
+    //CLIENT_SUCCESS SenderId chatId
     public static final String CREATE_CHAT = "CREATECHAT";
 
     //SIGNOUT SenderId userId

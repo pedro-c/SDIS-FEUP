@@ -3,6 +3,7 @@ package Server;
 import Chat.Chat;
 import Messages.Message;
 import Messages.MessageHandler;
+import Utilities.Constants;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -25,7 +26,6 @@ public class Server extends Node implements Serializable {
      */
     private Hashtable<BigInteger, User> users;
     private ArrayList<Node> serversInfo;
-    private ConcurrentHashMap<BigInteger, ServerChat> chats;
 
     //Logged in users
     private ConcurrentHashMap<BigInteger, SSLSocket> loggedInUsers;
@@ -67,8 +67,6 @@ public class Server extends Node implements Serializable {
         createDir(chatsPath);
 
         users = new Hashtable<>();
-
-        chats = new ConcurrentHashMap<BigInteger, ServerChat>();
         loggedInUsers = new ConcurrentHashMap<BigInteger, SSLSocket>();
         serversInfo = new ArrayList<Node>();
     }
@@ -177,7 +175,6 @@ public class Server extends Node implements Serializable {
     public boolean isResponsibleFor(BigInteger resquestId) {
 
         int tempId = Math.abs(resquestId.intValue());
-
         Node n = serverLookUp(tempId);
 
         if (n.getNodeId() == this.getNodeId())
@@ -447,27 +444,20 @@ public class Server extends Node implements Serializable {
      * @return Message to be sent to the client
      */
     public Message createChat(Chat chat) {
-        Message message = null;
 
-/*
-        //This email is valid? Server knows?
-        if (users.get(createHash(chat.getParticipant_email())) == null) {
-            System.out.println("Invalid user Email.");
-            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId), Constants.INVALID_USER_EMAIL);
-        } else if (chats.get(chat.getIdChat()) != null) {
-            System.out.println("Error creating chat");
-            message = new Message(Constants.CLIENT_ERROR, BigInteger.valueOf(nodeId), Constants.ERROR_CREATING_CHAT);
-        } else {
+        ServerChat newChat = new ServerChat(chat.getIdChat(), chat.getParticipant_email());
+        users.get(createHash(chat.getCreatorEmail())).addChat(newChat);
 
-            ServerChat newChat = new ServerChat(chat.getIdChat(), chat.getParticipant_email());
-            System.out.println("Created chat with success");
-            newChat.addParticipant(users.get(createHash(chat.getParticipant_email())));
-            System.out.println("Added participants with success");
-            chats.put(newChat.getIdChat(), newChat);
-            System.out.println("Stored chat with success");
-            message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId), chat);
+        Message message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId), newChat.getIdChat().toString());
+
+        if (isResponsibleFor(createHash(chat.getParticipant_email()))){
+            users.get(createHash(chat.getParticipant_email())).addChat(newChat);
+            System.out.println("Added participant with success");
         }
-*/
+        else {
+            System.out.println("Nada a ver comigo");
+        }
+
         return message;
     }
 
