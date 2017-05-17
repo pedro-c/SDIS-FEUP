@@ -69,16 +69,15 @@ public class ConnectionHandler implements Runnable {
         switch (response.getMessageType()) {
             case SIGNIN:
                 body = response.getBody().split(" ");
-                System.out.println("REQUEST ID: " + Integer.remainderUnsigned(response.getSenderId().intValue(),128));
+                System.out.println("REQUEST ID: " + Integer.remainderUnsigned(response.getSenderId().intValue(), 128));
                 if (server.isResponsibleFor(response.getSenderId())) {
                     System.out.println("I'm the RESPONSIBLE server");
                     Message message = server.loginUser(body[0], body[1]);
                     message.setInitialServerAddress(server.getNodeIp());
                     message.setInitialServerPort(server.getNodePort());
                     return message;
-                }
-                else {
-                    System.out.println("REDIRECTING ID: " + Integer.remainderUnsigned(response.getSenderId().intValue(),128));
+                } else {
+                    System.out.println("REDIRECTING ID: " + Integer.remainderUnsigned(response.getSenderId().intValue(), 128));
                     Node n = server.redirect(response);
 
                     MessageHandler redirect = new MessageHandler(response, n.getNodeIp(), n.getNodePort(), this);
@@ -90,7 +89,7 @@ public class ConnectionHandler implements Runnable {
                 break;
             case SIGNUP:
                 body = response.getBody().split(" ");
-                System.out.println("REQUEST ID: " + Integer.remainderUnsigned(response.getSenderId().intValue(),128));
+                System.out.println("REQUEST ID: " + Integer.remainderUnsigned(response.getSenderId().intValue(), 128));
                 if (server.isResponsibleFor(response.getSenderId())) {
                     System.out.println("I'm the RESPONSIBLE server");
                     Message message = server.addUser(body[0], body[1]);
@@ -98,7 +97,7 @@ public class ConnectionHandler implements Runnable {
                     message.setInitialServerPort(server.getNodePort());
                     return message;
                 } else {
-                    System.out.println("REDIRECTING ID: " + Integer.remainderUnsigned(response.getSenderId().intValue(),128));
+                    System.out.println("REDIRECTING ID: " + Integer.remainderUnsigned(response.getSenderId().intValue(), 128));
                     Node n = server.redirect(response);
 
                     MessageHandler redirect = new MessageHandler(response, n.getNodeIp(), n.getNodePort(), this);
@@ -109,7 +108,7 @@ public class ConnectionHandler implements Runnable {
                 }
                 break;
             case CREATE_CHAT:
-                if(server.isResponsibleFor(response.getSenderId()))
+                if (server.isResponsibleFor(response.getSenderId()))
                     server.createChat((Chat) response.getObject());
                 else {
                     System.out.println("REDIRECTING ID: " + response.getSenderId().intValue());
@@ -157,7 +156,7 @@ public class ConnectionHandler implements Runnable {
         try {
             message = (Message) serverInputStream.readObject();
             Message responseMessage = analyseResponse(message);
-            server.saveConnection(sslSocket,responseMessage.getSenderId());
+            server.saveConnection(sslSocket, responseMessage.getSenderId());
             System.out.println("Mandando...");
             sendMessage(responseMessage);
         } catch (IOException e) {

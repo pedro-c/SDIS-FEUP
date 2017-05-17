@@ -28,7 +28,7 @@ public class Server extends Node implements Serializable {
     private ConcurrentHashMap<BigInteger, ServerChat> chats;
 
     //Logged in users
-    private ConcurrentHashMap<BigInteger, SSLSocket> pendingRequests;
+    private ConcurrentHashMap<BigInteger, SSLSocket> loggedInUsers;
 
     /**
      * Key is an integer representing the m nodes and the value it's the server identifier
@@ -71,7 +71,6 @@ public class Server extends Node implements Serializable {
         chats = new ConcurrentHashMap<BigInteger, ServerChat>();
         loggedInUsers = new ConcurrentHashMap<BigInteger, SSLSocket>();
         serversInfo = new ArrayList<Node>();
-        pendingRequests = new ConcurrentHashMap<BigInteger, SSLSocket>();
     }
 
     /**
@@ -146,7 +145,7 @@ public class Server extends Node implements Serializable {
      */
     public Node serverLookUp(int key) {
 
-        key = Integer.remainderUnsigned(key,128);
+        key = Integer.remainderUnsigned(key, 128);
 
         long distance, position;
         Node successor = this;
@@ -197,6 +196,7 @@ public class Server extends Node implements Serializable {
 
     /**
      * This functions updates the server finger table with the new node info
+     *
      * @param newNode new node on the distributed hash table
      */
     public void updateFingerTable(Node newNode) {
@@ -238,6 +238,7 @@ public class Server extends Node implements Serializable {
 
     /**
      * Receives the successor finger table and updates is own finger table
+     *
      * @param successorFingerTable successor finger table
      */
     public void updateFingerTableFromSuccessor(ArrayList<Node> successorFingerTable) {
@@ -252,6 +253,7 @@ public class Server extends Node implements Serializable {
 
     /**
      * Function called when a new node message arrives to the server and forwards it to the correct server
+     *
      * @param info ip, port and id from the new server
      */
     public void newNode(String[] info) {
@@ -476,17 +478,9 @@ public class Server extends Node implements Serializable {
      * @param clientId
      */
     public void saveConnection(SSLSocket sslSocket, BigInteger clientId) {
-        pendingRequests.put(clientId, sslSocket);
+        loggedInUsers.put(clientId, sslSocket);
     }
 
-    /**
-     * Gets client connection
-     *
-     * @param clientId
-     */
-    public SSLSocket getConnection(BigInteger clientId) {
-        return pendingRequests.get(clientId);
-    }
 
     public Node getPredecessor() {
         return predecessor;
@@ -519,8 +513,8 @@ public class Server extends Node implements Serializable {
         return fingerTable;
     }
 
-    public Message signOutUser(BigInteger userId){
-        if(loggedInUsers.containsKey(userId)){
+    public Message signOutUser(BigInteger userId) {
+        if (loggedInUsers.containsKey(userId)) {
             loggedInUsers.remove(userId);
             System.out.println("Signed out user with id: " + userId);
         }

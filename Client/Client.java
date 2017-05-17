@@ -280,23 +280,19 @@ public class Client {
     /**
      * Signs out the user
      */
-    public void signOut(){
+    public void signOut() {
         atualState = WAITING_SIGNOUT;
 
         BigInteger clientId = getClientId();
 
         Message message = new Message(SIGNOUT, clientId, clientId.toString());
-        messageHandler = new MessageHandler(message, serverIp, Integer.toString(serverPort), this);
+        messageHandler = new MessageHandler(message, serverIp, serverPort, this);
         threadPool.submit(messageHandler);
-    }
-
-    public enum Task {
-        HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
-        WAITING_SIGNOUT
     }
 
     /**
      * Sets server port
+     *
      * @param serverPort
      */
     public void setServerPort(int serverPort) {
@@ -305,9 +301,15 @@ public class Client {
 
     /**
      * Sets server ip
+     *
      * @param serverIp
      */
     public void setServerIp(String serverIp) {
         this.serverIp = serverIp;
+    }
+
+    public enum Task {
+        HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
+        WAITING_SIGNOUT
     }
 }
