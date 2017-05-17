@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import static Utilities.Constants.MAX_FINGER_TABLE_SIZE;
 import static Utilities.Constants.MAX_NUMBER_OF_NODES;
 
-public class DistributedHashTable implements Serializable{
+public class DistributedHashTable implements Serializable {
 
     private ArrayList<Node> fingerTable = new ArrayList<Node>();
     private Node predecessor;

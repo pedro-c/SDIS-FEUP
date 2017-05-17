@@ -145,7 +145,7 @@ public class MessageHandler implements Runnable {
                 break;
             case CLIENT_SUCCESS:
                 if (client != null) {
-            //        System.out.println("client" + client.getClientId());
+                    //        System.out.println("client" + client.getClientId());
                     client.setServerIp(response.getInitialServerAddress());
                     client.setServerPort(response.getInitialServerPort());
                     client.verifyState(response);
@@ -163,7 +163,7 @@ public class MessageHandler implements Runnable {
 
 
         System.out.println("I'm blocked on signinMenu, waiting for an user input");
-        if(client.getAtualState() == Client.Task.SIGNED_IN || client.getAtualState() == Client.Task.SIGNED_IN){
+        if (client.getAtualState() == Client.Task.SIGNED_IN || client.getAtualState() == Client.Task.SIGNED_IN) {
             System.out.println("VOU OUVIR");
             listen();
         }

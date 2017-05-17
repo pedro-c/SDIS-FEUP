@@ -8,9 +8,7 @@ import Protocols.DistributedHashTable;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
+import java.io.*;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -27,11 +25,6 @@ public class Server extends Node implements Serializable {
      * Key is the user id (hash from e-mail) and value is the 256-bit hashed user password
      */
     private Hashtable<BigInteger, User> users;
-    private ArrayList<Node> serversInfo;
-
-    //Logged in users
-    private ConcurrentHashMap<BigInteger, SSLSocket> loggedInUsers;
-
     /**
      * Key is an integer representing the m nodes and the value it's the server identifier
      * (32-bit integer hash from ip+port)
@@ -153,14 +146,6 @@ public class Server extends Node implements Serializable {
         return dht.nodeLookUp(tempId);
     }
 
-    public Node redirect(BigInteger senderId) {
-
-        int tempId = Math.abs(senderId.intValue());
-
-        return serverLookUp(tempId);
-    }
-
-
     /**
      * Function called when a new node message arrives to the server and forwards it to the correct server
      *
@@ -199,19 +184,6 @@ public class Server extends Node implements Serializable {
             dht.setPredecessor(newNode);
     }
 
-    /**
-     * Gets the position of the new node em relation to the peer
-     *
-     * @param key key of the new node
-     * @return 0 if the new node it's before, 1 if it's after
-     */
-    public int getNewNodePosition(int key) {
-
-        if (getNodeId() > key)
-            return BEFORE;
-
-        return AFTER;
-    }
 
     public void sendFingerTableToPredecessor(Node newNode) {
 
@@ -269,7 +241,7 @@ public class Server extends Node implements Serializable {
             message = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId), EMAIL_ALREADY_USED);
         } else {
             User newUser = new User(email, new BigInteger(password));
-            users.put(user_email,newUser);
+            users.put(user_email, newUser);
             message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
             System.out.println("Signed up with success!");
         }
@@ -330,61 +302,59 @@ public class Server extends Node implements Serializable {
 
         ServerChat newChat = new ServerChat(chat.getIdChat(), chat.getCreatorEmail());
         users.get(createHash(chat.getCreatorEmail())).addChat(newChat);
-        Message message = new Message(Constants.CLIENT_SUCCESS, BigInteger.valueOf(nodeId), newChat.getIdChat().toString());
+        Message message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), newChat.getIdChat().toString());
 
         ServerChat chat1 = new ServerChat(chat.getIdChat(), chat.getParticipant_email());
 
-        if (isResponsibleFor(createHash(chat.getParticipant_email()))){
+        if (isResponsibleFor(createHash(chat.getParticipant_email()))) {
             users.get(createHash(chat.getParticipant_email())).addChat(chat1);
             //TODO: INVITE PARTICIPANT
             System.out.println("Added participant with success");
-        }
-        else {
-            Node n = redirect(createHash(chat.getParticipant_email()));
-
-            Message message1 = new Message(Constants.INVITE_USER, BigInteger.valueOf(nodeId), chat1);
+        } else {
+            //TODO: Perguntar à João
+            /*Node n = redirect(createHash(chat.getParticipant_email()));
+            Message message1 = new Message(INVITE_USER, BigInteger.valueOf(nodeId), chat1);
             MessageHandler redirect = new MessageHandler(message1, n.getNodeIp(), n.getNodePort(), this);
             System.out.println("Nada a ver comigo...XAU");
-            threadPool.submit(redirect);
+            threadPool.submit(redirect);*/
         }
 
 
         return message;
     }
 
-    public Message createParticipantChat(ServerChat chat){
+    public Message createParticipantChat(ServerChat chat) {
 
         Message message = null;
 
         ServerChat newChat = new ServerChat(chat.getIdChat(), chat.getCreatorEmail());
 
         User user = users.get(createHash(chat.getCreatorEmail()));
-        if(user != null){
+        if (user != null) {
             user.addChat(newChat);
             printLoggedInUsers();
             System.out.println(user.getUserId());
-            if(loggedInUsers.get(user.getUserId())!=null){
-                message = new Message(Constants.NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId),newChat);
+            if (loggedInUsers.get(user.getUserId()) != null) {
+                message = new Message(NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId), newChat);
                 SSLSocket socket = loggedInUsers.get(user.getUserId());
                 //TODO: BLOCKING
-                writeToSocket(socket,message);
+                writeToSocket(socket, message);
                 System.out.println(5);
             }
-        }
-        else{
+        } else {
             System.out.println("User not registry");
         }
         return message;
     }
 
-    public void writeToSocket(SSLSocket sslSocket, Message message){
+    public void writeToSocket(SSLSocket sslSocket, Message message) {
         ObjectOutputStream outputStream = null;
         ObjectInputStream inputStream = null;
 
         try {
-             outputStream = new ObjectOutputStream(sslSocket.getOutputStream());
-             inputStream = new ObjectInputStream(sslSocket.getInputStream());
-             outputStream.writeObject(message);
+            outputStream = new ObjectOutputStream(sslSocket.getOutputStream());
+            inputStream = new ObjectInputStream(sslSocket.getInputStream());
+            outputStream.writeObject(message);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -401,8 +371,8 @@ public class Server extends Node implements Serializable {
         printLoggedInUsers();
     }
 
-    public void printLoggedInUsers(){
-       loggedInUsers.forEach( (k,v)-> System.out.println("LOGGED IN : " + k));
+    public void printLoggedInUsers() {
+        loggedInUsers.forEach((k, v) -> System.out.println("LOGGED IN : " + k));
     }
 
     public Message signOutUser(BigInteger userId) {
