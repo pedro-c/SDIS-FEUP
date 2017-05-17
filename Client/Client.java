@@ -189,9 +189,8 @@ public class Client {
         System.out.print("Password: ");
 
         char[] oldPassword = console.readPassword();
-        String password = new String(oldPassword);
 
-        return password;
+        return new String(oldPassword);
     }
 
     /**

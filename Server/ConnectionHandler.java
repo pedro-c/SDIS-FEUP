@@ -118,19 +118,19 @@ public class ConnectionHandler implements Runnable {
             case NEWNODE:
                 body = response.getBody().split(" ");
                 server.newNode(body);
-                server.printFingerTable();
+                server.getDht().printFingerTable();
                 break;
             case PREDECESSOR:
                 Node temp = (Node) response.getObject();
-                server.setPredecessor(temp);
+                server.getDht().setPredecessor(temp);
                 server.sendFingerTableToSuccessor();
-                server.printFingerTable();
+                server.getDht().printFingerTable();
                 break;
             case SUCCESSOR_FT:
                 ArrayList<Node> ft = (ArrayList<Node>) response.getObject();
-                server.updateFingerTableFromSuccessor(ft);
-                server.setPredecessor(ft.get(0));
-                server.printFingerTable();
+                server.getDht().updateFingerTableFromSuccessor(ft);
+                server.getDht().setPredecessor(ft.get(0));
+                server.getDht().printFingerTable();
                 break;
             default:
                 break;

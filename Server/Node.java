@@ -75,10 +75,8 @@ public class Node implements Serializable {
 
         final Node node = (Node) o;
 
-        if (nodeId == ((Node) o).getNodeId())
-            return true;
+        return nodeId == ((Node) o).getNodeId();
 
-        return false;
     }
 
 }

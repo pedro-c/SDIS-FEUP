@@ -13,6 +13,12 @@ import java.sql.Timestamp;
 public class Utilities {
 
     /**
+     * Object encryption and decryption    code from: https://codereview.stackexchange.com/a/66931
+     */
+
+    private static final String transformation = "AES/ECB/PKCS5Padding";
+
+    /**
      * Returns a hexadecimal encoded SHA-256 hash for the input String.
      *
      * @param data
@@ -50,12 +56,6 @@ public class Utilities {
         Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         return timestamp.getTime();
     }
-
-    /**
-     * Object encryption and decryption    code from: https://codereview.stackexchange.com/a/66931
-     */
-
-    private static final String transformation = "AES/ECB/PKCS5Padding";
 
     public static void encrypt(Serializable object, OutputStream ostream, String password) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
         try {

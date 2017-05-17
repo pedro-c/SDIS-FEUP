@@ -133,7 +133,7 @@ public class MessageHandler implements Runnable {
             //PREDECESSOR NodeId NodeIp NodePort
             case PREDECESSOR:
                 nodeInfo = response.getBody().split(" ");
-                this.server.setPredecessor(new Node(nodeInfo[1], Integer.parseInt(nodeInfo[2]), Integer.parseInt(nodeInfo[0])));
+                this.server.getDht().setPredecessor(new Node(nodeInfo[1], Integer.parseInt(nodeInfo[2]), Integer.parseInt(nodeInfo[0])));
                 break;
             case CLIENT_SUCCESS:
                 if (client != null) {

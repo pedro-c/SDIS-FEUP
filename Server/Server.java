@@ -3,11 +3,14 @@ package Server;
 import Chat.Chat;
 import Messages.Message;
 import Messages.MessageHandler;
+import Protocols.DistributedHashTable;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -24,21 +27,20 @@ public class Server extends Node implements Serializable {
      * Key is the user id (hash from e-mail) and value is the 256-bit hashed user password
      */
     private Hashtable<BigInteger, User> users;
-    private ArrayList<Node> serversInfo;
-    private ConcurrentHashMap<BigInteger, ServerChat> chats;
-
-    //Logged in users
-    private ConcurrentHashMap<BigInteger, SSLSocket> loggedInUsers;
-
     /**
      * Key is an integer representing the m nodes and the value it's the server identifier
      * (32-bit integer hash from ip+port)
      */
-    private ArrayList<Node> fingerTable = new ArrayList<Node>();
+    private ArrayList<Node> serversInfo;
+    private DistributedHashTable dht;
+    private ConcurrentHashMap<BigInteger, ServerChat> chats;
+    /**
+     * Logged in users
+     */
+    private ConcurrentHashMap<BigInteger, SSLSocket> loggedInUsers;
     transient private SSLServerSocket sslServerSocket;
     transient private SSLServerSocketFactory sslServerSocketFactory;
     transient private ExecutorService threadPool = Executors.newFixedThreadPool(MAX_NUMBER_OF_REQUESTS);
-    private Node predecessor = this;
 
     /**
      * @param args ServerId ServerPort KnownServerId KnownServer Port
@@ -46,11 +48,11 @@ public class Server extends Node implements Serializable {
     public Server(String args[]) {
         super(args[0], Integer.parseInt(args[1]));
         users = new Hashtable<>();
+        dht = new DistributedHashTable(this);
 
         System.out.println("Server ID: " + this.getNodeId());
 
-        initFingerTable();
-        printFingerTable();
+
         initServerSocket();
         if (args.length > 2) {
             Node knownNode = new Node(args[2], Integer.parseInt(args[3]));
@@ -69,7 +71,7 @@ public class Server extends Node implements Serializable {
         users = new Hashtable<>();
 
         chats = new ConcurrentHashMap<BigInteger, ServerChat>();
-        loggedInUsers = new ConcurrentHashMap<BigInteger, SSLSocket>();
+        loggedInUsers = new ConcurrentHashMap<>();
         serversInfo = new ArrayList<Node>();
     }
 
@@ -115,21 +117,12 @@ public class Server extends Node implements Serializable {
     }
 
     /**
-     * Initializes the finger table with m values (max number of nodes = 2^m)
-     */
-    public void initFingerTable() {
-        for (int i = 0; i <= MAX_FINGER_TABLE_SIZE; i++) {
-            fingerTable.add(this);
-        }
-    }
-
-    /**
      * Sends a message to the network
      * Message: [NEWNODE] [SenderID] [NodeID] [NodeIp] [NodePort]
      */
     public void joinNetwork(Node newNode, Node knownNode) {
 
-        Message message = new Message(NEWNODE, BigInteger.valueOf(this.getNodeId()), Integer.toString(newNode.getNodeId()), newNode.getNodeIp().toString(), Integer.toString(newNode.getNodePort()));
+        Message message = new Message(NEWNODE, BigInteger.valueOf(this.getNodeId()), Integer.toString(newNode.getNodeId()), newNode.getNodeIp(), Integer.toString(newNode.getNodePort()));
 
         MessageHandler handler = new MessageHandler(message, knownNode.getNodeIp(), knownNode.getNodePort(), this);
 
@@ -138,52 +131,15 @@ public class Server extends Node implements Serializable {
 
     }
 
-    /**
-     * Looks up in the finger table which server has the closest smallest key comparing to the key we want to lookup
-     *
-     * @param key 256-bit identifier
-     */
-    public Node serverLookUp(int key) {
-
-        key = Integer.remainderUnsigned(key, 128);
-
-        long distance, position;
-        Node successor = this;
-        long previousId = this.getNodeId();
-        for (int i = 1; i < fingerTable.size(); i++) {
-            Node node = fingerTable.get(i);
-
-            distance = (long) Math.pow(2, (double) i - 1);
-            position = this.getNodeId() + distance;
-            if (key > this.getNodeId()) {
-                if (node.getNodeId() > key) {
-                    successor = node;
-                    break;
-                }
-            } else {
-                if (node.getNodeId() < previousId) {
-                    if (key < node.getNodeId()) {
-                        successor = node;
-                    }
-                }
-            }
-
-
-        }
-        System.out.println("Successor of " + key + " : " + successor.getNodeId());
-        return successor;
-    }
 
     public boolean isResponsibleFor(BigInteger resquestId) {
 
         int tempId = Math.abs(resquestId.intValue());
 
-        Node n = serverLookUp(tempId);
+        Node n = dht.nodeLookUp(tempId);
 
-        if (n.getNodeId() == this.getNodeId())
-            return true;
+        return n.getNodeId() == this.getNodeId();
 
-        return false;
     }
 
 
@@ -191,64 +147,7 @@ public class Server extends Node implements Serializable {
 
         int tempId = Math.abs(request.getSenderId().intValue());
 
-        return serverLookUp(tempId);
-    }
-
-    /**
-     * This functions updates the server finger table with the new node info
-     *
-     * @param newNode new node on the distributed hash table
-     */
-    public void updateFingerTable(Node newNode) {
-
-        long position;
-        long distance;
-
-        for (int i = 1; i < fingerTable.size(); i++) {
-            Node node = fingerTable.get(i);
-
-            distance = (long) Math.pow(2, (double) i - 1);
-            position = this.getNodeId() + distance;
-            if (node.getNodeId() == this.getNodeId() && newNode.getNodeId() >= position) {
-                fingerTable.set(i, newNode);
-                System.out.println("1");
-            } else if (newNode.getNodeId() >= position && newNode.getNodeId() < node.getNodeId()) {
-                fingerTable.set(i, newNode);
-                System.out.println("2");
-            } else if (newNode.getNodeId() < this.getNodeId()) {
-                if (newNode.getNodeId() < node.getNodeId()) {
-                    if (MAX_NUMBER_OF_NODES - position + newNode.getNodeId() >= 0 && MAX_NUMBER_OF_NODES - this.getNodeId() + node.getNodeId() > MAX_NUMBER_OF_NODES - this.getNodeId() + newNode.getNodeId()) {
-                        if (node.getNodeId() < this.getNodeId() || node.getNodeId() == this.getNodeId()) {
-                            fingerTable.set(i, newNode);
-                            System.out.println("3");
-                        }
-
-                    } else if (MAX_NUMBER_OF_NODES - position + newNode.getNodeId() >= 0 && node.getNodeId() == this.getNodeId()) {
-                        fingerTable.set(i, newNode);
-                        System.out.println("4");
-                    }
-                }
-            } else if (newNode.getNodeId() > this.getNodeId() && newNode.getNodeId() >= position && node.getNodeId() < position) {
-                if (MAX_NUMBER_OF_NODES - this.getNodeId() + node.getNodeId() < MAX_NUMBER_OF_NODES - this.getNodeId() + newNode.getNodeId()) {
-                    fingerTable.set(i, newNode);
-                }
-            }
-        }
-    }
-
-    /**
-     * Receives the successor finger table and updates is own finger table
-     *
-     * @param successorFingerTable successor finger table
-     */
-    public void updateFingerTableFromSuccessor(ArrayList<Node> successorFingerTable) {
-
-        System.out.println(successorFingerTable.size());
-        for (int i = 0; i < successorFingerTable.size(); i++) {
-            updateFingerTable(successorFingerTable.get(i));
-        }
-
-        printFingerTable();
+        return dht.nodeLookUp(tempId);
     }
 
     /**
@@ -262,31 +161,31 @@ public class Server extends Node implements Serializable {
         int newNodePort = Integer.parseInt(info[2]);
 
         Node newNode = new Node(newNodeIp, newNodePort, newNodeKey);
-        updateFingerTable(newNode);
+        dht.updateFingerTable(newNode);
 
-        printFingerTable();
+        dht.printFingerTable();
 
-        Node successor = serverLookUp(newNodeKey);
+        Node successor = dht.nodeLookUp(newNodeKey);
 
         notifySuccessorOfItsPredecessor(successor, newNode);
 
-        if (successor.getNodeId() == fingerTable.get(1).getNodeId()) {
+        if (successor.getNodeId() == dht.fingerTableNode(1).getNodeId()) {
             sendFingerTableToSuccessor();
         }
 
-        if (successor.getNodeId() == predecessor.getNodeId()) {
+        if (successor.getNodeId() == dht.getPredecessor().getNodeId()) {
             sendFingerTableToPredecessor(newNode);
             System.out.println("Case1");
-        } else if (newNode.getNodeId() > predecessor.getNodeId() && newNode.getNodeId() < this.getNodeId()) {
+        } else if (newNode.getNodeId() > dht.getPredecessor().getNodeId() && newNode.getNodeId() < this.getNodeId()) {
             sendFingerTableToPredecessor(newNode);
             System.out.println("Case2");
-        } else if (successor.getNodeId() == this.getNodeId() && fingerTable.get(MAX_FINGER_TABLE_SIZE).getNodeId() != this.getNodeId()) {
-            joinNetwork(newNode, fingerTable.get(MAX_FINGER_TABLE_SIZE));
+        } else if (successor.getNodeId() == this.getNodeId() && dht.fingerTableNode(MAX_FINGER_TABLE_SIZE).getNodeId() != this.getNodeId()) {
+            joinNetwork(newNode, dht.fingerTableNode(MAX_FINGER_TABLE_SIZE));
             System.out.println("Case3");
         }
 
-        if (this.predecessor.getNodeId() == this.getNodeId())
-            this.predecessor = newNode;
+        if (dht.getPredecessor().getNodeId() == this.getNodeId())
+            dht.setPredecessor(newNode);
     }
 
     /**
@@ -305,9 +204,9 @@ public class Server extends Node implements Serializable {
 
     public void sendFingerTableToPredecessor(Node newNode) {
 
-        this.setPredecessor(newNode);
+        dht.setPredecessor(newNode);
 
-        Message message = new Message(SUCCESSOR_FT, new BigInteger(Integer.toString(this.getNodeId())), fingerTable);
+        Message message = new Message(SUCCESSOR_FT, new BigInteger(Integer.toString(this.getNodeId())), dht.getFingerTable());
 
         MessageHandler handler = new MessageHandler(message, newNode.getNodeIp(), newNode.getNodePort(), this);
 
@@ -318,9 +217,9 @@ public class Server extends Node implements Serializable {
 
     public void sendFingerTableToSuccessor() {
 
-        Node successor = fingerTable.get(1);
+        Node successor = dht.fingerTableNode(1);
 
-        Message message = new Message(SUCCESSOR_FT, new BigInteger(Integer.toString(this.getNodeId())), fingerTable);
+        Message message = new Message(SUCCESSOR_FT, new BigInteger(Integer.toString(this.getNodeId())), dht.getFingerTable());
 
         MessageHandler handler = new MessageHandler(message, successor.getNodeIp(), successor.getNodePort(), this);
 
@@ -338,37 +237,6 @@ public class Server extends Node implements Serializable {
         handler.connectToServer();
         handler.sendMessage(message);
 
-    }
-
-    /**
-     * Checks if .config file already has info about this server, if not appends ip:port:id
-     */
-    public void saveServerInfoToDisk() {
-        try {
-            File file = new File("./", ".config");
-
-            if (!file.isFile() && !file.createNewFile()) {
-                throw new IOException("Error creating new file: " + file.getAbsolutePath());
-            }
-
-            BufferedReader reader = new BufferedReader(new FileReader(".config"));
-            String line = reader.readLine();
-            while (line != null) {
-                String[] serverInfo = line.split(":");
-                System.out.println(this.getNodeId());
-                System.out.println(serverInfo[2]);
-                if (serverInfo[2].equals(Integer.toString(this.getNodeId()))) {
-                    return;
-                }
-                line = reader.readLine();
-            }
-            PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(".config", true)));
-            out.println(this.getNodeIp() + ":" + this.getNodePort() + ":" + this.getNodeId());
-            out.close();
-            System.out.println("Saved server info to config file");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     /**
@@ -482,37 +350,6 @@ public class Server extends Node implements Serializable {
     }
 
 
-    public Node getPredecessor() {
-        return predecessor;
-    }
-
-    public void setPredecessor(Node node) {
-
-        if (this.predecessor.getNodeId() != node.getNodeId()) {
-            updateFingerTable(node);
-            this.predecessor = node;
-            System.out.println("New predecessor: " + node.getNodeId());
-
-        }
-    }
-
-    public void printFingerTable() {
-        System.out.println("FINGERTABLE");
-        System.out.println("-----------");
-        System.out.println("Node ID: " + this.getNodeId());
-        System.out.println("Predecessor: " + this.predecessor.getNodeId());
-        System.out.println("-----------");
-        System.out.println("FINGERtableSize: " + fingerTable.size());
-        for (int i = 1; i < fingerTable.size(); i++) {
-            System.out.println(i + "    " + fingerTable.get(i).getNodeId());
-        }
-        System.out.println("-----------");
-    }
-
-    public ArrayList<Node> getFingerTable() {
-        return fingerTable;
-    }
-
     public Message signOutUser(BigInteger userId) {
         if (loggedInUsers.containsKey(userId)) {
             loggedInUsers.remove(userId);
@@ -520,6 +357,46 @@ public class Server extends Node implements Serializable {
         }
 
         return (new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId)));
+    }
+
+    public Hashtable<BigInteger, User> getUsers() {
+        return users;
+    }
+
+    public void setUsers(Hashtable<BigInteger, User> users) {
+        this.users = users;
+    }
+
+    public ArrayList<Node> getServersInfo() {
+        return serversInfo;
+    }
+
+    public void setServersInfo(ArrayList<Node> serversInfo) {
+        this.serversInfo = serversInfo;
+    }
+
+    public DistributedHashTable getDht() {
+        return dht;
+    }
+
+    public void setDht(DistributedHashTable dht) {
+        this.dht = dht;
+    }
+
+    public ConcurrentHashMap<BigInteger, ServerChat> getChats() {
+        return chats;
+    }
+
+    public void setChats(ConcurrentHashMap<BigInteger, ServerChat> chats) {
+        this.chats = chats;
+    }
+
+    public ConcurrentHashMap<BigInteger, SSLSocket> getLoggedInUsers() {
+        return loggedInUsers;
+    }
+
+    public void setLoggedInUsers(ConcurrentHashMap<BigInteger, SSLSocket> loggedInUsers) {
+        this.loggedInUsers = loggedInUsers;
     }
 }
 
