@@ -89,16 +89,13 @@ public class MessageHandler implements Runnable {
             e.printStackTrace();
         }
     }
-
     /**
      * Reads a message response from the socket and calls the handler function
      */
     public void receiveResponse() {
         Message response = null;
         try {
-            System.out.println("Message 1");
             response = (Message) inputStream.readObject();
-            System.out.println("Message 2");
             handleResponse(response);
         } catch (IOException e) {
             System.out.println("Error reading message...");
@@ -127,9 +124,15 @@ public class MessageHandler implements Runnable {
                 this.server.setPredecessor(new Node(nodeInfo[1], Integer.parseInt(nodeInfo[2]), Integer.parseInt(nodeInfo[0])));
                 break;
             case CLIENT_SUCCESS:
-                client.setServerIp(sslSocket.getInetAddress().toString());
-                client.setServerPort(sslSocket.getPort());
-                client.verifyState(response);
+                if(server==null){
+                    System.out.println("Cheguei ao cliente!!!!");
+                    client.setServerIp(sslSocket.getInetAddress().toString());
+                    client.setServerPort(sslSocket.getPort());
+                    client.verifyState(response);
+                }
+                else{
+                    sendMessage(response);
+                }
                 break;
             case CLIENT_ERROR:
                 client.verifyState(response);

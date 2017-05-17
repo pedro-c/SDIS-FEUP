@@ -199,7 +199,7 @@ public class Server extends Node implements Serializable {
 
         redirect.connectToServer();
         redirect.sendMessage();
-
+        redirect.receiveResponse();
     }
 
     /**
@@ -451,7 +451,7 @@ public class Server extends Node implements Serializable {
      * @param email    user email
      * @param password user password
      */
-    public void addUser(String email, String password) {
+    public Message addUser(String email, String password) {
 
         System.out.println("Sign up with  " + email);
 
@@ -468,9 +468,9 @@ public class Server extends Node implements Serializable {
             System.out.println("Signed up with success!");
         }
 
-        MessageHandler handler = new MessageHandler(message, message.getInitialServerAddress(),message.getInitialServerPort(),this);
-        threadPool.submit(handler);
+        System.out.println("Sign up... Ready to response to client");
 
+        return message;
     }
 
     /**
@@ -480,12 +480,10 @@ public class Server extends Node implements Serializable {
      * @param password user password
      * @return true if user authentication went well, false if don't
      */
-    public void loginUser(String email, String password) {
+    public Message loginUser(String email, String password) {
 
         System.out.println("Sign in with " + email);
-
         BigInteger user_email = createHash(email);
-
         Message message;
 
         if (users.get(user_email) == null) {
@@ -498,9 +496,8 @@ public class Server extends Node implements Serializable {
             System.out.println("Logged in with success!");
             message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
         }
-        MessageHandler handler = new MessageHandler(message, message.getInitialServerAddress(),message.getInitialServerPort(),this);
-        threadPool.submit(handler);
 
+        return message;
     }
 
     /**

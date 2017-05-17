@@ -66,20 +66,13 @@ public class ConnectionHandler implements Runnable {
                 body = response.getBody().split(" ");
                 System.out.println("REQUEST ID: " + response.getSenderId().intValue());
                 if (server.isResponsibleFor(response.getSenderId())) {
-                    //server.saveConnection(this.sslSocket, response.getSenderId());
-                    server.loginUser(body[0], body[1]);
-                    closeConnection();
+                    Message message = server.loginUser(body[0], body[1]);
+                    message.setInitialServerAddress(server.getNodeIp());
+                    message.setInitialServerPort(server.getNodePort());
+                    return message;
                 }
                 else {
                     System.out.println("REDIRECTING ID: " + response.getSenderId().intValue());
-                    if(response.getInitialServerPort()==-1 || response.getInitialServerAddress()==null){
-                        System.out.println("This user information don't belong to me...");
-                        response.setInitialServerAddress(sslSocket.getInetAddress().toString());
-                        response.setInitialServerPort(sslSocket.getPort());
-                    }
-                    else{
-                        closeConnection();
-                    }
                     server.redirect(response);
                 }
                 break;
