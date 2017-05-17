@@ -125,12 +125,12 @@ public class MessageHandler implements Runnable {
                 break;
             case CLIENT_SUCCESS:
                 if(server==null){
-                    System.out.println("Cheguei ao cliente!!!!");
                     client.setServerIp(sslSocket.getInetAddress().toString());
                     client.setServerPort(sslSocket.getPort());
                     client.verifyState(response);
                 }
                 else{
+                    System.out.println("Sending message back to initiator server");
                     sendMessage(response);
                 }
                 break;

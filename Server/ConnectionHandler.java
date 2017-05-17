@@ -66,6 +66,7 @@ public class ConnectionHandler implements Runnable {
                 body = response.getBody().split(" ");
                 System.out.println("REQUEST ID: " + response.getSenderId().intValue());
                 if (server.isResponsibleFor(response.getSenderId())) {
+                    System.out.println("I'm the RESPONSIBLE server");
                     Message message = server.loginUser(body[0], body[1]);
                     message.setInitialServerAddress(server.getNodeIp());
                     message.setInitialServerPort(server.getNodePort());
@@ -80,13 +81,14 @@ public class ConnectionHandler implements Runnable {
                 body = response.getBody().split(" ");
                 System.out.println("REQUEST ID: " + response.getSenderId().intValue());
                 if (server.isResponsibleFor(response.getSenderId())) {
-                    server.saveConnection(this.sslSocket, response.getSenderId());
-                    server.addUser(body[0], body[1]);
-                    closeConnection();
+                    System.out.println("I'm the RESPONSIBLE server");
+                    Message message = server.addUser(body[0], body[1]);
+                    message.setInitialServerAddress(server.getNodeIp());
+                    message.setInitialServerPort(server.getNodePort());
+                    return message;
                 } else {
                     System.out.println("REDIRECTING ID: " + response.getSenderId().intValue());
                     server.redirect(response);
-                    closeConnection();
                 }
                 break;
             case CREATE_CHAT:
