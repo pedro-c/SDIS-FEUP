@@ -241,6 +241,18 @@ public class Client {
                 System.out.println("\nSigned out!!");
                 mainMenu();
                 break;
+            case SIGNED_IN:
+                if (response.getMessageType().equals(NEW_CHAT_INVITATION)) {
+                    System.out.println("Received new chat invitation!!!");
+                    ServerChat sv = (ServerChat) response.getObject();
+                    Chat chat = new Chat(sv.getIdChat(),sv.getCreatorEmail());
+                    userChats.put(chat.getIdChat(),chat);
+                    openChat(chat);
+                }
+                else {
+                    System.out.println("Error");
+                }
+                break;
             default:
                 break;
         }

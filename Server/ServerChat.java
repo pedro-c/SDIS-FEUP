@@ -8,9 +8,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Created by mariajoaomirapaulo on 16/05/17.
- */
 public class ServerChat implements Serializable {
 
     private Set<User> participants;
@@ -30,5 +27,9 @@ public class ServerChat implements Serializable {
 
     public BigInteger getIdChat() {
         return idChat;
+    }
+
+    public String getCreatorEmail() {
+        return creatorEmail;
     }
 }

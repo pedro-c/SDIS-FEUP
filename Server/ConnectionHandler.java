@@ -124,6 +124,15 @@ public class ConnectionHandler implements Runnable {
             case INVITE_USER:
                 if (server.isResponsibleFor(response.getSenderId())){
                     System.out.println("I'm the RESPONSIBLE server");
+                    return server.createParticipantChat((ServerChat) response.getObject());
+                }
+                else{
+                    System.out.println("REDIRECTING ID: " + response.getSenderId().intValue());
+                    Node n = server.redirect(response);
+                    MessageHandler redirect = new MessageHandler(response, n.getNodeIp(), n.getNodePort(), this);
+                    redirect.connectToServer();
+                    redirect.sendMessage();
+                    redirect.receiveResponse();
                 }
                 break;
             case NEWNODE:

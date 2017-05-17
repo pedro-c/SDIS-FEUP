@@ -14,7 +14,6 @@ public class User {
     private BigInteger password;
     private Hashtable<BigInteger, ServerChat> chats;
 
-
     public User(String email, BigInteger password) {
         this.email = email;
         this.password = password;
