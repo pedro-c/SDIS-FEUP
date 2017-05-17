@@ -80,9 +80,7 @@ public class ConnectionHandler implements Runnable {
                 } else {
                     System.out.println("REDIRECTING ID: " + Integer.remainderUnsigned(response.getSenderId().intValue(), 128));
                     Node n = server.redirect(response);
-
                     MessageHandler redirect = new MessageHandler(response, n.getNodeIp(), n.getNodePort(), this);
-
                     redirect.connectToServer();
                     redirect.sendMessage();
                     redirect.receiveResponse();
@@ -176,8 +174,7 @@ public class ConnectionHandler implements Runnable {
         try {
             message = (Message) serverInputStream.readObject();
             Message responseMessage = analyseResponse(message);
-            server.saveConnection(sslSocket, responseMessage.getSenderId());
-            System.out.println("Mandando...");
+            System.out.println("Sending...");
             sendMessage(responseMessage);
         } catch (IOException e) {
             System.out.println("Error reading message...");

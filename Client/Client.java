@@ -316,6 +316,15 @@ public class Client {
         this.serverIp = serverIp;
     }
 
+
+    /**
+     * Gets client current task
+     * @return
+     */
+    public Client.Task getAtualState() {
+        return atualState;
+    }
+
     public enum Task {
         HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
         WAITING_SIGNOUT

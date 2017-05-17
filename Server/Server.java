@@ -482,19 +482,17 @@ public class Server extends Node implements Serializable {
 
         Message message = null;
 
-        System.out.println(1);
         ServerChat newChat = new ServerChat(chat.getIdChat(), chat.getCreatorEmail());
 
         User user = users.get(createHash(chat.getCreatorEmail()));
         if(user != null){
             user.addChat(newChat);
-            System.out.println(2);
-            if(loggedInUsers.contains(user)){
-                System.out.println(3);
+            printLoggedInUsers();
+            System.out.println(user.getUserId());
+            if(loggedInUsers.get(user.getUserId())!=null){
                 message = new Message(Constants.NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId),newChat);
                 SSLSocket socket = loggedInUsers.get(user.getUserId());
-                //TODO: Falta enviar para o CLIENTE
-                System.out.println(4);
+                //TODO: BLOCKING
                 writeToSocket(socket,message);
                 System.out.println(5);
             }
@@ -526,6 +524,11 @@ public class Server extends Node implements Serializable {
      */
     public void saveConnection(SSLSocket sslSocket, BigInteger clientId) {
         loggedInUsers.put(clientId, sslSocket);
+        printLoggedInUsers();
+    }
+
+    public void printLoggedInUsers(){
+       loggedInUsers.forEach( (k,v)-> System.out.println("LOGGED IN : " + k));
     }
 
 

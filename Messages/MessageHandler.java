@@ -56,6 +56,14 @@ public class MessageHandler implements Runnable {
         connectToServer();
         sendMessage(message);
         while (true) {
+            System.out.println("Reading response...");
+            receiveResponse();
+        }
+    }
+
+    public void listen() {
+        while (true) {
+            System.out.println("Reading response...");
             receiveResponse();
         }
     }
@@ -152,6 +160,14 @@ public class MessageHandler implements Runnable {
             default:
                 break;
         }
+
+
+        System.out.println("I'm blocked on signinMenu, waiting for an user input");
+        if(client.getAtualState() == Client.Task.SIGNED_IN || client.getAtualState() == Client.Task.SIGNED_IN){
+            System.out.println("VOU OUVIR");
+            listen();
+        }
+
     }
 
     /**
