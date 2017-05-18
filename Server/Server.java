@@ -165,6 +165,9 @@ public class Server extends Node implements Serializable {
 
         Node successor = dht.nodeLookUp(newNodeKey);
 
+        sendFingerTableToSuccessor();
+        sendFingerTableToPredecessor(dht.getPredecessor());
+
         if(successor.getNodeId() == this.getNodeId()){
             sendFingerTableToPredecessor(newNode);
             notifyNodeOfItsPredecessor(newNode, previousPredecessor);
@@ -349,6 +352,8 @@ public class Server extends Node implements Serializable {
             if (loggedInUsers.get(user.getUserId()) != null) {
                 message = new Message(NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId), newChat);
                 SSLSocket socket = loggedInUsers.get(user.getUserId());
+                System.out.println(user.getUserId());
+                System.out.println(socket);
                 //TODO: BLOCKING
                 writeToSocket(socket, message);
                 System.out.println(5);
