@@ -69,7 +69,7 @@ public class DistributedHashTable implements Serializable {
             for (int i = 3; i < fingerTable.size(); i++) {
                 if(tempNode1.getNodeId() > tempNode2.getNodeId()){
                     successor = tempNode2;
-                    break; 
+                    break;
                 }
                 tempNode1 = fingerTable.get(i-1);
                 tempNode2 = fingerTable.get(i);
@@ -168,6 +168,10 @@ public class DistributedHashTable implements Serializable {
 
     public ArrayList<Node> getFingerTable() {
         return fingerTable;
+    }
+
+    public Node getSuccessor(){
+        return fingerTable.get(1);
     }
 
 }
