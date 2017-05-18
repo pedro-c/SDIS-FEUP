@@ -171,7 +171,17 @@ public class DistributedHashTable implements Serializable {
     }
 
     public Node getSuccessor(){
-        return fingerTable.get(1);
+
+        Node successor = null;
+
+        for(Node node: fingerTable){
+            if(node.getNodeId() != server.getNode().getNodeId()){
+                successor = node;
+                break;
+            }
+        }
+
+        return successor;
     }
 
 }
