@@ -307,8 +307,10 @@ public class Server extends Node implements Serializable {
             Node n = dht.nodeLookUp(createHash(chat.getParticipant_email()).intValue());
             Message message1 = new Message(INVITE_USER, BigInteger.valueOf(nodeId), chat1);
             MessageHandler redirect = new MessageHandler(message1, n.getNodeIp(), n.getNodePort(), this);
+            redirect.connectToServer();
             System.out.println("Nada a ver comigo...XAU");
-            threadPool.submit(redirect);
+            redirect.sendMessage(message1);
+            System.out.println("Enviada a mensagem para convidar participante...");
         }
 
 
@@ -322,18 +324,20 @@ public class Server extends Node implements Serializable {
         ServerChat newChat = new ServerChat(chat.getIdChat(), chat.getCreatorEmail());
 
         User user = users.get(createHash(chat.getCreatorEmail()));
+
         if (user != null) {
             user.addChat(newChat);
             printLoggedInUsers();
-            System.out.println(user.getUserId());
             if (loggedInUsers.get(user.getUserId()) != null) {
                 message = new Message(NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId), newChat);
+                
                 SSLSocket socket = loggedInUsers.get(user.getUserId());
-                System.out.println(user.getUserId());
                 System.out.println(socket);
+
                 //TODO: BLOCKING
+                System.out.println("trying to send NEW_CHAT_INVITATION");
                 writeToSocket(socket, message);
-                System.out.println(5);
+                System.out.println("SENT");
             }
         } else {
             System.out.println("User not registry");
