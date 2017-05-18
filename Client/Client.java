@@ -39,7 +39,7 @@ public class Client {
         this.userChats = new Hashtable<BigInteger, Chat>();
         this.atualState = Task.HOLDING;
         onChangeTask = new CompletableFuture<>();
-        onChangeTask.thenAcceptAsync(aVoid -> verifyState());
+      //  onChangeTask.thenAcceptAsync(aVoid -> verifyState());
         scannerIn = new Scanner(System.in);
     }
 
@@ -140,6 +140,7 @@ public class Client {
         Message message = new Message(CREATE_CHAT, getClientId(), newChat);
         messageHandler.setMessage(message);
         threadPool.submit(messageHandler);
+        verifyState(Task.WAITING_CREATE_CHAT);
     }
 
     /**
@@ -160,6 +161,7 @@ public class Client {
         Message message = new Message(SIGNIN, getClientId(), email, createHash(password).toString());
         messageHandler = new MessageHandler(message, serverIp, serverPort, this);
         threadPool.submit(messageHandler);
+        verifyState(Task.WAITING_SIGNIN);
     }
 
     /**
@@ -171,6 +173,7 @@ public class Client {
         Message message = new Message(SIGNUP, getClientId(), email, createHash(password).toString());
         messageHandler = new MessageHandler(message, serverIp, serverPort, this);
         threadPool.submit(messageHandler);
+        verifyState(Task.WAITING_SIGNUP);
     }
 
     /**
@@ -210,9 +213,10 @@ public class Client {
     /**
      * Acts according off the actual state
      */
-    public void verifyState() {
-        System.out.println("ooo");
-        onChangeTask = new CompletableFuture<>().thenAcceptAsync(o -> verifyState());
+    public void verifyState(Task task) {
+
+        while(task == atualState){}
+        //onChangeTask = new CompletableFuture<>().thenAcceptAsync(o -> verifyState());
         switch (atualState) {
             case SIGNED_IN:
                 signInMenu();
@@ -310,7 +314,7 @@ public class Client {
     }
 
     public void setAtualState(Task atualState) {
-        System.out.println("QUERO COMPLETAR");
+        System.out.println(atualState);
         this.atualState = atualState;
         this.onChangeTask.complete(null);
     }
