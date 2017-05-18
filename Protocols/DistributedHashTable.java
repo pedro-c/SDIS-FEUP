@@ -61,7 +61,7 @@ public class DistributedHashTable implements Serializable {
                         successor = node;
                     }
                 }
-            }
+            } 
 
 
         }
@@ -154,19 +154,6 @@ public class DistributedHashTable implements Serializable {
             System.out.println(i + "    " + fingerTable.get(i).getNodeId());
         }
         System.out.println("-----------");
-    }
-
-    /**
-     * This function gets the next successor from the finger table that is different from itself
-     * @return the successor
-     */
-    public Node getSuccessor(){
-        for(Node node : fingerTable){
-            if(node.getNodeId() != server.getNodeId())
-                return node;
-        }
-
-        return null;
     }
 
     public ArrayList<Node> getFingerTable() {
