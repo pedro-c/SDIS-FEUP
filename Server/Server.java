@@ -329,8 +329,9 @@ public class Server extends Node implements Serializable {
                 System.out.println(user.getUserId());
                 System.out.println(socket);
                 //TODO: BLOCKING
+                System.out.println("trying to send NEW_CHAT_INVITATION");
                 writeToSocket(socket, message);
-                System.out.println(5);
+                System.out.println("SENT");
             }
         } else {
             System.out.println("User not registry");
