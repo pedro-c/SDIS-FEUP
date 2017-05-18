@@ -47,6 +47,9 @@ public class Constants {
     //SERVER_ERROR SenderId code
     public static final String SERVER_ERROR = "SERVER_ERROR";
 
+    //ADD_USER SenderId User
+    public static final String ADD_USER = "ADD_USER";
+
     //Directories
     public static final String USER_DIRECTORY = "users";
     public static final String CHAT_DIRECTORY = "chats";

@@ -12,6 +12,8 @@ import java.io.*;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -24,7 +26,7 @@ public class Server extends Node implements Serializable {
     /**
      * Key is the user id (hash from e-mail) and value is the 256-bit hashed user password
      */
-    private Hashtable<BigInteger, User> users;
+    private ConcurrentHashMap<BigInteger, User> users;
 
     /**
      * Hash map to hold backups of files from this node predecessors
@@ -46,7 +48,6 @@ public class Server extends Node implements Serializable {
      */
     public Server(String args[]) {
         super(args[0], Integer.parseInt(args[1]));
-        users = new Hashtable<>();
         dht = new DistributedHashTable(this);
 
         System.out.println("Server ID: " + this.getNodeId());
@@ -67,7 +68,7 @@ public class Server extends Node implements Serializable {
         createDir(usersPath);
         createDir(chatsPath);
 
-        users = new Hashtable<>();
+        users = new ConcurrentHashMap<>();
         loggedInUsers = new ConcurrentHashMap<BigInteger, SSLSocket>();
         backups = new ConcurrentHashMap<BigInteger, User>();
     }
@@ -167,9 +168,13 @@ public class Server extends Node implements Serializable {
         if(successor.getNodeId() == this.getNodeId()){
             sendFingerTableToPredecessor(newNode);
             notifyNodeOfItsPredecessor(newNode, previousPredecessor);
+            sendInfoToPredecessor(newNode,users,ADD_USER);
+            sendInfoToPredecessor(newNode,backups,BACKUP_USER);
         }else if(newNode.getNodeId() > dht.getPredecessor().getNodeId()){
             sendFingerTableToPredecessor(newNode);
             notifyNodeOfItsPredecessor(newNode, dht.getPredecessor());
+            sendInfoToPredecessor(newNode,users,ADD_USER);
+            sendInfoToPredecessor(newNode,backups,BACKUP_USER);
         }else{
             joinNetwork(newNode, successor);
             System.out.println("Redirecting.");
@@ -219,6 +224,7 @@ public class Server extends Node implements Serializable {
      *
      * @param email    user email
      * @param password user password
+     * @return response message
      */
     public Message addUser(String email, String password) {
 
@@ -242,6 +248,20 @@ public class Server extends Node implements Serializable {
         System.out.println("Sign up... Ready to response to client");
 
         return message;
+    }
+
+    /**
+     * Regists user
+     * @param newUser
+     * @return response message
+     */
+    public Message addUser(User newUser){
+        System.out.println("Recebendo user do meu sucessor");
+
+        BigInteger userId = createHash(newUser.getEmail());
+
+        users.put(userId, newUser);
+        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId),USER_ADDED);
     }
 
     /**
@@ -441,11 +461,59 @@ public class Server extends Node implements Serializable {
         }
     }
 
-    public Hashtable<BigInteger, User> getUsers() {
+    /**
+     * Gets the respective users of a new server from a given container(users,backups) of the server
+     * @param node New node/server
+     * @param container server user containers, users and backups
+     * @return a container of users
+     */
+    public Queue<User> getUsersOfANewServer(Node node,ConcurrentHashMap<BigInteger,User> container){
+
+        Queue<User> newServerUsers = new LinkedList<User>();
+
+        BigInteger newNodeId = BigInteger.valueOf(node.getNodeId());
+
+        container.forEach((userId,user) -> {
+
+            // -1 userId is greater
+            // 0 the values are equal
+            // 1 newNodeId is greater
+            int result = newNodeId.compareTo(userId);
+
+            if(result == -1 || result == 0){
+                newServerUsers.add(user);
+                users.remove(userId,user);
+            }
+        });
+
+        return newServerUsers;
+    }
+
+    public void sendInfoToPredecessor(Node node,ConcurrentHashMap<BigInteger,User> container,String type){
+
+        Queue<User> predecessorUsers = getUsersOfANewServer(node,container);
+
+        System.out.println("Enviando info para o predecessor");
+
+        Message message = null;
+        MessageHandler handler = new MessageHandler(message, node.getNodeIp(), node.getNodePort(), this);
+        handler.connectToServer();
+
+        for (User user : predecessorUsers) {
+            //type = ADD_USER or BACKUP_USER
+            message = new Message(type,BigInteger.valueOf(nodeId),user);
+            handler.sendMessage(message);
+            handler.receiveResponse();
+        }
+
+
+    }
+
+    public ConcurrentHashMap<BigInteger, User> getUsers() {
         return users;
     }
 
-    public void setUsers(Hashtable<BigInteger, User> users) {
+    public void setUsers(ConcurrentHashMap<BigInteger, User> users) {
         this.users = users;
     }
 
@@ -457,13 +525,16 @@ public class Server extends Node implements Serializable {
         this.dht = dht;
     }
 
-
     public ConcurrentHashMap<BigInteger, SSLSocket> getLoggedInUsers() {
         return loggedInUsers;
     }
 
     public void setLoggedInUsers(ConcurrentHashMap<BigInteger, SSLSocket> loggedInUsers) {
         this.loggedInUsers = loggedInUsers;
+    }
+
+    public ConcurrentHashMap<BigInteger, User> getBackups() {
+        return backups;
     }
 }
 

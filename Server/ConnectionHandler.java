@@ -6,9 +6,11 @@ import Messages.MessageHandler;
 
 import javax.net.ssl.SSLSocket;
 import java.io.*;
+import java.math.BigInteger;
 import java.util.ArrayList;
 
 import static Utilities.Constants.*;
+import static Utilities.Utilities.createHash;
 
 /**
  * Handles new SSL Connections to the server
@@ -149,7 +151,15 @@ public class ConnectionHandler implements Runnable {
                 server.getDht().printFingerTable();
                 break;
             case BACKUP_USER:
-                return server.backupInfo(response);
+                if(response.getObject() != null){
+                    User user = (User)response.getObject();
+                    server.getBackups().put(createHash(user.getEmail()),user);
+                    return new Message(SERVER_SUCCESS, BigInteger.valueOf(this.server.getNodeId()), USER_ADDED);
+                }
+                else
+                    return server.backupInfo(response);
+            case ADD_USER:
+                return server.addUser((User)response.getObject());
             default:
                 break;
         }
