@@ -138,6 +138,10 @@ public class MessageHandler implements Runnable {
                 this.server.getDht().setPredecessor(new Node(nodeInfo[1], Integer.parseInt(nodeInfo[2]), Integer.parseInt(nodeInfo[0])));
                 break;
             case CLIENT_SUCCESS:
+                if(connectionHandler != null){
+                    System.out.println("Sending message back to initiator server");
+                    connectionHandler.sendMessage(response);
+                }
                 if (client.getAtualState() == Client.Task.WAITING_SIGNUP || client.getAtualState() == Client.Task.WAITING_SIGNIN) {
                     client.setServerIp(response.getInitialServerAddress());
                     client.setServerPort(response.getInitialServerPort());
@@ -147,10 +151,6 @@ public class MessageHandler implements Runnable {
                 else if (client.getAtualState() == Client.Task.WAITING_CREATE_CHAT){
                     client.setAtualState(Client.Task.CREATING_CHAT);
                     client.setPendingChat(new BigInteger(response.getBody()));
-                }
-                else {
-                    System.out.println("Sending message back to initiator server");
-                    connectionHandler.sendMessage(response);
                 }
                 break;
             case CLIENT_ERROR:
