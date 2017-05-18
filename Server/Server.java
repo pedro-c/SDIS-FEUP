@@ -145,13 +145,6 @@ public class Server extends Node implements Serializable {
         return dht.nodeLookUp(tempId);
     }
 
-
-    public Node redirect(BigInteger clientId) {
-
-        int tempId = Math.abs(clientId.intValue());
-        return dht.nodeLookUp(tempId);
-    }
-
     /**
      * Function called when a new node message arrives to the server and forwards it to the correct server
      *
@@ -317,7 +310,7 @@ public class Server extends Node implements Serializable {
             //TODO: INVITE PARTICIPANT
             System.out.println("Added participant with success");
         } else {
-            Node n = redirect(createHash(chat.getParticipant_email()));
+            Node n = dht.nodeLookUp(createHash(chat.getParticipant_email()).intValue());
             Message message1 = new Message(INVITE_USER, BigInteger.valueOf(nodeId), chat1);
             MessageHandler redirect = new MessageHandler(message1, n.getNodeIp(), n.getNodePort(), this);
             System.out.println("Nada a ver comigo...XAU");

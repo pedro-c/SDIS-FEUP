@@ -161,7 +161,6 @@ public class MessageHandler implements Runnable {
                 break;
         }
 
-
         System.out.println("I'm blocked on signinMenu, waiting for an user input");
         if (client.getAtualState() == Client.Task.SIGNED_IN || client.getAtualState() == Client.Task.SIGNED_IN) {
             System.out.println("VOU OUVIR");
