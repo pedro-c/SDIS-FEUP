@@ -157,6 +157,8 @@ public class MessageHandler implements Runnable {
             case CLIENT_ERROR:
                 client.verifyState(response);
                 break;
+            case SERVER_SUCCESS:
+                server.verifyState(response);
             default:
                 break;
         }

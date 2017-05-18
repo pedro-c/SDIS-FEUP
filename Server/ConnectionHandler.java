@@ -148,6 +148,8 @@ public class ConnectionHandler implements Runnable {
                 server.getDht().setPredecessor(ft.get(0));
                 server.getDht().printFingerTable();
                 break;
+            case BACKUP_USER:
+                return server.backupInfo(response);
             default:
                 break;
         }

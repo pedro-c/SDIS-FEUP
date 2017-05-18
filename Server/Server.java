@@ -25,11 +25,13 @@ public class Server extends Node implements Serializable {
      * Key is the user id (hash from e-mail) and value is the 256-bit hashed user password
      */
     private Hashtable<BigInteger, User> users;
+
     /**
-     * Key is an integer representing the m nodes and the value it's the server identifier
-     * (32-bit integer hash from ip+port)
+     * Hash map to hold backups of files from this node predecessors
+     * Key is the integer representing the userId and the value is the user Object
      */
-    private ArrayList<Node> serversInfo;
+    private ConcurrentHashMap<BigInteger, User> backups;
+
     private DistributedHashTable dht;
     private ConcurrentHashMap<BigInteger, ServerChat> chats;
     /**
@@ -68,7 +70,7 @@ public class Server extends Node implements Serializable {
 
         users = new Hashtable<>();
         loggedInUsers = new ConcurrentHashMap<BigInteger, SSLSocket>();
-        serversInfo = new ArrayList<Node>();
+        backups = new ConcurrentHashMap<BigInteger, User>();
     }
 
     /**
@@ -243,6 +245,7 @@ public class Server extends Node implements Serializable {
             users.put(user_email, newUser);
             message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
             System.out.println("Signed up with success!");
+            sendInfoToBackup(new Message(BACKUP_USER, BigInteger.valueOf(nodeId), email, password));
         }
 
         System.out.println("Sign up... Ready to response to client");
@@ -373,6 +376,11 @@ public class Server extends Node implements Serializable {
         loggedInUsers.forEach((k, v) -> System.out.println("LOGGED IN : " + k));
     }
 
+    /**
+     * Function used to sign out users, this user is removed from the logged-in users arraylist
+     * @param userId id of the user
+     * @return message
+     */
     public Message signOutUser(BigInteger userId) {
         if (loggedInUsers.containsKey(userId)) {
             loggedInUsers.remove(userId);
@@ -382,20 +390,72 @@ public class Server extends Node implements Serializable {
         return (new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId)));
     }
 
+    /**
+     * Replicates info to his successor
+     * @param message message with all the info to be backed up
+     */
+    public void sendInfoToBackup(Message message){
+        Node successor = dht.getSuccessor();
+
+        if(successor == null)
+            return;
+
+        MessageHandler handler = new MessageHandler(message, successor.getNodeIp(),
+                successor.getNodePort(), this);
+
+        threadPool.submit(handler);
+    }
+
+    /**
+     * Function used when a BACKUP request arrives to the server, basically depending on the request
+     * this function add, update or delete the information
+     * @param message message with all the information and the type of the request
+     * @return message of success or error
+     */
+    public Message backupInfo(Message message) {
+        Message response = null;
+        String[] body;
+
+        switch (message.getMessageType()) {
+            case BACKUP_USER:
+                body = message.getBody().split(" ");
+                User user = new User(body[0], new BigInteger(body[1]));
+                backups.put(user.getUserId(), user);
+                response = new Message(SERVER_SUCCESS, BigInteger.valueOf(this.getNodeId()), USER_ADDED);
+                break;
+            default:
+                break;
+        }
+
+        return response;
+    }
+
+    /**
+     * Decides what to do depending on the situation
+     * @param response response by a server or client of a message sent the server
+     */
+    public void verifyState(Message response){
+
+        String body[] = response.getBody().split(" ");
+
+        if(body.length == 0)
+            return;
+
+        switch (body[0]){
+            case USER_ADDED:
+                System.out.println("Node with id " + response.getSenderId() + " backed up user");
+                break;
+            default:
+                break;
+        }
+    }
+
     public Hashtable<BigInteger, User> getUsers() {
         return users;
     }
 
     public void setUsers(Hashtable<BigInteger, User> users) {
         this.users = users;
-    }
-
-    public ArrayList<Node> getServersInfo() {
-        return serversInfo;
-    }
-
-    public void setServersInfo(ArrayList<Node> serversInfo) {
-        this.serversInfo = serversInfo;
     }
 
     public DistributedHashTable getDht() {
