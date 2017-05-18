@@ -138,7 +138,6 @@ public class MessageHandler implements Runnable {
         System.out.println("MH Message received: " + response.getMessageType());
 
         switch (response.getMessageType()) {
-            //PREDECESSOR NodeId NodeIp NodePort
             case PREDECESSOR:
                 nodeInfo = response.getBody().split(" ");
                 this.server.getDht().setPredecessor(new Node(nodeInfo[1], Integer.parseInt(nodeInfo[2]), Integer.parseInt(nodeInfo[0])));
