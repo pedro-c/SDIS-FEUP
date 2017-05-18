@@ -21,6 +21,7 @@ public class ServerChat implements Serializable {
         this.participants = new HashSet<User>();
         this.creatorEmail = creatorEmail;
     }
+
     public void addParticipant(User user) {
         participants.add(user);
     }

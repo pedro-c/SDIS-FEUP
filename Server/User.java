@@ -1,7 +1,5 @@
 package Server;
 
-import Chat.Chat;
-
 import java.math.BigInteger;
 import java.util.Hashtable;
 
@@ -53,7 +51,7 @@ public class User {
         this.clientPort = clientPort;
     }
 
-    public BigInteger getUserId(){
+    public BigInteger getUserId() {
         return createHash(email);
     }
 

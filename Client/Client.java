@@ -3,7 +3,6 @@ package Client;
 import Chat.Chat;
 import Messages.Message;
 import Messages.MessageHandler;
-import Server.Server;
 import Server.ServerChat;
 
 import java.io.Console;
@@ -130,7 +129,7 @@ public class Client {
             newChat.setChatName(chatName);
         newChat.setParticipant_email(participantEmail);
 
-        userChats.put(newChat.getIdChat(),newChat);
+        userChats.put(newChat.getIdChat(), newChat);
 
         System.out.println(newChat.getIdChat());
 
@@ -193,9 +192,8 @@ public class Client {
         System.out.print("Password: ");
 
         char[] oldPassword = console.readPassword();
-        String password = new String(oldPassword);
 
-        return password;
+        return new String(oldPassword);
     }
 
     /**
@@ -245,11 +243,10 @@ public class Client {
                 if (response.getMessageType().equals(NEW_CHAT_INVITATION)) {
                     System.out.println("Received new chat invitation!!!");
                     ServerChat sv = (ServerChat) response.getObject();
-                    Chat chat = new Chat(sv.getIdChat(),sv.getCreatorEmail());
-                    userChats.put(chat.getIdChat(),chat);
+                    Chat chat = new Chat(sv.getIdChat(), sv.getCreatorEmail());
+                    userChats.put(chat.getIdChat(), chat);
                     openChat(chat);
-                }
-                else {
+                } else {
                     System.out.println("Error");
                 }
                 break;
@@ -319,6 +316,7 @@ public class Client {
 
     /**
      * Gets client current task
+     *
      * @return
      */
     public Client.Task getAtualState() {

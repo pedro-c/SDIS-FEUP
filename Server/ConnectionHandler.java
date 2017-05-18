@@ -72,7 +72,7 @@ public class ConnectionHandler implements Runnable {
                 System.out.println("REQUEST ID: " + Integer.remainderUnsigned(response.getSenderId().intValue(), 128));
                 if (server.isResponsibleFor(response.getSenderId())) {
                     System.out.println("I'm the RESPONSIBLE server");
-                    server.saveConnection(sslSocket,response.getSenderId());
+                    server.saveConnection(sslSocket, response.getSenderId());
                     Message message = server.loginUser(body[0], body[1]);
                     message.setInitialServerAddress(server.getNodeIp());
                     message.setInitialServerPort(server.getNodePort());
@@ -91,7 +91,7 @@ public class ConnectionHandler implements Runnable {
                 System.out.println("REQUEST ID: " + Integer.remainderUnsigned(response.getSenderId().intValue(), 128));
                 if (server.isResponsibleFor(response.getSenderId())) {
                     System.out.println("I'm the RESPONSIBLE server");
-                    server.saveConnection(sslSocket,response.getSenderId());
+                    server.saveConnection(sslSocket, response.getSenderId());
                     Message message = server.addUser(body[0], body[1]);
                     message.setInitialServerAddress(server.getNodeIp());
                     message.setInitialServerPort(server.getNodePort());
@@ -106,11 +106,10 @@ public class ConnectionHandler implements Runnable {
                 }
                 break;
             case CREATE_CHAT:
-                if (server.isResponsibleFor(response.getSenderId())){
+                if (server.isResponsibleFor(response.getSenderId())) {
                     System.out.println("I'm the RESPONSIBLE server");
                     return server.createChat((Chat) response.getObject());
-                }
-                else {
+                } else {
                     System.out.println("REDIRECTING ID: " + response.getSenderId().intValue());
                     Node n = server.redirect(response);
                     MessageHandler redirect = new MessageHandler(response, n.getNodeIp(), n.getNodePort(), this);
@@ -120,11 +119,10 @@ public class ConnectionHandler implements Runnable {
                 }
                 break;
             case INVITE_USER:
-                if (server.isResponsibleFor(response.getSenderId())){
+                if (server.isResponsibleFor(response.getSenderId())) {
                     System.out.println("I'm the RESPONSIBLE server");
                     server.createParticipantChat((ServerChat) response.getObject());
-                }
-                else{
+                } else {
                     System.out.println("REDIRECTING ID: " + response.getSenderId().intValue());
                     Node n = server.redirect(response);
                     MessageHandler redirect = new MessageHandler(response, n.getNodeIp(), n.getNodePort(), this);
@@ -136,19 +134,19 @@ public class ConnectionHandler implements Runnable {
             case NEWNODE:
                 body = response.getBody().split(" ");
                 server.newNode(body);
-                server.printFingerTable();
+                server.getDht().printFingerTable();
                 break;
             case PREDECESSOR:
                 Node temp = (Node) response.getObject();
-                server.setPredecessor(temp);
+                server.getDht().setPredecessor(temp);
                 server.sendFingerTableToSuccessor();
-                server.printFingerTable();
+                server.getDht().printFingerTable();
                 break;
             case SUCCESSOR_FT:
                 ArrayList<Node> ft = (ArrayList<Node>) response.getObject();
-                server.updateFingerTableFromSuccessor(ft);
-                server.setPredecessor(ft.get(0));
-                server.printFingerTable();
+                server.getDht().updateFingerTableFromSuccessor(ft);
+                server.getDht().setPredecessor(ft.get(0));
+                server.getDht().printFingerTable();
                 break;
             default:
                 break;
