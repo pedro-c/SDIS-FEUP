@@ -423,7 +423,11 @@ public class Server extends Node implements Serializable {
         MessageHandler handler = new MessageHandler(message, successor.getNodeIp(),
                 successor.getNodePort(), this);
 
-        threadPool.submit(handler);
+        //threadPool.submit(handler);
+
+        handler.connectToServer();
+        handler.sendMessage();
+        handler.receiveResponse();
     }
 
     /**
@@ -438,6 +442,7 @@ public class Server extends Node implements Serializable {
 
         switch (message.getMessageType()) {
             case BACKUP_USER:
+                System.out.println("Back up user from server " + message.getSenderId());
                 body = message.getBody().split(" ");
                 User user = new User(body[0], new BigInteger(body[1]));
                 backups.put(user.getUserId(), user);
