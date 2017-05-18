@@ -170,13 +170,16 @@ public class ConnectionHandler implements Runnable {
     public void run() {
         Message message = null;
         try {
+            System.out.println("Reading...");
             message = (Message) serverInputStream.readObject();
             Message responseMessage = analyseResponse(message);
             System.out.println("Sending...");
             sendMessage(responseMessage);
         } catch (IOException e) {
+            e.printStackTrace();
             System.out.println("Error reading message...");
         } catch (ClassNotFoundException e) {
+            e.printStackTrace();
             System.out.println("Error reading message...");
         }
 
