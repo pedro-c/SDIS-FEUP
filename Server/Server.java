@@ -31,7 +31,6 @@ public class Server extends Node implements Serializable {
      */
     private ArrayList<Node> serversInfo;
     private DistributedHashTable dht;
-    private ConcurrentHashMap<BigInteger, ServerChat> chats;
     /**
      * Logged in users
      */
@@ -151,6 +150,7 @@ public class Server extends Node implements Serializable {
      * @param info ip, port and id from the new server
      */
     public void newNode(String[] info) {
+        Node previousPredecessor = dht.getPredecessor();
         int newNodeKey = Integer.parseInt(info[0]);
         String newNodeIp = info[1];
         int newNodePort = Integer.parseInt(info[2]);
@@ -162,25 +162,16 @@ public class Server extends Node implements Serializable {
 
         Node successor = dht.nodeLookUp(newNodeKey);
 
-        notifySuccessorOfItsPredecessor(successor, newNode);
-
-        if (successor.getNodeId() == dht.fingerTableNode(1).getNodeId()) {
-            sendFingerTableToSuccessor();
-        }
-
-        if (successor.getNodeId() == dht.getPredecessor().getNodeId()) {
+        if(successor.getNodeId() == this.getNodeId()){
             sendFingerTableToPredecessor(newNode);
-            System.out.println("Case1");
-        } else if (newNode.getNodeId() > dht.getPredecessor().getNodeId() && newNode.getNodeId() < this.getNodeId()) {
+            notifyNodeOfItsPredecessor(newNode, previousPredecessor);
+        }else if(newNode.getNodeId() > dht.getPredecessor().getNodeId()){
             sendFingerTableToPredecessor(newNode);
-            System.out.println("Case2");
-        } else if (successor.getNodeId() == this.getNodeId() && dht.fingerTableNode(MAX_FINGER_TABLE_SIZE).getNodeId() != this.getNodeId()) {
-            joinNetwork(newNode, dht.fingerTableNode(MAX_FINGER_TABLE_SIZE));
-            System.out.println("Case3");
+            notifyNodeOfItsPredecessor(newNode, dht.getPredecessor());
+        }else{
+            joinNetwork(newNode, successor);
+            System.out.println("Redirecting.");
         }
-
-        if (dht.getPredecessor().getNodeId() == this.getNodeId())
-            dht.setPredecessor(newNode);
     }
 
 
@@ -210,11 +201,11 @@ public class Server extends Node implements Serializable {
 
     }
 
-    public void notifySuccessorOfItsPredecessor(Node successor, Node newNode) {
+    public void notifyNodeOfItsPredecessor(Node node, Node newNode) {
 
         Message message = new Message(PREDECESSOR, new BigInteger(Integer.toString(this.getNodeId())), newNode);
 
-        MessageHandler handler = new MessageHandler(message, successor.getNodeIp(), successor.getNodePort(), this);
+        MessageHandler handler = new MessageHandler(message, node.getNodeIp(), node.getNodePort(), this);
 
         handler.connectToServer();
         handler.sendMessage(message);
@@ -406,13 +397,6 @@ public class Server extends Node implements Serializable {
         this.dht = dht;
     }
 
-    public ConcurrentHashMap<BigInteger, ServerChat> getChats() {
-        return chats;
-    }
-
-    public void setChats(ConcurrentHashMap<BigInteger, ServerChat> chats) {
-        this.chats = chats;
-    }
 
     public ConcurrentHashMap<BigInteger, SSLSocket> getLoggedInUsers() {
         return loggedInUsers;
