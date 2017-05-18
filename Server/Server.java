@@ -162,6 +162,9 @@ public class Server extends Node implements Serializable {
 
         Node successor = dht.nodeLookUp(newNodeKey);
 
+        sendFingerTableToSuccessor();
+        sendFingerTableToPredecessor(dht.getPredecessor());
+
         if(successor.getNodeId() == this.getNodeId()){
             sendFingerTableToPredecessor(newNode);
             notifyNodeOfItsPredecessor(newNode, previousPredecessor);
