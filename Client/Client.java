@@ -3,7 +3,6 @@ package Client;
 import Chat.Chat;
 import Messages.Message;
 import Messages.MessageHandler;
-import Server.ServerChat;
 
 import java.io.Console;
 import java.math.BigInteger;
@@ -29,6 +28,7 @@ public class Client {
     private MessageHandler messageHandler;
     private Task atualState;
     private Chat pendingChat;
+    private CompletableFuture<Void> onChangeTask;
 
     /**
      * Client
@@ -38,6 +38,8 @@ public class Client {
         this.serverIp = serverIp;
         this.userChats = new Hashtable<BigInteger, Chat>();
         this.atualState = Task.HOLDING;
+        onChangeTask = new CompletableFuture<>();
+        onChangeTask.thenAcceptAsync(aVoid -> verifyState());
         scannerIn = new Scanner(System.in);
     }
 
@@ -138,7 +140,6 @@ public class Client {
         Message message = new Message(CREATE_CHAT, getClientId(), newChat);
         messageHandler.setMessage(message);
         threadPool.submit(messageHandler);
-
     }
 
     /**
@@ -210,6 +211,8 @@ public class Client {
      * Acts according off the actual state
      */
     public void verifyState() {
+        System.out.println("ooo");
+        onChangeTask = new CompletableFuture<>().thenAcceptAsync(o -> verifyState());
         switch (atualState) {
             case SIGNED_IN:
                 signInMenu();
@@ -307,7 +310,9 @@ public class Client {
     }
 
     public void setAtualState(Task atualState) {
+        System.out.println("QUERO COMPLETAR");
         this.atualState = atualState;
+        this.onChangeTask.complete(null);
     }
 
     public void setPendingChat(BigInteger pendingChat) {

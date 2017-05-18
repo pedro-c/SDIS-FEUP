@@ -151,10 +151,11 @@ public class MessageHandler implements Runnable {
                     System.out.println("Logged in with success..");
                 }
                 else if (client.getAtualState() == Client.Task.WAITING_CREATE_CHAT){
-                    System.out.println(2);
-                    System.out.println("Created new chat..");
+                    System.out.println("Chat criado");
                     client.setAtualState(Client.Task.CREATING_CHAT);
+                    System.out.println("Chat criado");
                     client.setPendingChat(new BigInteger(response.getBody()));
+                    System.out.println("Chat criado");
                 }
                 else {
                     System.out.println("Sending message back to initiator server");
