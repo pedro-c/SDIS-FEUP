@@ -28,7 +28,6 @@ public class Client {
     private MessageHandler messageHandler;
     private Task atualState;
     private Chat pendingChat;
-    private CompletableFuture<Void> onChangeTask;
 
     /**
      * Client
@@ -38,8 +37,6 @@ public class Client {
         this.serverIp = serverIp;
         this.userChats = new Hashtable<BigInteger, Chat>();
         this.atualState = Task.HOLDING;
-        onChangeTask = new CompletableFuture<>();
-      //  onChangeTask.thenAcceptAsync(aVoid -> verifyState());
         scannerIn = new Scanner(System.in);
     }
 
@@ -93,6 +90,7 @@ public class Client {
                 createNewChat();
                 break;
             case 2:
+                loadChat();
                 break;
             case 3:
                 signOut();
@@ -100,6 +98,13 @@ public class Client {
             default:
                 System.exit(0);
         }
+    }
+
+
+    public void loadChat(){
+        if(userChats.size()==0)
+            System.out.println("You don't have any chat to show...");
+        else userChats.forEach((k, v) -> System.out.println(v.getChatName() + "\n"));
     }
 
     /**
@@ -139,7 +144,8 @@ public class Client {
         atualState = Task.WAITING_CREATE_CHAT;
         Message message = new Message(CREATE_CHAT, getClientId(), newChat);
         messageHandler.setMessage(message);
-        threadPool.submit(messageHandler);
+        messageHandler.sendMessage();
+
         verifyState(Task.WAITING_CREATE_CHAT);
     }
 
@@ -160,7 +166,9 @@ public class Client {
         String password = getCredentials();
         Message message = new Message(SIGNIN, getClientId(), email, createHash(password).toString());
         messageHandler = new MessageHandler(message, serverIp, serverPort, this);
-        threadPool.submit(messageHandler);
+        messageHandler.connectToServer();
+        messageHandler.sendMessage();
+        messageHandler.receiveResponse();
         verifyState(Task.WAITING_SIGNIN);
     }
 
@@ -172,7 +180,9 @@ public class Client {
         String password = getCredentials();
         Message message = new Message(SIGNUP, getClientId(), email, createHash(password).toString());
         messageHandler = new MessageHandler(message, serverIp, serverPort, this);
-        threadPool.submit(messageHandler);
+        messageHandler.connectToServer();
+        messageHandler.sendMessage();
+        messageHandler.receiveResponse();
         verifyState(Task.WAITING_SIGNUP);
     }
 
@@ -215,10 +225,14 @@ public class Client {
      */
     public void verifyState(Task task) {
 
-        while(task == atualState){}
-        //onChangeTask = new CompletableFuture<>().thenAcceptAsync(o -> verifyState());
+        System.out.println(task);
+        while(task == atualState){System.out.print("");}
+
+        System.out.println(atualState);
         switch (atualState) {
             case SIGNED_IN:
+                messageHandler.closeSocket();
+                threadPool.submit(messageHandler);
                 signInMenu();
                 break;
             case WAITING_SIGNUP:
@@ -314,9 +328,7 @@ public class Client {
     }
 
     public void setAtualState(Task atualState) {
-        System.out.println(atualState);
         this.atualState = atualState;
-        this.onChangeTask.complete(null);
     }
 
     public void setPendingChat(BigInteger pendingChat) {
@@ -324,6 +336,7 @@ public class Client {
     }
 
     public void addPendingChat(Chat pendingChat) {
+        System.out.println("Adding chat...");
         this.pendingChat = userChats.put(pendingChat.getIdChat(), pendingChat);
     }
 }

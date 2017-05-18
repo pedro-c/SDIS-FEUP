@@ -57,11 +57,6 @@ public class MessageHandler implements Runnable {
 
     public void run() {
         connectToServer();
-        sendMessage(message);
-        receiveResponse();
-    }
-
-    public void listen() {
         while (true) {
             System.out.println("Reading response...");
             receiveResponse();
@@ -143,23 +138,19 @@ public class MessageHandler implements Runnable {
                 this.server.getDht().setPredecessor(new Node(nodeInfo[1], Integer.parseInt(nodeInfo[2]), Integer.parseInt(nodeInfo[0])));
                 break;
             case CLIENT_SUCCESS:
+                if(connectionHandler != null){
+                    System.out.println("Sending message back to initiator server");
+                    connectionHandler.sendMessage(response);
+                }
                 if (client.getAtualState() == Client.Task.WAITING_SIGNUP || client.getAtualState() == Client.Task.WAITING_SIGNIN) {
-                    System.out.println(1);
                     client.setServerIp(response.getInitialServerAddress());
                     client.setServerPort(response.getInitialServerPort());
                     client.setAtualState(Client.Task.SIGNED_IN);
                     System.out.println("Logged in with success..");
                 }
                 else if (client.getAtualState() == Client.Task.WAITING_CREATE_CHAT){
-                    System.out.println("Chat criado");
                     client.setAtualState(Client.Task.CREATING_CHAT);
-                    System.out.println("Chat criado");
                     client.setPendingChat(new BigInteger(response.getBody()));
-                    System.out.println("Chat criado");
-                }
-                else {
-                    System.out.println("Sending message back to initiator server");
-                    connectionHandler.sendMessage(response);
                 }
                 break;
             case CLIENT_ERROR:
@@ -171,8 +162,8 @@ public class MessageHandler implements Runnable {
                 }
                 break;
             case NEW_CHAT_INVITATION:
+                System.out.println("Received new chat invitation..");
                 if (response.getMessageType().equals(NEW_CHAT_INVITATION)) {
-                    System.out.println("Received new chat invitation..");
                     ServerChat sv = (ServerChat) response.getObject();
                     Chat chat = new Chat(sv.getIdChat(), sv.getCreatorEmail());
                     client.addPendingChat(chat);
