@@ -370,11 +370,9 @@ public class Server extends Node implements Serializable {
 
     public void writeToSocket(SSLSocket sslSocket, Message message) {
         ObjectOutputStream outputStream = null;
-        ObjectInputStream inputStream = null;
 
         try {
             outputStream = new ObjectOutputStream(sslSocket.getOutputStream());
-            inputStream = new ObjectInputStream(sslSocket.getInputStream());
             outputStream.writeObject(message);
         } catch (IOException e) {
             e.printStackTrace();

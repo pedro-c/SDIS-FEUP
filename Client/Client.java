@@ -232,6 +232,8 @@ public class Client {
         switch (atualState) {
             case SIGNED_IN:
                 messageHandler.closeSocket();
+                System.out.println("server port: " + serverPort);
+                messageHandler = new MessageHandler(null, serverIp, serverPort, this);
                 threadPool.submit(messageHandler);
                 signInMenu();
                 break;
