@@ -421,8 +421,6 @@ public class Server extends Node implements Serializable {
         MessageHandler handler = new MessageHandler(message, successor.getNodeIp(),
                 successor.getNodePort(), this);
 
-        //threadPool.submit(handler);
-
         handler.connectToServer();
         handler.sendMessage();
         handler.receiveResponse();
