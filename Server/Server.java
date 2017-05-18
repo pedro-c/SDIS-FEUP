@@ -305,7 +305,7 @@ public class Server extends Node implements Serializable {
             Message message1 = new Message(INVITE_USER, BigInteger.valueOf(nodeId), chat1);
             MessageHandler redirect = new MessageHandler(message1, n.getNodeIp(), n.getNodePort(), this);
             System.out.println("Nada a ver comigo...XAU");
-            threadPool.submit(redirect);
+            redirect.sendMessage(message1);
         }
 
 

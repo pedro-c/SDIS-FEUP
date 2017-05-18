@@ -226,15 +226,7 @@ public class Client {
     public void verifyState(Task task) {
 
         System.out.println(task);
-
-        int counter = 0;
-        while(task == atualState){
-            counter++;
-            if(counter > 1000) {
-                System.out.print(".");
-                counter = 0;
-            }
-        }
+        while(task == atualState){System.out.print("");}
 
         System.out.println(atualState);
         switch (atualState) {
