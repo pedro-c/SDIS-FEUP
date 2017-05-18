@@ -9,6 +9,7 @@ import java.io.Console;
 import java.math.BigInteger;
 import java.util.Hashtable;
 import java.util.Scanner;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,6 +28,7 @@ public class Client {
     private Hashtable<BigInteger, Chat> userChats;
     private MessageHandler messageHandler;
     private Task atualState;
+    private Chat pendingChat;
 
     /**
      * Client
@@ -36,7 +38,6 @@ public class Client {
         this.serverIp = serverIp;
         this.userChats = new Hashtable<BigInteger, Chat>();
         this.atualState = Task.HOLDING;
-
         scannerIn = new Scanner(System.in);
     }
 
@@ -129,10 +130,11 @@ public class Client {
             newChat.setChatName(chatName);
         newChat.setParticipant_email(participantEmail);
 
+
         userChats.put(newChat.getIdChat(), newChat);
 
         System.out.println(newChat.getIdChat());
-
+        atualState = Task.WAITING_CREATE_CHAT;
         Message message = new Message(CREATE_CHAT, getClientId(), newChat);
         messageHandler.setMessage(message);
         threadPool.submit(messageHandler);
@@ -157,7 +159,6 @@ public class Client {
         Message message = new Message(SIGNIN, getClientId(), email, createHash(password).toString());
         messageHandler = new MessageHandler(message, serverIp, serverPort, this);
         threadPool.submit(messageHandler);
-
     }
 
     /**
@@ -207,48 +208,25 @@ public class Client {
 
     /**
      * Acts according off the actual state
-     *
-     * @param response response message
      */
-    public void verifyState(Message response) {
+    public void verifyState() {
         switch (atualState) {
-            case WAITING_SIGNIN:
-            case WAITING_SIGNUP:
-                if (response.getMessageType().equals(CLIENT_SUCCESS)) {
-                    atualState = SIGNED_IN;
-                    signInMenu();
-                } else {
-                    atualState = HOLDING;
-                    printError(response.getBody());
-                    mainMenu();
-                }
+            case SIGNED_IN:
+                signInMenu();
                 break;
-            case WAITING_CREATE_CHAT:
-                if (response.getMessageType().equals(CLIENT_SUCCESS)) {
-                    System.out.println(response.getBody());
-                    Chat chat = userChats.get(new BigInteger(response.getBody()));
-                    openChat(chat);
-                } else {
-                    atualState = HOLDING;
-                    printError(response.getBody());
-                    signInMenu();
-                }
+            case WAITING_SIGNUP:
+                mainMenu();
+                break;
+            case CREATING_CHAT:
+                openChat(pendingChat);
+                break;
+            case HOLDING:
+                signInMenu();
                 break;
             case WAITING_SIGNOUT:
                 atualState = HOLDING;
                 System.out.println("\nSigned out!!");
                 mainMenu();
-                break;
-            case SIGNED_IN:
-                if (response.getMessageType().equals(NEW_CHAT_INVITATION)) {
-                    System.out.println("Received new chat invitation!!!");
-                    ServerChat sv = (ServerChat) response.getObject();
-                    Chat chat = new Chat(sv.getIdChat(), sv.getCreatorEmail());
-                    userChats.put(chat.getIdChat(), chat);
-                    openChat(chat);
-                } else {
-                    System.out.println("Error");
-                }
                 break;
             default:
                 break;
@@ -326,5 +304,17 @@ public class Client {
     public enum Task {
         HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
         WAITING_SIGNOUT
+    }
+
+    public void setAtualState(Task atualState) {
+        this.atualState = atualState;
+    }
+
+    public void setPendingChat(BigInteger pendingChat) {
+        this.pendingChat = userChats.get(pendingChat);
+    }
+
+    public void addPendingChat(Chat pendingChat) {
+        this.pendingChat = userChats.put(pendingChat.getIdChat(), pendingChat);
     }
 }

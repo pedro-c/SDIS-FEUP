@@ -1,17 +1,20 @@
 package Messages;
 
+import Chat.Chat;
 import Client.Client;
 import Server.ConnectionHandler;
 import Server.Node;
 import Server.Server;
+import Server.ServerChat;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-
+import java.math.BigInteger;
 import static Utilities.Constants.*;
+
 
 public class MessageHandler implements Runnable {
 
@@ -55,10 +58,7 @@ public class MessageHandler implements Runnable {
     public void run() {
         connectToServer();
         sendMessage(message);
-        while (true) {
-            System.out.println("Reading response...");
-            receiveResponse();
-        }
+        receiveResponse();
     }
 
     public void listen() {
@@ -144,27 +144,44 @@ public class MessageHandler implements Runnable {
                 this.server.getDht().setPredecessor(new Node(nodeInfo[1], Integer.parseInt(nodeInfo[2]), Integer.parseInt(nodeInfo[0])));
                 break;
             case CLIENT_SUCCESS:
-                if (client != null) {
-                    //        System.out.println("client" + client.getClientId());
+                if (client.getAtualState() == Client.Task.WAITING_SIGNUP || client.getAtualState() == Client.Task.WAITING_SIGNIN) {
+                    System.out.println(1);
                     client.setServerIp(response.getInitialServerAddress());
                     client.setServerPort(response.getInitialServerPort());
-                    client.verifyState(response);
-                } else {
+                    client.setAtualState(Client.Task.SIGNED_IN);
+                    System.out.println("Logged in with success..");
+                }
+                else if (client.getAtualState() == Client.Task.WAITING_CREATE_CHAT){
+                    System.out.println(2);
+                    System.out.println("Created new chat..");
+                    client.setAtualState(Client.Task.CREATING_CHAT);
+                    client.setPendingChat(new BigInteger(response.getBody()));
+                }
+                else {
                     System.out.println("Sending message back to initiator server");
                     connectionHandler.sendMessage(response);
                 }
                 break;
             case CLIENT_ERROR:
-                client.verifyState(response);
+                if (client.getAtualState() == Client.Task.WAITING_SIGNUP || client.getAtualState() == Client.Task.WAITING_SIGNIN) {
+                    client.setAtualState(Client.Task.HOLDING);
+                }
+                else if (client.getAtualState() == Client.Task.WAITING_CREATE_CHAT){
+                    client.setAtualState(Client.Task.HOLDING);
+                }
+                break;
+            case NEW_CHAT_INVITATION:
+                if (response.getMessageType().equals(NEW_CHAT_INVITATION)) {
+                    System.out.println("Received new chat invitation..");
+                    ServerChat sv = (ServerChat) response.getObject();
+                    Chat chat = new Chat(sv.getIdChat(), sv.getCreatorEmail());
+                    client.addPendingChat(chat);
+                } else {
+                    System.out.println("Error");
+                }
                 break;
             default:
                 break;
-        }
-
-        System.out.println("I'm blocked on signinMenu, waiting for an user input");
-        if (client.getAtualState() == Client.Task.SIGNED_IN || client.getAtualState() == Client.Task.SIGNED_IN) {
-            System.out.println("VOU OUVIR");
-            listen();
         }
 
     }
