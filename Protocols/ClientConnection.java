@@ -107,7 +107,6 @@ public class ClientConnection extends Connection implements Runnable {
     public void run() {
 
         while(true){
-            System.out.println("Vou ouvir");
             Message message = receiveMessage();
 
             Runnable task = () -> {

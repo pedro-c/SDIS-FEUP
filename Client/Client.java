@@ -177,7 +177,6 @@ public class Client {
         String password = getCredentials();
         Message message = new Message(SIGNIN, getClientId(), email, createHash(password).toString());
         connection.sendMessage(message);
-        //verifyState(WAITING_SIGNIN);
     }
 
     /**
@@ -188,7 +187,6 @@ public class Client {
         String password = getCredentials();
         Message message = new Message(SIGNUP, getClientId(), email, createHash(password).toString());
         connection.sendMessage(message);
-        //verifyState(WAITING_SIGNUP);
     }
 
     /**
@@ -230,12 +228,11 @@ public class Client {
      */
     public void verifyState(Message message) {
 
-        System.out.println(atualState);
-
         if (message.getInitialServerPort() != serverPort || message.getInitialServerAddress().equals(serverIp)) {
             serverPort = message.getInitialServerPort();
             serverIp = message.getInitialServerAddress();
-            threadPool.shutdown();
+            //threadPool.shutdown();
+            connection.stopTasks();
             connection.closeConnection();
             connection = new ClientConnection(serverIp, serverPort, this);
             connection.connect();

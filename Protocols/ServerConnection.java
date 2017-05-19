@@ -1,6 +1,5 @@
 package Protocols;
 
-import Chat.Chat;
 import Messages.Message;
 import Server.*;
 

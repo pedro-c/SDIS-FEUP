@@ -8,7 +8,7 @@ import java.io.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static Utilities.Constants.MAX_NUMBER_OF_THREADS;
+import static Utilities.Constants.*;
 
 /**
  * Handles connections
@@ -91,7 +91,7 @@ public class Connection {
         try {
             return (Message) inputStream.readObject();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Error receiving message or connection closed");
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             System.out.println("Error receiving message...");
@@ -112,7 +112,7 @@ public class Connection {
         }
     }
 
-    public int getPort() {
-        return port;
+    public void stopTasks(){
+        service.shutdownNow();
     }
 }
