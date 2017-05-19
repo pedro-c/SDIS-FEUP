@@ -156,8 +156,6 @@ public class Client {
         atualState = WAITING_CREATE_CHAT;
         Message message = new Message(CREATE_CHAT, getClientId(), newChat);
         connection.sendMessage(message);
-
-        //verifyState(WAITING_CREATE_CHAT);
     }
 
     /**
@@ -243,19 +241,6 @@ public class Client {
 
         switch (atualState) {
             case SIGNED_IN:
-               /* if (connection.getPort() != serverPort) {
-                    threadPool.shutdown();
-                    connection.closeConnection();
-                    System.out.println("server port: " + serverPort);
-                    Message updateServer = new Message(USER_UPDATED_CONNECTION, this.getClientId());
-                    connection = new ClientConnection(serverIp, serverPort, this);
-                    connection.connect();
-                    connection.sendMessage(updateServer);
-                    //messageHandler.stopListening();
-                    //messageHandler.closeSocket();
-                    //messageHandler = new MessageHandler(updateServer, serverIp, serverPort, this);
-                    threadPool.submit(connection);
-                }*/
                 signInMenu();
                 break;
             case WAITING_SIGNUP:

@@ -502,7 +502,10 @@ public class Server extends Node implements Serializable {
     }
 
     public void isResponsible(ServerConnection connection, Message message) {
-        String[] body = message.getBody().split(" ");
+        String[] body ={""};
+        if(message.getBody() != null)
+            body = message.getBody().split(" ");
+
         System.out.println("REQUEST ID: " + Integer.remainderUnsigned(message.getSenderId().intValue(), 128));
 
         if (!isResponsibleFor(message.getSenderId())){
@@ -523,7 +526,7 @@ public class Server extends Node implements Serializable {
                 response = addUser(body[0],body[1]);
                 break;
             case CREATE_CHAT:
-                response = createChat((Chat) response.getObject());
+                response = createChat((Chat) message.getObject());
                 break;
             default:
                 break;
