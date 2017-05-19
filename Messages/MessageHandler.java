@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.math.BigInteger;
+
 import static Utilities.Constants.*;
 
 
@@ -27,6 +28,7 @@ public class MessageHandler implements Runnable {
     private ObjectInputStream inputStream;
     private ObjectOutputStream outputStream;
     private ConnectionHandler connectionHandler;
+    private Boolean listen;
 
     private Message message;
 
@@ -36,6 +38,7 @@ public class MessageHandler implements Runnable {
         this.port = port;
         this.server = server;
         this.message = message;
+        this.listen = true;
     }
 
     public MessageHandler(Message message, String ip, int port, Client client) {
@@ -44,21 +47,29 @@ public class MessageHandler implements Runnable {
         this.port = port;
         this.client = client;
         this.message = message;
+        this.listen = true;
     }
 
     public MessageHandler(Message message, String ip, int port, ConnectionHandler connectionHandler) {
 
         this.ip = ip;
         this.port = port;
-        this.client = client;
         this.message = message;
         this.connectionHandler = connectionHandler;
+        this.listen = true;
     }
 
     public void run() {
         connectToServer();
-        while (true) {
+        while (listen) {
             System.out.println("Reading response...");
+            receiveResponse();
+        }
+    }
+
+    public void listen() {
+        while (listen) {
+            System.out.println("Listening...");
             receiveResponse();
         }
     }
@@ -138,7 +149,7 @@ public class MessageHandler implements Runnable {
                 this.server.getDht().setPredecessor(new Node(nodeInfo[1], Integer.parseInt(nodeInfo[2]), Integer.parseInt(nodeInfo[0])));
                 break;
             case CLIENT_SUCCESS:
-                if(connectionHandler != null){
+                if (connectionHandler != null) {
                     System.out.println("Sending message back to initiator server");
                     connectionHandler.sendMessage(response);
                 }
@@ -147,17 +158,16 @@ public class MessageHandler implements Runnable {
                     client.setServerPort(response.getInitialServerPort());
                     client.setAtualState(Client.Task.SIGNED_IN);
                     System.out.println("Logged in with success..");
-                }
-                else if (client.getAtualState() == Client.Task.WAITING_CREATE_CHAT){
+                } else if (client.getAtualState() == Client.Task.WAITING_CREATE_CHAT) {
                     client.setAtualState(Client.Task.CREATING_CHAT);
+                    System.out.println("Creating chat");
                     client.setPendingChat(new BigInteger(response.getBody()));
                 }
                 break;
             case CLIENT_ERROR:
                 if (client.getAtualState() == Client.Task.WAITING_SIGNUP || client.getAtualState() == Client.Task.WAITING_SIGNIN) {
                     client.setAtualState(Client.Task.HOLDING);
-                }
-                else if (client.getAtualState() == Client.Task.WAITING_CREATE_CHAT){
+                } else if (client.getAtualState() == Client.Task.WAITING_CREATE_CHAT) {
                     client.setAtualState(Client.Task.HOLDING);
                 }
                 break;
@@ -191,8 +201,16 @@ public class MessageHandler implements Runnable {
         }
     }
 
+    public void stopListening(){
+        this.listen = false;
+    }
+
     public void setMessage(Message message) {
         this.message = message;
+    }
+
+    public int getPort() {
+        return port;
     }
 
 }

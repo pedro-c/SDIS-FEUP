@@ -3,12 +3,12 @@ package Client;
 import Chat.Chat;
 import Messages.Message;
 import Messages.MessageHandler;
+import com.sun.xml.internal.ws.api.message.MessageWritable;
 
 import java.io.Console;
 import java.math.BigInteger;
 import java.util.Hashtable;
 import java.util.Scanner;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -16,6 +16,7 @@ import static Client.Client.Task.*;
 import static Utilities.Constants.*;
 import static Utilities.Utilities.createHash;
 import static Utilities.Utilities.getTimestamp;
+import static java.lang.Thread.sleep;
 
 public class Client {
 
@@ -101,8 +102,8 @@ public class Client {
     }
 
 
-    public void loadChat(){
-        if(userChats.size()==0)
+    public void loadChat() {
+        if (userChats.size() == 0)
             System.out.println("You don't have any chat to show...");
         else userChats.forEach((k, v) -> System.out.println(v.getChatName() + "\n"));
     }
@@ -226,15 +227,26 @@ public class Client {
     public void verifyState(Task task) {
 
         System.out.println(task);
-        while(task == atualState){System.out.print("");}
+        while (task == atualState) {
+            System.out.print("");
+        }
 
         System.out.println(atualState);
         switch (atualState) {
             case SIGNED_IN:
-                messageHandler.closeSocket();
-                System.out.println("server port: " + serverPort);
-                messageHandler = new MessageHandler(null, serverIp, serverPort, this);
-                threadPool.submit(messageHandler);
+                if (messageHandler.getPort() != serverPort) {
+                    messageHandler.stopListening();
+                    messageHandler.closeSocket();
+                    System.out.println("server port: " + serverPort);
+                    Message updateServer = new Message(USER_UPDATED_CONNECTION, this.getClientId());
+                    messageHandler = new MessageHandler(updateServer, serverIp, serverPort, this);
+                    messageHandler.connectToServer();
+                    messageHandler.sendMessage(updateServer);
+                    //messageHandler.stopListening();
+                    //messageHandler.closeSocket();
+                    //messageHandler = new MessageHandler(updateServer, serverIp, serverPort, this);
+                    threadPool.submit(messageHandler);
+                }
                 signInMenu();
                 break;
             case WAITING_SIGNUP:
@@ -324,11 +336,6 @@ public class Client {
         return atualState;
     }
 
-    public enum Task {
-        HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
-        WAITING_SIGNOUT
-    }
-
     public void setAtualState(Task atualState) {
         this.atualState = atualState;
     }
@@ -340,5 +347,10 @@ public class Client {
     public void addPendingChat(Chat pendingChat) {
         System.out.println("Adding chat...");
         this.pendingChat = userChats.put(pendingChat.getIdChat(), pendingChat);
+    }
+
+    public enum Task {
+        HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
+        WAITING_SIGNOUT
     }
 }

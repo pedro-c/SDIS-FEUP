@@ -13,6 +13,7 @@ public class Constants {
     public static final String NEWNODE_ANSWER = "NEWNODE ANSWER";
     public static final String PREDECESSOR = "PREDECESSOR";
     public static final String SUCCESSOR_FT = "SUCCESSOR_FT";
+    public static final String USER_UPDATED_CONNECTION = "USER_UPDATED_CONNECTION";
 
     //INVITE_USER SenderId Chat password
     public static final String INVITE_USER = "INVITE_USER";
@@ -39,7 +40,7 @@ public class Constants {
     public static final String SIGNOUT = "SIGNOUT";
 
     //BACKUP_USER SenderId email passwordHash
-     public static final String BACKUP_USER = "BACKUP_USER";
+    public static final String BACKUP_USER = "BACKUP_USER";
 
     //SERVER_SUCCESS SenderId code
     public static final String SERVER_SUCCESS = "SERVER_SUCCESS";

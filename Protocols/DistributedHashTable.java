@@ -63,15 +63,15 @@ public class DistributedHashTable implements Serializable {
                 }
             }
         }
-        if(successor == server && key > server.getNodeId()){
+        if (successor == server && key > server.getNodeId()) {
             Node tempNode1 = fingerTable.get(1);
             Node tempNode2 = fingerTable.get(2);
             for (int i = 3; i < fingerTable.size(); i++) {
-                if(tempNode1.getNodeId() > tempNode2.getNodeId()){
+                if (tempNode1.getNodeId() > tempNode2.getNodeId()) {
                     successor = tempNode2;
                     break;
                 }
-                tempNode1 = fingerTable.get(i-1);
+                tempNode1 = fingerTable.get(i - 1);
                 tempNode2 = fingerTable.get(i);
             }
         }
@@ -170,12 +170,12 @@ public class DistributedHashTable implements Serializable {
         return fingerTable;
     }
 
-    public Node getSuccessor(){
+    public Node getSuccessor() {
 
         Node successor = null;
 
-        for(Node node: fingerTable){
-            if(node.getNodeId() != server.getNode().getNodeId()){
+        for (Node node : fingerTable) {
+            if (node.getNodeId() != server.getNode().getNodeId()) {
                 successor = node;
                 break;
             }

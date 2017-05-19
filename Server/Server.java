@@ -8,10 +8,11 @@ import Protocols.DistributedHashTable;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,7 +39,7 @@ public class Server extends Node implements Serializable {
     /**
      * Logged in users
      */
-    private ConcurrentHashMap<BigInteger, SSLSocket> loggedInUsers;
+    private ConcurrentHashMap<BigInteger, ConnectionHandler> loggedInUsers;
     transient private SSLServerSocket sslServerSocket;
     transient private SSLServerSocketFactory sslServerSocketFactory;
     transient private ExecutorService threadPool = Executors.newFixedThreadPool(MAX_NUMBER_OF_REQUESTS);
@@ -69,7 +70,7 @@ public class Server extends Node implements Serializable {
         createDir(chatsPath);
 
         users = new ConcurrentHashMap<>();
-        loggedInUsers = new ConcurrentHashMap<BigInteger, SSLSocket>();
+        loggedInUsers = new ConcurrentHashMap<>();
         backups = new ConcurrentHashMap<BigInteger, User>();
     }
 
@@ -92,6 +93,7 @@ public class Server extends Node implements Serializable {
                 SSLSocket socket = (SSLSocket) sslServerSocket.accept();
                 sslServerSocket.setNeedClientAuth(true);
                 ConnectionHandler handler = new ConnectionHandler(socket, this);
+                System.out.println("Connection accepted");
                 threadPool.submit(handler);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -168,17 +170,17 @@ public class Server extends Node implements Serializable {
         sendFingerTableToSuccessor();
         sendFingerTableToPredecessor(dht.getPredecessor());
 
-        if(successor.getNodeId() == this.getNodeId()){
+        if (successor.getNodeId() == this.getNodeId()) {
             sendFingerTableToPredecessor(newNode);
             notifyNodeOfItsPredecessor(newNode, previousPredecessor);
-            sendInfoToPredecessor(newNode,users,ADD_USER);
-            sendInfoToPredecessor(newNode,backups,BACKUP_USER);
-        }else if(newNode.getNodeId() > dht.getPredecessor().getNodeId()){
+            sendInfoToPredecessor(newNode, users, ADD_USER);
+            sendInfoToPredecessor(newNode, backups, BACKUP_USER);
+        } else if (newNode.getNodeId() > dht.getPredecessor().getNodeId()) {
             sendFingerTableToPredecessor(newNode);
             notifyNodeOfItsPredecessor(newNode, dht.getPredecessor());
-            sendInfoToPredecessor(newNode,users,ADD_USER);
-            sendInfoToPredecessor(newNode,backups,BACKUP_USER);
-        }else{
+            sendInfoToPredecessor(newNode, users, ADD_USER);
+            sendInfoToPredecessor(newNode, backups, BACKUP_USER);
+        } else {
             joinNetwork(newNode, successor);
             System.out.println("Redirecting.");
         }
@@ -255,16 +257,17 @@ public class Server extends Node implements Serializable {
 
     /**
      * Regists user
+     *
      * @param newUser
      * @return response message
      */
-    public Message addUser(User newUser){
+    public Message addUser(User newUser) {
         System.out.println("Recebendo user do meu sucessor");
 
         BigInteger userId = createHash(newUser.getEmail());
 
         users.put(userId, newUser);
-        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId),USER_ADDED);
+        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), USER_ADDED);
     }
 
     /**
@@ -340,32 +343,26 @@ public class Server extends Node implements Serializable {
         return message;
     }
 
-    public Message createParticipantChat(ServerChat chat) {
+    public void createParticipantChat(ServerChat chat) {
 
         Message message = null;
 
         ServerChat newChat = new ServerChat(chat.getIdChat(), chat.getCreatorEmail());
 
         User user = users.get(createHash(chat.getCreatorEmail()));
-
+        System.out.println("Creator: " + user.getEmail());
+        System.out.println("Creator: " + user.getUserId());
         if (user != null) {
             user.addChat(newChat);
             printLoggedInUsers();
             if (loggedInUsers.get(user.getUserId()) != null) {
-                message = new Message(NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId), newChat);
-                
-                SSLSocket socket = loggedInUsers.get(user.getUserId());
-                System.out.println(socket);
-
-                //TODO: BLOCKING
+                message = new Message(NEW_CHAT_INVITATION, BigInteger.valueOf(this.getNodeId()), newChat);
                 System.out.println("trying to send NEW_CHAT_INVITATION");
-                writeToSocket(socket, message);
-                System.out.println("SENT");
+                loggedInUsers.get(user.getUserId()).closeConnection();
             }
         } else {
             System.out.println("User not registry");
         }
-        return message;
     }
 
     public void writeToSocket(SSLSocket sslSocket, Message message) {
@@ -382,20 +379,23 @@ public class Server extends Node implements Serializable {
     /**
      * Saves client connection
      *
-     * @param sslSocket
-     * @param clientId
      */
-    public void saveConnection(SSLSocket sslSocket, BigInteger clientId) {
-        loggedInUsers.put(clientId, sslSocket);
+    public void saveConnection(ConnectionHandler connectionHandler, BigInteger clientId) {
+        loggedInUsers.put(clientId, connectionHandler);
         printLoggedInUsers();
     }
 
     public void printLoggedInUsers() {
+
+        System.out.println("");
+        System.out.println("Logged in users");
         loggedInUsers.forEach((k, v) -> System.out.println("LOGGED IN : " + k));
+        System.out.println("");
     }
 
     /**
      * Function used to sign out users, this user is removed from the logged-in users arraylist
+     *
      * @param userId id of the user
      * @return message
      */
@@ -410,12 +410,13 @@ public class Server extends Node implements Serializable {
 
     /**
      * Replicates info to his successor
+     *
      * @param message message with all the info to be backed up
      */
-    public void sendInfoToBackup(Message message){
+    public void sendInfoToBackup(Message message) {
         Node successor = dht.getSuccessor();
 
-        if(successor == null)
+        if (successor == null)
             return;
 
         MessageHandler handler = new MessageHandler(message, successor.getNodeIp(),
@@ -429,6 +430,7 @@ public class Server extends Node implements Serializable {
     /**
      * Function used when a BACKUP request arrives to the server, basically depending on the request
      * this function add, update or delete the information
+     *
      * @param message message with all the information and the type of the request
      * @return message of success or error
      */
@@ -453,16 +455,17 @@ public class Server extends Node implements Serializable {
 
     /**
      * Decides what to do depending on the situation
+     *
      * @param response response by a server or client of a message sent the server
      */
-    public void verifyState(Message response){
+    public void verifyState(Message response) {
 
         String body[] = response.getBody().split(" ");
 
-        if(body.length == 0)
+        if (body.length == 0)
             return;
 
-        switch (body[0]){
+        switch (body[0]) {
             case USER_ADDED:
                 System.out.println("Node with id " + response.getSenderId() + " backed up user");
                 break;
@@ -473,35 +476,36 @@ public class Server extends Node implements Serializable {
 
     /**
      * Gets the respective users of a new server from a given container(users,backups) of the server
-     * @param node New node/server
+     *
+     * @param node      New node/server
      * @param container server user containers, users and backups
      * @return a container of users
      */
-    public Queue<User> getUsersOfANewServer(Node node,ConcurrentHashMap<BigInteger,User> container){
+    public Queue<User> getUsersOfANewServer(Node node, ConcurrentHashMap<BigInteger, User> container) {
 
         Queue<User> newServerUsers = new LinkedList<User>();
 
         BigInteger newNodeId = BigInteger.valueOf(node.getNodeId());
 
-        container.forEach((userId,user) -> {
+        container.forEach((userId, user) -> {
 
             // -1 userId is greater
             // 0 the values are equal
             // 1 newNodeId is greater
             int result = newNodeId.compareTo(userId);
 
-            if(result == -1 || result == 0){
+            if (result == -1 || result == 0) {
                 newServerUsers.add(user);
-                users.remove(userId,user);
+                users.remove(userId, user);
             }
         });
 
         return newServerUsers;
     }
 
-    public void sendInfoToPredecessor(Node node,ConcurrentHashMap<BigInteger,User> container,String type){
+    public void sendInfoToPredecessor(Node node, ConcurrentHashMap<BigInteger, User> container, String type) {
 
-        Queue<User> predecessorUsers = getUsersOfANewServer(node,container);
+        Queue<User> predecessorUsers = getUsersOfANewServer(node, container);
 
         System.out.println("Enviando info para o predecessor");
 
@@ -511,7 +515,7 @@ public class Server extends Node implements Serializable {
 
         for (User user : predecessorUsers) {
             //type = ADD_USER or BACKUP_USER
-            message = new Message(type,BigInteger.valueOf(nodeId),user);
+            message = new Message(type, BigInteger.valueOf(nodeId), user);
             handler.sendMessage(message);
             handler.receiveResponse();
         }
@@ -535,11 +539,11 @@ public class Server extends Node implements Serializable {
         this.dht = dht;
     }
 
-    public ConcurrentHashMap<BigInteger, SSLSocket> getLoggedInUsers() {
+    public ConcurrentHashMap<BigInteger, ConnectionHandler> getLoggedInUsers() {
         return loggedInUsers;
     }
 
-    public void setLoggedInUsers(ConcurrentHashMap<BigInteger, SSLSocket> loggedInUsers) {
+    public void setLoggedInUsers(ConcurrentHashMap<BigInteger, ConnectionHandler> loggedInUsers) {
         this.loggedInUsers = loggedInUsers;
     }
 
