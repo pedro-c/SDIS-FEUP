@@ -2,8 +2,7 @@ package Client;
 
 import Chat.Chat;
 import Messages.Message;
-import Messages.MessageHandler;
-import com.sun.xml.internal.ws.api.message.MessageWritable;
+import Protocols.ClientConnection;
 
 import java.io.Console;
 import java.math.BigInteger;
@@ -26,7 +25,7 @@ public class Client {
     private int serverPort;
     private String serverIp;
     private Hashtable<BigInteger, Chat> userChats;
-    private MessageHandler messageHandler;
+    private ClientConnection connection;
     private Task atualState;
     private Chat pendingChat;
 
@@ -37,10 +36,20 @@ public class Client {
         this.serverPort = serverPort;
         this.serverIp = serverIp;
         this.userChats = new Hashtable<BigInteger, Chat>();
-        this.atualState = Task.HOLDING;
+        this.atualState = HOLDING;
         scannerIn = new Scanner(System.in);
+
+        connection = new ClientConnection(serverIp, serverPort, this);
+        connection.connect();
+
+        //Listen
+        threadPool.submit(connection);
     }
 
+    /**
+     * Main
+     * @param args initial arguments
+     */
     public static void main(String[] args) {
 
         if (args.length != 2) {
@@ -101,7 +110,9 @@ public class Client {
         }
     }
 
-
+    /**
+     * Loads a chat
+     */
     public void loadChat() {
         if (userChats.size() == 0)
             System.out.println("You don't have any chat to show...");
@@ -121,7 +132,7 @@ public class Client {
      */
     public void createNewChat() {
         Console console = System.console();
-        atualState = Task.WAITING_CREATE_CHAT;
+        atualState = WAITING_CREATE_CHAT;
 
         System.out.println("Name: ");
         String chatName = console.readLine();
@@ -142,12 +153,11 @@ public class Client {
         userChats.put(newChat.getIdChat(), newChat);
 
         System.out.println(newChat.getIdChat());
-        atualState = Task.WAITING_CREATE_CHAT;
+        atualState = WAITING_CREATE_CHAT;
         Message message = new Message(CREATE_CHAT, getClientId(), newChat);
-        messageHandler.setMessage(message);
-        messageHandler.sendMessage();
+        connection.sendMessage(message);
 
-        verifyState(Task.WAITING_CREATE_CHAT);
+        //verifyState(WAITING_CREATE_CHAT);
     }
 
     /**
@@ -163,28 +173,22 @@ public class Client {
      * Sends a sign in message throw a ssl socket
      */
     public void signInUser() {
-        atualState = Task.WAITING_SIGNIN;
+        atualState = WAITING_SIGNIN;
         String password = getCredentials();
         Message message = new Message(SIGNIN, getClientId(), email, createHash(password).toString());
-        messageHandler = new MessageHandler(message, serverIp, serverPort, this);
-        messageHandler.connectToServer();
-        messageHandler.sendMessage();
-        messageHandler.receiveResponse();
-        verifyState(Task.WAITING_SIGNIN);
+        connection.sendMessage(message);
+        //verifyState(WAITING_SIGNIN);
     }
 
     /**
      * Sends a sign up message throw a ssl socket
      */
     public void signUpUser() {
-        atualState = Task.WAITING_SIGNUP;
+        atualState = WAITING_SIGNUP;
         String password = getCredentials();
         Message message = new Message(SIGNUP, getClientId(), email, createHash(password).toString());
-        messageHandler = new MessageHandler(message, serverIp, serverPort, this);
-        messageHandler.connectToServer();
-        messageHandler.sendMessage();
-        messageHandler.receiveResponse();
-        verifyState(Task.WAITING_SIGNUP);
+        connection.sendMessage(message);
+        //verifyState(WAITING_SIGNUP);
     }
 
     /**
@@ -224,33 +228,47 @@ public class Client {
     /**
      * Acts according off the actual state
      */
-    public void verifyState(Task task) {
-
-        System.out.println(task);
-        while (task == atualState) {
-            System.out.print("");
-        }
+    public void verifyState(Message message) {
 
         System.out.println(atualState);
+
+        if (message.getInitialServerPort() != serverPort || message.getInitialServerAddress().equals(serverIp)) {
+            serverPort = message.getInitialServerPort();
+            serverIp = message.getInitialServerAddress();
+            threadPool.shutdown();
+            connection.closeConnection();
+            connection = new ClientConnection(serverIp, serverPort, this);
+            connection.connect();
+            threadPool.submit(connection);
+        }
+
+        String body[] = message.getBody().split(" ");
+
         switch (atualState) {
             case SIGNED_IN:
-                if (messageHandler.getPort() != serverPort) {
-                    messageHandler.stopListening();
-                    messageHandler.closeSocket();
+               /* if (connection.getPort() != serverPort) {
+                    threadPool.shutdown();
+                    connection.closeConnection();
                     System.out.println("server port: " + serverPort);
                     Message updateServer = new Message(USER_UPDATED_CONNECTION, this.getClientId());
-                    messageHandler = new MessageHandler(updateServer, serverIp, serverPort, this);
-                    messageHandler.connectToServer();
-                    messageHandler.sendMessage(updateServer);
+                    connection = new ClientConnection(serverIp, serverPort, this);
+                    connection.connect();
+                    connection.sendMessage(updateServer);
                     //messageHandler.stopListening();
                     //messageHandler.closeSocket();
                     //messageHandler = new MessageHandler(updateServer, serverIp, serverPort, this);
-                    threadPool.submit(messageHandler);
-                }
+                    threadPool.submit(connection);
+                }*/
                 signInMenu();
                 break;
             case WAITING_SIGNUP:
-                mainMenu();
+            case WAITING_SIGNIN:
+                if(message.getMessageType().equals(CLIENT_ERROR)){
+                    printError(body[0]);
+                    mainMenu();
+                }
+                else
+                    signInMenu();
                 break;
             case CREATING_CHAT:
                 openChat(pendingChat);
@@ -304,8 +322,8 @@ public class Client {
         BigInteger clientId = getClientId();
 
         Message message = new Message(SIGNOUT, clientId, clientId.toString());
-        messageHandler = new MessageHandler(message, serverIp, serverPort, this);
-        threadPool.submit(messageHandler);
+
+        connection.sendMessage(message);
     }
 
     /**

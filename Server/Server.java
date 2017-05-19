@@ -2,8 +2,11 @@ package Server;
 
 import Chat.Chat;
 import Messages.Message;
-import Messages.MessageHandler;
+import Protocols.ClientConnection;
+import Protocols.Connection;
 import Protocols.DistributedHashTable;
+import Protocols.ServerConnection;
+import com.sun.org.apache.bcel.internal.generic.NEW;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -39,9 +42,8 @@ public class Server extends Node implements Serializable {
     /**
      * Logged in users
      */
-    private ConcurrentHashMap<BigInteger, ConnectionHandler> loggedInUsers;
+    private ConcurrentHashMap<BigInteger, ServerConnection> loggedInUsers;
     transient private SSLServerSocket sslServerSocket;
-    transient private SSLServerSocketFactory sslServerSocketFactory;
     transient private ExecutorService threadPool = Executors.newFixedThreadPool(MAX_NUMBER_OF_REQUESTS);
 
     /**
@@ -52,7 +54,6 @@ public class Server extends Node implements Serializable {
         dht = new DistributedHashTable(this);
 
         System.out.println("Server ID: " + this.getNodeId());
-
 
         initServerSocket();
         if (args.length > 2) {
@@ -92,9 +93,10 @@ public class Server extends Node implements Serializable {
                 System.out.println("Listening...");
                 SSLSocket socket = (SSLSocket) sslServerSocket.accept();
                 sslServerSocket.setNeedClientAuth(true);
-                ConnectionHandler handler = new ConnectionHandler(socket, this);
-                System.out.println("Connection accepted");
-                threadPool.submit(handler);
+
+                ServerConnection connection = new ServerConnection(socket, this);
+                threadPool.submit(connection);
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -105,14 +107,14 @@ public class Server extends Node implements Serializable {
      * Initiates the server socket for incoming requests
      */
     public void initServerSocket() {
-        sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+        SSLServerSocketFactory sslServerSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
         try {
             sslServerSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(getNodePort());
             sslServerSocket.setEnabledCipherSuites(sslServerSocket.getSupportedCipherSuites());
 
         } catch (IOException e) {
-            System.out.println("Failed to create sslServerSocket");
             e.printStackTrace();
+            System.out.println("Failed to create sslServerSocket");
         }
     }
 
@@ -124,34 +126,29 @@ public class Server extends Node implements Serializable {
 
         Message message = new Message(NEWNODE, BigInteger.valueOf(this.getNodeId()), Integer.toString(newNode.getNodeId()), newNode.getNodeIp(), Integer.toString(newNode.getNodePort()));
 
-        MessageHandler handler = new MessageHandler(message, knownNode.getNodeIp(), knownNode.getNodePort(), this);
+        ServerConnection handler = new ServerConnection(knownNode.getNodeIp(), knownNode.getNodePort(), this);
 
-        handler.connectToServer();
+        handler.connect();
         handler.sendMessage(message);
 
     }
 
+    /**
+     * Verifies if this server is responsible for a given client
+     * @param clientId client id
+     * @return
+     */
+    public boolean isResponsibleFor(BigInteger clientId) {
 
-    public boolean isResponsibleFor(BigInteger resquestId) {
-
-        int tempId = Math.abs(resquestId.intValue());
+        int tempId = Math.abs(clientId.intValue());
 
         Node n = dht.nodeLookUp(tempId);
 
         return n.getNodeId() == this.getNodeId();
-
-    }
-
-
-    public Node redirect(Message request) {
-
-        int tempId = Math.abs(request.getSenderId().intValue());
-        return dht.nodeLookUp(tempId);
     }
 
     /**
      * Function called when a new node message arrives to the server and forwards it to the correct server
-     *
      * @param info ip, port and id from the new server
      */
     public void newNode(String[] info) {
@@ -170,16 +167,17 @@ public class Server extends Node implements Serializable {
         sendFingerTableToSuccessor();
         sendFingerTableToPredecessor(dht.getPredecessor());
 
+        //TODO VER O BACKUP DE NOVO
         if (successor.getNodeId() == this.getNodeId()) {
             sendFingerTableToPredecessor(newNode);
             notifyNodeOfItsPredecessor(newNode, previousPredecessor);
-            sendInfoToPredecessor(newNode, users, ADD_USER);
-            sendInfoToPredecessor(newNode, backups, BACKUP_USER);
+            /*sendInfoToPredecessor(newNode, users, ADD_USER);
+            sendInfoToPredecessor(newNode, backups, BACKUP_USER);*/
         } else if (newNode.getNodeId() > dht.getPredecessor().getNodeId()) {
             sendFingerTableToPredecessor(newNode);
             notifyNodeOfItsPredecessor(newNode, dht.getPredecessor());
-            sendInfoToPredecessor(newNode, users, ADD_USER);
-            sendInfoToPredecessor(newNode, backups, BACKUP_USER);
+            /*sendInfoToPredecessor(newNode, users, ADD_USER);
+            sendInfoToPredecessor(newNode, backups, BACKUP_USER);*/
         } else {
             joinNetwork(newNode, successor);
             System.out.println("Redirecting.");
@@ -193,9 +191,9 @@ public class Server extends Node implements Serializable {
 
         Message message = new Message(SUCCESSOR_FT, new BigInteger(Integer.toString(this.getNodeId())), dht.getFingerTable());
 
-        MessageHandler handler = new MessageHandler(message, newNode.getNodeIp(), newNode.getNodePort(), this);
+        ServerConnection handler = new ServerConnection(newNode.getNodeIp(), newNode.getNodePort(), this);
 
-        handler.connectToServer();
+        handler.connect();
         handler.sendMessage(message);
 
     }
@@ -206,9 +204,9 @@ public class Server extends Node implements Serializable {
 
         Message message = new Message(SUCCESSOR_FT, new BigInteger(Integer.toString(this.getNodeId())), dht.getFingerTable());
 
-        MessageHandler handler = new MessageHandler(message, successor.getNodeIp(), successor.getNodePort(), this);
+        ServerConnection handler = new ServerConnection(successor.getNodeIp(), successor.getNodePort(), this);
 
-        handler.connectToServer();
+        handler.connect();
         handler.sendMessage(message);
 
     }
@@ -217,9 +215,9 @@ public class Server extends Node implements Serializable {
 
         Message message = new Message(PREDECESSOR, new BigInteger(Integer.toString(this.getNodeId())), newNode);
 
-        MessageHandler handler = new MessageHandler(message, node.getNodeIp(), node.getNodePort(), this);
+        ServerConnection handler = new ServerConnection(node.getNodeIp(), node.getNodePort(), this);
 
-        handler.connectToServer();
+        handler.connect();
         handler.sendMessage(message);
 
     }
@@ -233,7 +231,7 @@ public class Server extends Node implements Serializable {
      */
     public Message addUser(String email, String password) {
 
-        System.out.println("Sign up with  " + email);
+        System.out.println("\nCreating account to user with email:  " + email);
 
         BigInteger user_email = createHash(email);
 
@@ -246,11 +244,9 @@ public class Server extends Node implements Serializable {
             User newUser = new User(email, new BigInteger(password));
             users.put(user_email, newUser);
             message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
-            System.out.println("Signed up with success!");
-            sendInfoToBackup(new Message(BACKUP_USER, BigInteger.valueOf(nodeId), email, password));
+            System.out.println("Account created with success!");
+            //sendInfoToBackup(new Message(BACKUP_USER, BigInteger.valueOf(nodeId), email, password));
         }
-
-        System.out.println("Sign up... Ready to response to client");
 
         return message;
     }
@@ -273,28 +269,28 @@ public class Server extends Node implements Serializable {
     /**
      * Authenticates user already registered
      *
-     * @param email    user email
-     * @param password user password
+     * @param email  message
+     * @param password message
      * @return true if user authentication went well, false if don't
      */
     public Message loginUser(String email, String password) {
 
-        System.out.println("Sign in with " + email);
+        System.out.println("\nUser with email " + email + " trying to login!");
         BigInteger user_email = createHash(email);
-        Message message;
+        Message response;
 
         if (users.get(user_email) == null) {
             System.out.println("Try to create an account. Your email was not found on the database...");
-            message = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId), EMAIL_NOT_FOUND);
+            response = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId), EMAIL_NOT_FOUND);
         } else if (!users.get(user_email).getPassword().equals(new BigInteger(password))) {
             System.out.println("Impossible to sign in, wrong email or password...");
-            message = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId), WRONG_PASSWORD);
+            response = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId), WRONG_PASSWORD);
         } else {
-            System.out.println("Logged in with success!");
-            message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
+            System.out.println("Login with success!");
+            response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
         }
 
-        return message;
+        return response;
     }
 
     /**
@@ -325,6 +321,8 @@ public class Server extends Node implements Serializable {
 
         ServerChat chat1 = new ServerChat(chat.getIdChat(), chat.getParticipant_email());
 
+        System.out.println("particpant id: " + createHash(chat.getParticipant_email()).intValue());
+
         if (isResponsibleFor(createHash(chat.getParticipant_email()))) {
             users.get(createHash(chat.getParticipant_email())).addChat(chat1);
             //TODO: INVITE PARTICIPANT
@@ -332,13 +330,10 @@ public class Server extends Node implements Serializable {
         } else {
             Node n = dht.nodeLookUp(createHash(chat.getParticipant_email()).intValue());
             Message message1 = new Message(INVITE_USER, BigInteger.valueOf(nodeId), chat1);
-            MessageHandler redirect = new MessageHandler(message1, n.getNodeIp(), n.getNodePort(), this);
-            redirect.connectToServer();
-            System.out.println("Nada a ver comigo...XAU");
+            ServerConnection redirect = new ServerConnection(n.getNodeIp(), n.getNodePort(), this);
+            redirect.connect();
             redirect.sendMessage(message1);
-            System.out.println("Enviada a mensagem para convidar participante...");
         }
-
 
         return message;
     }
@@ -365,24 +360,12 @@ public class Server extends Node implements Serializable {
         }
     }
 
-    public void writeToSocket(SSLSocket sslSocket, Message message) {
-        ObjectOutputStream outputStream = null;
-
-        try {
-            outputStream = new ObjectOutputStream(sslSocket.getOutputStream());
-            outputStream.writeObject(message);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     /**
      * Saves client connection
-     *
      */
-    public void saveConnection(ConnectionHandler connectionHandler, BigInteger clientId) {
-        loggedInUsers.put(clientId, connectionHandler);
-        printLoggedInUsers();
+    public void saveConnection(ServerConnection connection, BigInteger clientId) {
+        loggedInUsers.put(clientId, connection);
+        //printLoggedInUsers();
     }
 
     public void printLoggedInUsers() {
@@ -394,8 +377,7 @@ public class Server extends Node implements Serializable {
     }
 
     /**
-     * Function used to sign out users, this user is removed from the logged-in users arraylist
-     *
+     * Function used to sign out users, this user is removed from the logged-in users arrayList
      * @param userId id of the user
      * @return message
      */
@@ -419,18 +401,16 @@ public class Server extends Node implements Serializable {
         if (successor == null)
             return;
 
-        MessageHandler handler = new MessageHandler(message, successor.getNodeIp(),
-                successor.getNodePort(), this);
+        ServerConnection handler = new ServerConnection(successor.getNodeIp(), successor.getNodePort(), this);
 
-        handler.connectToServer();
-        handler.sendMessage();
-        handler.receiveResponse();
+        handler.connect();
+        handler.sendMessage(message);
+        handler.receiveMessage();
     }
 
     /**
      * Function used when a BACKUP request arrives to the server, basically depending on the request
      * this function add, update or delete the information
-     *
      * @param message message with all the information and the type of the request
      * @return message of success or error
      */
@@ -510,41 +490,64 @@ public class Server extends Node implements Serializable {
         System.out.println("Enviando info para o predecessor");
 
         Message message = null;
-        MessageHandler handler = new MessageHandler(message, node.getNodeIp(), node.getNodePort(), this);
-        handler.connectToServer();
+        ServerConnection handler = new ServerConnection(node.getNodeIp(), node.getNodePort(), this);
+        handler.connect();
 
         for (User user : predecessorUsers) {
             //type = ADD_USER or BACKUP_USER
             message = new Message(type, BigInteger.valueOf(nodeId), user);
             handler.sendMessage(message);
-            handler.receiveResponse();
+            handler.receiveMessage();
+        }
+    }
+
+    public void isResponsible(ServerConnection connection, Message message) {
+        String[] body = message.getBody().split(" ");
+        System.out.println("REQUEST ID: " + Integer.remainderUnsigned(message.getSenderId().intValue(), 128));
+
+        if (!isResponsibleFor(message.getSenderId())){
+            redirect(connection,message);
+            return;
         }
 
+        System.out.println("I'm the RESPONSIBLE server");
 
+        saveConnection(connection, message.getSenderId());
+        Message response = null;
+
+        switch (message.getMessageType()) {
+            case SIGNIN:
+                response = loginUser(body[0],body[1]);
+                break;
+            case SIGNUP:
+                response = addUser(body[0],body[1]);
+                break;
+            case CREATE_CHAT:
+                response = createChat((Chat) response.getObject());
+                break;
+            default:
+                break;
+        }
+
+        response.setInitialServerAddress(nodeIp);
+        response.setInitialServerPort(nodePort);
+        connection.sendMessage(response);
     }
 
-    public ConcurrentHashMap<BigInteger, User> getUsers() {
-        return users;
-    }
+    public void redirect(ServerConnection initialConnection, Message message) {
+        System.out.println("REDIRECTING ID: " + message.getSenderId().intValue());
 
-    public void setUsers(ConcurrentHashMap<BigInteger, User> users) {
-        this.users = users;
+        int tempId = Math.abs(message.getSenderId().intValue());
+        Node n = dht.nodeLookUp(tempId);
+
+        ServerConnection redirect = new ServerConnection(n.getNodeIp(), n.getNodePort(), this);
+        redirect.connect();
+        redirect.sendMessage(message);
+        initialConnection.sendMessage(redirect.receiveMessage());
     }
 
     public DistributedHashTable getDht() {
         return dht;
-    }
-
-    public void setDht(DistributedHashTable dht) {
-        this.dht = dht;
-    }
-
-    public ConcurrentHashMap<BigInteger, ConnectionHandler> getLoggedInUsers() {
-        return loggedInUsers;
-    }
-
-    public void setLoggedInUsers(ConcurrentHashMap<BigInteger, ConnectionHandler> loggedInUsers) {
-        this.loggedInUsers = loggedInUsers;
     }
 
     public ConcurrentHashMap<BigInteger, User> getBackups() {
