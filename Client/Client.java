@@ -3,40 +3,40 @@ package Client;
 import Chat.Chat;
 import Messages.Message;
 import Protocols.ClientConnection;
+import Server.User;
+import Utilities.Utilities;
 
 import java.io.Console;
 import java.math.BigInteger;
-import java.util.Hashtable;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static Client.Client.Task.*;
 import static Utilities.Constants.*;
-import static Utilities.Utilities.createHash;
-import static Utilities.Utilities.getTimestamp;
-import static java.lang.Thread.sleep;
+import static Utilities.Utilities.*;
 
-public class Client {
+public class Client extends User{
 
     private Scanner scannerIn;
-    private String email;
+
     private ExecutorService threadPool = Executors.newFixedThreadPool(MAX_NUMBER_OF_REQUESTS);
+
+    private ClientConnection connection;
     private int serverPort;
     private String serverIp;
-    private Hashtable<BigInteger, Chat> userChats;
-    private ClientConnection connection;
-    private Task atualState;
+
+    private Task actualState;
     private Chat pendingChat;
 
     /**
      * Client
      */
     public Client(String serverIp, int serverPort) {
+        super(null,null);
         this.serverPort = serverPort;
         this.serverIp = serverIp;
-        this.userChats = new Hashtable<BigInteger, Chat>();
-        this.atualState = HOLDING;
+        this.actualState = HOLDING;
         scannerIn = new Scanner(System.in);
 
         connection = new ClientConnection(serverIp, serverPort, this);
@@ -96,7 +96,7 @@ public class Client {
         int option = scannerIn.nextInt();
         switch (option) {
             case 1:
-                atualState = CREATING_CHAT;
+                actualState = CREATING_CHAT;
                 createNewChat();
                 break;
             case 2:
@@ -114,9 +114,9 @@ public class Client {
      * Loads a chat
      */
     public void loadChat() {
-        if (userChats.size() == 0)
+        if (chats.size() == 0)
             System.out.println("You don't have any chat to show...");
-        else userChats.forEach((k, v) -> System.out.println(v.getChatName() + "\n"));
+        else chats.forEach((k, v) -> System.out.println(v.getChatName() + "\n"));
     }
 
     /**
@@ -132,7 +132,7 @@ public class Client {
      */
     public void createNewChat() {
         Console console = System.console();
-        atualState = WAITING_CREATE_CHAT;
+        actualState = WAITING_CREATE_CHAT;
 
         System.out.println("Name: ");
         String chatName = console.readLine();
@@ -144,46 +144,46 @@ public class Client {
             participantEmail = console.readLine();
         }
 
-        Chat newChat = new Chat(generateChatId(), email);
+        Chat newChat = new Chat(email);
         if (chatName != null)
             newChat.setChatName(chatName);
         newChat.setParticipant_email(participantEmail);
 
 
-        userChats.put(newChat.getIdChat(), newChat);
+        chats.put(newChat.getIdChat(), newChat);
 
         System.out.println(newChat.getIdChat());
-        atualState = WAITING_CREATE_CHAT;
+        actualState = WAITING_CREATE_CHAT;
         Message message = new Message(CREATE_CHAT, getClientId(), newChat);
         connection.sendMessage(message);
-    }
-
-    /**
-     * Generates Chat id with creation date and user_id : CREATION_DATE + USER_CREATOR_ID
-     *
-     * @return BigInteger chat Id
-     */
-    public BigInteger generateChatId() {
-        return createHash(String.valueOf(getTimestamp()) + email);
     }
 
     /**
      * Sends a sign in message throw a ssl socket
      */
     public void signInUser() {
-        atualState = WAITING_SIGNIN;
+        actualState = WAITING_SIGNIN;
         String password = getCredentials();
         Message message = new Message(SIGNIN, getClientId(), email, createHash(password).toString());
-        connection.sendMessage(message);
+        newConnectionAndSendMessage(message);
     }
 
     /**
      * Sends a sign up message throw a ssl socket
      */
     public void signUpUser() {
-        atualState = WAITING_SIGNUP;
+        actualState = WAITING_SIGNUP;
         String password = getCredentials();
         Message message = new Message(SIGNUP, getClientId(), email, createHash(password).toString());
+        newConnectionAndSendMessage(message);
+    }
+
+    public void newConnectionAndSendMessage(Message message){
+        connection = new ClientConnection(serverIp, serverPort, this);
+        connection.connect();
+
+        //Listen
+        threadPool.submit(connection);
         connection.sendMessage(message);
     }
 
@@ -226,12 +226,14 @@ public class Client {
      */
     public void verifyState(Message message) {
 
-        if (message.getInitialServerPort() != serverPort || message.getInitialServerAddress().equals(serverIp)) {
+        if (message.getInitialServerPort() != serverPort || !message.getInitialServerAddress().equals(serverIp)) {
+
             serverPort = message.getInitialServerPort();
             serverIp = message.getInitialServerAddress();
-            //threadPool.shutdown();
+
             connection.stopTasks();
             connection.closeConnection();
+
             connection = new ClientConnection(serverIp, serverPort, this);
             connection.connect();
             threadPool.submit(connection);
@@ -239,7 +241,7 @@ public class Client {
 
         String body[] = message.getBody().split(" ");
 
-        switch (atualState) {
+        switch (actualState) {
             case SIGNED_IN:
                 signInMenu();
                 break;
@@ -259,7 +261,10 @@ public class Client {
                 signInMenu();
                 break;
             case WAITING_SIGNOUT:
-                atualState = HOLDING;
+                actualState = HOLDING;
+                connection.stopTasks();
+                connection.closeConnection();
+                connection = null;
                 System.out.println("\nSigned out!!");
                 mainMenu();
                 break;
@@ -299,7 +304,7 @@ public class Client {
      * Signs out the user
      */
     public void signOut() {
-        atualState = WAITING_SIGNOUT;
+        actualState = WAITING_SIGNOUT;
 
         BigInteger clientId = getClientId();
 
@@ -308,45 +313,9 @@ public class Client {
         connection.sendMessage(message);
     }
 
-    /**
-     * Sets server port
-     *
-     * @param serverPort
-     */
-    public void setServerPort(int serverPort) {
-        this.serverPort = serverPort;
-    }
-
-    /**
-     * Sets server ip
-     *
-     * @param serverIp
-     */
-    public void setServerIp(String serverIp) {
-        this.serverIp = serverIp;
-    }
-
-
-    /**
-     * Gets client current task
-     *
-     * @return
-     */
-    public Client.Task getAtualState() {
-        return atualState;
-    }
-
-    public void setAtualState(Task atualState) {
-        this.atualState = atualState;
-    }
-
-    public void setPendingChat(BigInteger pendingChat) {
-        this.pendingChat = userChats.get(pendingChat);
-    }
-
     public void addPendingChat(Chat pendingChat) {
         System.out.println("Adding chat...");
-        this.pendingChat = userChats.put(pendingChat.getIdChat(), pendingChat);
+        this.pendingChat = chats.put(pendingChat.getIdChat(), pendingChat);
     }
 
     public enum Task {

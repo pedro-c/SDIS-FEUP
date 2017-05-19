@@ -315,11 +315,11 @@ public class Server extends Node implements Serializable {
      */
     public Message createChat(Chat chat) {
 
-        ServerChat newChat = new ServerChat(chat.getIdChat(), chat.getCreatorEmail());
+        Chat newChat = new Chat(chat.getCreatorEmail());
         users.get(createHash(chat.getCreatorEmail())).addChat(newChat);
         Message message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), newChat.getIdChat().toString());
 
-        ServerChat chat1 = new ServerChat(chat.getIdChat(), chat.getParticipant_email());
+        Chat chat1 = new Chat(chat.getParticipant_email());
 
         System.out.println("particpant id: " + createHash(chat.getParticipant_email()).intValue());
 
@@ -338,11 +338,11 @@ public class Server extends Node implements Serializable {
         return message;
     }
 
-    public void createParticipantChat(ServerChat chat) {
+    public void createParticipantChat(Chat chat) {
 
         Message message = null;
 
-        ServerChat newChat = new ServerChat(chat.getIdChat(), chat.getCreatorEmail());
+        Chat newChat = new Chat(chat.getCreatorEmail());
 
         User user = users.get(createHash(chat.getCreatorEmail()));
         System.out.println("Creator: " + user.getEmail());
@@ -384,7 +384,7 @@ public class Server extends Node implements Serializable {
     public Message signOutUser(BigInteger userId) {
         if (loggedInUsers.containsKey(userId)) {
             loggedInUsers.remove(userId);
-            System.out.println("Signed out user with id: " + userId);
+            System.out.println("\nSigned out user with id: " + userId);
         }
 
         return (new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId)));
@@ -528,6 +528,8 @@ public class Server extends Node implements Serializable {
             case CREATE_CHAT:
                 response = createChat((Chat) message.getObject());
                 break;
+            case SIGNOUT:
+                response = signOutUser(message.getSenderId());
             default:
                 break;
         }

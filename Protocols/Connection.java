@@ -78,7 +78,7 @@ public class Connection {
             outputStream.writeObject(message);
         } catch (IOException e) {
             e.printStackTrace();
-            System.out.println("Error sending message...");
+            System.out.println("\nError sending message...");
         }
     }
 
@@ -91,10 +91,10 @@ public class Connection {
         try {
             return (Message) inputStream.readObject();
         } catch (IOException e) {
-            System.out.println("Error receiving message or connection closed");
+            System.out.println("\nError receiving message or connection closed");
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
-            System.out.println("Error receiving message...");
+            System.out.println("\nError receiving message...");
         }
 
         return null;
@@ -108,7 +108,7 @@ public class Connection {
             sslSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
-            System.out.println("Failed to close ssl connection");
+            System.out.println("\nFailed to close ssl connection");
         }
     }
 

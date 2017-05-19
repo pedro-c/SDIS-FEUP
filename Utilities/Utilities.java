@@ -54,6 +54,15 @@ public class Utilities {
     }
 
     /**
+     * Generates Chat id with creation date and user_id : CREATION_DATE + USER_CREATOR_ID
+     *
+     * @return BigInteger chat Id
+     */
+    public static BigInteger generateChatId(String email) {
+        return createHash(String.valueOf(getTimestamp()) + email);
+    }
+
+    /**
      * Object encryption and decryption    code from: https://codereview.stackexchange.com/a/66931
      */
     public static void encrypt(Serializable object, OutputStream ostream, String password) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {

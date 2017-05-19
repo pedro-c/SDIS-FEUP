@@ -21,16 +21,16 @@ public class Constants {
     //SIGNIN SenderId email password
     public static final String SUCCESSOR = "SUCCESSOR";
 
-    //SIGNIN SenderId email passwordHash server(1 or 0, true if comes from a server)
+    //SIGNIN SenderId email passwordHash
     public static final String SIGNIN = "SIGNIN";
 
-    //SIGNUP SenderId email passwordHash server(1 or 0, true if comes from a server)
+    //SIGNUP SenderId email passwordHash
     public static final String SIGNUP = "SIGNUP";
 
-    //CLIENT_SUCCESS SenderId clientId(if comes from a server)
+    //CLIENT_SUCCESS SenderId
     public static final String CLIENT_SUCCESS = "CLIENT_SUCCESS";
 
-    //CLIENT_ERROR SenderId code clientId(if comes from a server)
+    //CLIENT_ERROR SenderId code
     public static final String CLIENT_ERROR = "CLIENT_ERROR";
 
     //CREATECHAT SenderId Chat

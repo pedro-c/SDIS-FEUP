@@ -1,5 +1,7 @@
 package Chat;
 
+import Utilities.Utilities;
+
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -16,8 +18,8 @@ public class Chat implements Serializable {
     private Set<String> participants;
     private ArrayList<ChatMessage> chatMessages;
 
-    public Chat(BigInteger idChat, String creatorEmail) {
-        this.idChat = idChat;
+    public Chat(String creatorEmail) {
+        this.idChat = Utilities.generateChatId(creatorEmail);
         this.creatorEmail = creatorEmail;
         this.chatMessages = new ArrayList<ChatMessage>();
         this.participants = new HashSet<>();

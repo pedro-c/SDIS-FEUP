@@ -2,12 +2,8 @@ package Protocols;
 
 import Client.Client;
 import Messages.Message;
-import Server.ServerChat;
 import Chat.Chat;
 
-import java.math.BigInteger;
-
-import static Client.Client.Task.*;
 import static Utilities.Constants.*;
 
 public class ClientConnection extends Connection implements Runnable {
@@ -32,7 +28,7 @@ public class ClientConnection extends Connection implements Runnable {
      * @param message message to be sent
      */
     public void sendMessage(Message message) {
-        System.out.println("\nSending message - Header: " + message.getMessageType() + " Body " + message.getBody() + "\n");
+        System.out.println("\nSending message - Header: " + message.getMessageType() + " Body " + message.getBody());
         super.sendMessage(message);
     }
 
@@ -43,7 +39,7 @@ public class ClientConnection extends Connection implements Runnable {
     public Message receiveMessage(){
         Message message = super.receiveMessage();
 
-        System.out.println("\nReceiving message - Header: " + message.getMessageType() + " Body " + message.getBody() + "\n");
+        System.out.println("\nReceiving message - Header: " + message.getMessageType() + " Body " + message.getBody());
 
         return message;
     }
@@ -91,8 +87,8 @@ public class ClientConnection extends Connection implements Runnable {
             case NEW_CHAT_INVITATION:
                 System.out.println("Received new chat invitation..");
                 if (message.getMessageType().equals(NEW_CHAT_INVITATION)) {
-                    ServerChat sv = (ServerChat) message.getObject();
-                    Chat chat = new Chat(sv.getIdChat(), sv.getCreatorEmail());
+                    Chat sv = (Chat) message.getObject();
+                    Chat chat = new Chat(sv.getCreatorEmail());
                     client.addPendingChat(chat);
                 } else {
                     System.out.println("Error");

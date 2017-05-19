@@ -1,5 +1,6 @@
 package Protocols;
 
+import Chat.Chat;
 import Messages.Message;
 import Server.*;
 
@@ -38,7 +39,7 @@ public class ServerConnection extends Connection implements Runnable {
      * @param message message to be sent
      */
     public void sendMessage(Message message) {
-        System.out.println("\nSending message - Header: " + message.getMessageType() + " Body " + message.getBody() + "\n");
+        System.out.println("\nSending message - Header: " + message.getMessageType() + " Body " + message.getBody());
         super.sendMessage(message);
     }
 
@@ -49,7 +50,7 @@ public class ServerConnection extends Connection implements Runnable {
     public Message receiveMessage(){
         Message message = super.receiveMessage();
 
-        System.out.println("\nReceiving message - Header: " + message.getMessageType() + " Body " + message.getBody() + "\n");
+        System.out.println("\nReceiving message - Header: " + message.getMessageType() + " Body " + message.getBody());
 
         return message;
     }
@@ -67,19 +68,18 @@ public class ServerConnection extends Connection implements Runnable {
      */
     public void handleMessage(Message message){
         String[] body;
-
-        System.out.println("Boas");
-
+        
         switch (message.getMessageType()) {
             case SIGNIN:
             case SIGNUP:
+            case SIGNOUT:
             case CREATE_CHAT:
                 server.isResponsible(this,message);
                 break;
             case INVITE_USER:
                 if (server.isResponsibleFor(message.getSenderId())) {
                     System.out.println("I'm the RESPONSIBLE server");
-                    server.createParticipantChat((ServerChat) message.getObject());
+                    server.createParticipantChat((Chat) message.getObject());
                 } else {
                     server.redirect(this,message);
                 }
