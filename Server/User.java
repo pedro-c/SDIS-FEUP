@@ -3,24 +3,20 @@ package Server;
 import java.math.BigInteger;
 import java.util.Hashtable;
 
+import Chat.Chat;
+
 import static Utilities.Utilities.createHash;
 
-/**
- * Created by mariajoaomirapaulo on 13/05/17.
- */
 public class User {
 
-    private String email;
-    private BigInteger password;
-    private Hashtable<BigInteger, ServerChat> chats;
-    private String clientAddress;
-    private int clientPort;
-
+    protected String email;
+    protected BigInteger password;
+    protected Hashtable<BigInteger, Chat> chats;
 
     public User(String email, BigInteger password) {
         this.email = email;
         this.password = password;
-        chats = new Hashtable<BigInteger, ServerChat>();
+        chats = new Hashtable<BigInteger, Chat>();
     }
 
     public String getEmail() {
@@ -31,24 +27,8 @@ public class User {
         return password;
     }
 
-    public void addChat(ServerChat chat) {
+    public void addChat(Chat chat) {
         chats.put(chat.getIdChat(), chat);
-    }
-
-    public String getClientAddress() {
-        return clientAddress;
-    }
-
-    public void setClientAddress(String clientAddress) {
-        this.clientAddress = clientAddress;
-    }
-
-    public int getClientPort() {
-        return clientPort;
-    }
-
-    public void setClientPort(int clientPort) {
-        this.clientPort = clientPort;
     }
 
     public BigInteger getUserId() {

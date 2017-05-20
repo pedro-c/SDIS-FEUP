@@ -144,5 +144,7 @@ public class Message implements Serializable {
         this.initialServerPort = initialServerPort;
     }
 
-
+    public void setBody(String body) {
+        this.body = body;
+    }
 }
