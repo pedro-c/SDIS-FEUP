@@ -6,8 +6,10 @@ import Protocols.ClientConnection;
 import Protocols.Connection;
 import Protocols.DistributedHashTable;
 import Protocols.ServerConnection;
+import Utilities.Utilities;
 import com.sun.org.apache.bcel.internal.generic.NEW;
 
+import javax.lang.model.element.Name;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
@@ -313,51 +315,41 @@ public class Server extends Node implements Serializable {
      *
      * @return Message to be sent to the client
      */
-    public Message createChat(Chat chat) {
+    public Message createChat(ServerConnection connection, Chat chat) {
 
-        Chat newChat = new Chat(chat.getCreatorEmail());
-        users.get(createHash(chat.getCreatorEmail())).addChat(newChat);
-        Message message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), newChat.getIdChat().toString());
 
-        Chat chat1 = new Chat(chat.getParticipant_email());
+        for (String participant_email : chat.getParticipants()) {
 
-        System.out.println("particpant id: " + createHash(chat.getParticipant_email()).intValue());
 
-        if (isResponsibleFor(createHash(chat.getParticipant_email()))) {
-            users.get(createHash(chat.getParticipant_email())).addChat(chat1);
-            //TODO: INVITE PARTICIPANT
-            System.out.println("Added participant with success");
-        } else {
-            Node n = dht.nodeLookUp(createHash(chat.getParticipant_email()).intValue());
-            Message message1 = new Message(INVITE_USER, BigInteger.valueOf(nodeId), chat1);
-            ServerConnection redirect = new ServerConnection(n.getNodeIp(), n.getNodePort(), this);
-            redirect.connect();
-            redirect.sendMessage(message1);
-        }
+            //if this server is responsible for this participant send client a message
+            if(users.get(createHash(participant_email))!=null){
+                users.get(createHash(participant_email)).addChat(chat);
 
-        return message;
-    }
-
-    public void createParticipantChat(Chat chat) {
-
-        Message message = null;
-
-        Chat newChat = new Chat(chat.getCreatorEmail());
-
-        User user = users.get(createHash(chat.getCreatorEmail()));
-        System.out.println("Creator: " + user.getEmail());
-        System.out.println("Creator: " + user.getUserId());
-        if (user != null) {
-            user.addChat(newChat);
-            printLoggedInUsers();
-            if (loggedInUsers.get(user.getUserId()) != null) {
-                message = new Message(NEW_CHAT_INVITATION, BigInteger.valueOf(this.getNodeId()), newChat);
-                System.out.println("trying to send NEW_CHAT_INVITATION");
-                loggedInUsers.get(user.getUserId()).closeConnection();
+                //TODO: VERFICIAR SE ESTA LOGGADO?
+                if(chat.getCreatorEmail()==participant_email){
+                    Message response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId),chat.getIdChat().toString(),CREATED_CHAT_WITH_SUCCESS);
+                    ServerConnection serverConnection = loggedInUsers.get(createHash(participant_email));
+                    serverConnection.sendMessage(response);
+                }
+                else if((loggedInUsers.get(createHash(participant_email))!=null)){ //if client is logged in
+                    Message response = new Message(NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId),chat.getIdChat().toString());
+                    ServerConnection serverConnection = loggedInUsers.get(createHash(participant_email));
+                    serverConnection.sendMessage(response);
+                }
+                else{
+                    //If client is not logged in, server adds chat to pending requests
+                    users.get(createHash(participant_email)).addPendingChat(chat);
+                }
             }
-        } else {
-            System.out.println("User not registry");
+            else if (users.get(createHash(chat.getCreatorEmail())) != null) {
+                Message message = new Message(CREATE_CHAT, BigInteger.valueOf(nodeId), chat);
+                Runnable task = () -> { redirect(connection, message);};
+                threadPool.submit(task);
+            }
         }
+
+        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), chat.getIdChat().toString(), SENT_INVITATIONS);
+
     }
 
     /**
@@ -526,7 +518,7 @@ public class Server extends Node implements Serializable {
                 response = addUser(body[0],body[1]);
                 break;
             case CREATE_CHAT:
-                response = createChat((Chat) message.getObject());
+                response = createChat(connection, (Chat) message.getObject());
                 break;
             case SIGNOUT:
                 response = signOutUser(message.getSenderId());

@@ -86,13 +86,6 @@ public class ClientConnection extends Connection implements Runnable {
                 break;
             case NEW_CHAT_INVITATION:
                 System.out.println("Received new chat invitation..");
-                if (message.getMessageType().equals(NEW_CHAT_INVITATION)) {
-                    Chat sv = (Chat) message.getObject();
-                    Chat chat = new Chat(sv.getCreatorEmail());
-                    client.addPendingChat(chat);
-                } else {
-                    System.out.println("Error");
-                }
                 break;
             default:
                 break;

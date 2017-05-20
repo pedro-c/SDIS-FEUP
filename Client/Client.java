@@ -4,8 +4,6 @@ import Chat.Chat;
 import Messages.Message;
 import Protocols.ClientConnection;
 import Server.User;
-import Utilities.Utilities;
-
 import java.io.Console;
 import java.math.BigInteger;
 import java.util.Scanner;
@@ -27,7 +25,6 @@ public class Client extends User{
     private String serverIp;
 
     private Task actualState;
-    private Chat pendingChat;
 
     /**
      * Client
@@ -123,7 +120,7 @@ public class Client extends User{
      * Opens chat
      */
     public void openChat(Chat chat) {
-        String menu = "\n" + "\n" + "Chat:  " + chat.getChatName() + "\n" + "\n" + "Send a message to " + chat.getParticipant_email() + "\n" + "\n" + "\n" + "\n";
+        String menu = "\n" + "\n" + "Chat:  " + chat.getChatName() + "\n" + "\n" + "Send a message: " + "\n" + "\n" + "\n" + "\n";
         System.out.println(menu);
     }
 
@@ -147,8 +144,9 @@ public class Client extends User{
         Chat newChat = new Chat(email);
         if (chatName != null)
             newChat.setChatName(chatName);
-        newChat.setParticipant_email(participantEmail);
 
+        newChat.addParticipant(participantEmail);
+        newChat.addParticipant(email);
 
         chats.put(newChat.getIdChat(), newChat);
 
@@ -255,7 +253,7 @@ public class Client extends User{
                     signInMenu();
                 break;
             case CREATING_CHAT:
-                openChat(pendingChat);
+                //openChat(pendingChat);
                 break;
             case HOLDING:
                 signInMenu();
@@ -311,11 +309,6 @@ public class Client extends User{
         Message message = new Message(SIGNOUT, clientId, clientId.toString());
 
         connection.sendMessage(message);
-    }
-
-    public void addPendingChat(Chat pendingChat) {
-        System.out.println("Adding chat...");
-        this.pendingChat = chats.put(pendingChat.getIdChat(), pendingChat);
     }
 
     public enum Task {

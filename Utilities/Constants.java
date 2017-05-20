@@ -27,7 +27,7 @@ public class Constants {
     //SIGNUP SenderId email passwordHash
     public static final String SIGNUP = "SIGNUP";
 
-    //CLIENT_SUCCESS SenderId
+    //CLIENT_SUCCESS SenderId Code
     public static final String CLIENT_SUCCESS = "CLIENT_SUCCESS";
 
     //CLIENT_ERROR SenderId code
@@ -75,5 +75,8 @@ public class Constants {
     public static final String ERROR_CREATING_CHAT = "-4";
     public static final String INVALID_USER_EMAIL = "-5";
     public static final String USER_ADDED = "1";
+    public static final String SENT_INVITATIONS = "2";
+    public static final String CREATED_CHAT_WITH_SUCCESS = "3";
+
 
 }

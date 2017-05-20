@@ -79,7 +79,6 @@ public class ServerConnection extends Connection implements Runnable {
             case INVITE_USER:
                 if (server.isResponsibleFor(message.getSenderId())) {
                     System.out.println("I'm the RESPONSIBLE server");
-                    server.createParticipantChat((Chat) message.getObject());
                 } else {
                     server.redirect(this,message);
                 }
