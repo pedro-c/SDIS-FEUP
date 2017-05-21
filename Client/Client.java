@@ -7,6 +7,7 @@ import Server.User;
 import java.io.Console;
 import java.math.BigInteger;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -17,14 +18,12 @@ import static Utilities.Utilities.*;
 public class Client extends User{
 
     private Scanner scannerIn;
-
     private ExecutorService threadPool = Executors.newFixedThreadPool(MAX_NUMBER_OF_REQUESTS);
-
     private ClientConnection connection;
     private int serverPort;
     private String serverIp;
-
     private Task actualState;
+    private ConcurrentHashMap<BigInteger, Chat> chats;
 
     /**
      * Client
@@ -35,10 +34,9 @@ public class Client extends User{
         this.serverIp = serverIp;
         this.actualState = HOLDING;
         scannerIn = new Scanner(System.in);
-
         connection = new ClientConnection(serverIp, serverPort, this);
         connection.connect();
-
+        chats = new ConcurrentHashMap<BigInteger, Chat>();
         //Listen
         threadPool.submit(connection);
     }
@@ -119,9 +117,16 @@ public class Client extends User{
     /**
      * Opens chat
      */
-    public void openChat(Chat chat) {
-        String menu = "\n" + "\n" + "Chat:  " + chat.getChatName() + "\n" + "\n" + "Send a message: " + "\n" + "\n" + "\n" + "\n";
-        System.out.println(menu);
+    public void openChat(BigInteger chatId) {
+
+        System.out.println("Openning chat ... ");
+
+        if(chats.get(chatId)!=null){
+            Chat chat = chats.get(chatId);
+            String menu = "\n" + "\n" + "Chat:  " + chat.getChatName() + "\n" + "\n" + "Send a message: " + "\n" + "\n" + "\n" + "\n";
+            System.out.println(menu);
+        }
+
     }
 
     /**
@@ -253,7 +258,7 @@ public class Client extends User{
                     signInMenu();
                 break;
             case CREATING_CHAT:
-                //openChat(pendingChat);
+                openChat(new BigInteger(body[0]));
                 break;
             case HOLDING:
                 signInMenu();
