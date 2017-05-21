@@ -357,7 +357,7 @@ public class Server extends Node implements Serializable {
      */
     public void saveConnection(ServerConnection connection, BigInteger clientId) {
         loggedInUsers.put(clientId, connection);
-        //printLoggedInUsers();
+        printLoggedInUsers();
     }
 
     public void printLoggedInUsers() {

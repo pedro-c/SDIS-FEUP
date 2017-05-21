@@ -72,6 +72,10 @@ public class ServerConnection extends Connection implements Runnable {
         switch (message.getMessageType()) {
             case SIGNIN:
             case SIGNUP:
+                if(server.isResponsibleFor(message.getSenderId())){
+                    server.saveConnection(this, message.getSenderId());
+                    server.printLoggedInUsers();
+                }
             case SIGNOUT:
             case CREATE_CHAT:
                 server.isResponsible(this,message);

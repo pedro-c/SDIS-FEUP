@@ -243,6 +243,8 @@ public class Client extends User{
                 connection = new ClientConnection(serverIp, serverPort, this);
                 connection.connect();
                 threadPool.submit(connection);
+                Message connectToServer = new Message(USER_UPDATED_CONNECTION, this.getClientId());
+                connection.sendMessage(connectToServer);
             }
         }
 
