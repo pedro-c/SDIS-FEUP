@@ -317,37 +317,32 @@ public class Server extends Node implements Serializable {
      */
     public Message createChat(ServerConnection connection, Chat chat) {
 
-
         for (String participant_email : chat.getParticipants()) {
-
-            System.out.println(1);
+            System.out.println(participant_email);
             //if this server is responsible for this participant send client a message
             if(users.get(createHash(participant_email))!=null){
                 users.get(createHash(participant_email)).addChat(chat);
-
-                System.out.println(2);
-                if(chat.getCreatorEmail()==participant_email){
-                    System.out.println(3);
+                if(chat.getCreatorEmail().equals(participant_email)){
                     Message response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId),chat.getIdChat().toString(),CREATED_CHAT_WITH_SUCCESS);
                     ServerConnection serverConnection = loggedInUsers.get(createHash(participant_email));
                     serverConnection.sendMessage(response);
                 }
                 else if((loggedInUsers.get(createHash(participant_email))!=null)){
-                    System.out.println(4);
-                    //if client is logged in
+                    System.out.println("Sending invitation to logged in user");
                     Message response = new Message(NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId),chat.getIdChat().toString());
-                    ServerConnection serverConnection = loggedInUsers.get(createHash(participant_email));
-                    serverConnection.sendMessage(response);
+                    ServerConnection userConnection = loggedInUsers.get(createHash(participant_email));
+                    System.out.println("IP: " + userConnection.getIp());
+                    System.out.println("porta: " + userConnection.getPort());
+                    userConnection.sendMessage(response);
                 }
                 else{
-                    System.out.println(4);
                     //If client is not logged in, server adds chat to pending requests
+                    System.out.println("Added to pendind chats");
                     users.get(createHash(participant_email)).addPendingChat(chat);
                 }
             }
-            else if (users.get(createHash(chat.getCreatorEmail())) != null) {
-                System.out.println(6);
-                Message message = new Message(CREATE_CHAT, BigInteger.valueOf(nodeId), chat);
+            else if (users.get(createHash(chat.getCreatorEmail())) != null ) {
+                Message message = new Message(CREATE_CHAT, createHash(participant_email), chat);
                 Runnable task = () -> { redirect(connection, message);};
                 threadPool.submit(task);
             }
@@ -512,14 +507,15 @@ public class Server extends Node implements Serializable {
 
         System.out.println("I'm the RESPONSIBLE server");
 
-        saveConnection(connection, message.getSenderId());
         Message response = null;
 
         switch (message.getMessageType()) {
             case SIGNIN:
+                saveConnection(connection, message.getSenderId());
                 response = loginUser(body[0],body[1]);
                 break;
             case SIGNUP:
+                saveConnection(connection, message.getSenderId());
                 response = addUser(body[0],body[1]);
                 break;
             case CREATE_CHAT:
@@ -537,9 +533,9 @@ public class Server extends Node implements Serializable {
     }
 
     public void redirect(ServerConnection initialConnection, Message message) {
-        System.out.println("REDIRECTING ID: " + message.getSenderId().intValue());
 
-        int tempId = Math.abs(message.getSenderId().intValue());
+        int tempId = Integer.remainderUnsigned(Math.abs(message.getSenderId().intValue()),128);
+        System.out.println("REDIRECTING ID: " + tempId);
         Node n = dht.nodeLookUp(tempId);
 
         ServerConnection redirect = new ServerConnection(n.getNodeIp(), n.getNodePort(), this);

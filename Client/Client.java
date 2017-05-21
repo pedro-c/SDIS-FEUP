@@ -230,19 +230,20 @@ public class Client extends User{
     public void verifyState(Message message) {
 
         if (message.getInitialServerPort() != serverPort || !message.getInitialServerAddress().equals(serverIp)) {
+            if(message.getInitialServerPort() != -1){
+                System.out.println("Meu server - porta: " + message.getInitialServerPort());
+                System.out.println("Meu servidor - address: " + message.getInitialServerAddress());
 
-            System.out.println("Meu server - porta: " + message.getInitialServerPort());
-            System.out.println("Meu servidor - address: " + message.getInitialServerAddress());
+                serverPort = message.getInitialServerPort();
+                serverIp = message.getInitialServerAddress();
 
-            serverPort = message.getInitialServerPort();
-            serverIp = message.getInitialServerAddress();
+                connection.stopTasks();
+                connection.closeConnection();
 
-            connection.stopTasks();
-            connection.closeConnection();
-
-            connection = new ClientConnection(serverIp, serverPort, this);
-            connection.connect();
-            threadPool.submit(connection);
+                connection = new ClientConnection(serverIp, serverPort, this);
+                connection.connect();
+                threadPool.submit(connection);
+            }
         }
 
         String body[] = message.getBody().split(" ");

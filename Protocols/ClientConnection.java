@@ -39,7 +39,7 @@ public class ClientConnection extends Connection implements Runnable {
     public Message receiveMessage(){
         Message message = super.receiveMessage();
 
-        System.out.println("\nReceiving message - Header: " + message.getMessageType() + " Body " + message.getBody());
+        System.out.println("\nReceiving message - Header: " + message.getMessageType() +  " Sender: " + message.getSenderId() + " Body " + message.getBody());
 
         return message;
     }

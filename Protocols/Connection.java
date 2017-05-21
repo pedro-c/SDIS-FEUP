@@ -115,4 +115,12 @@ public class Connection {
     public void stopTasks(){
         service.shutdownNow();
     }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public int getPort() {
+        return port;
+    }
 }
