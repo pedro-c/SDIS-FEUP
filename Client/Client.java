@@ -231,6 +231,9 @@ public class Client extends User{
 
         if (message.getInitialServerPort() != serverPort || !message.getInitialServerAddress().equals(serverIp)) {
 
+            System.out.println("Meu server - porta: " + message.getInitialServerPort());
+            System.out.println("Meu servidor - address: " + message.getInitialServerAddress());
+
             serverPort = message.getInitialServerPort();
             serverIp = message.getInitialServerAddress();
 

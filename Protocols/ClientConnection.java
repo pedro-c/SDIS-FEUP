@@ -59,29 +59,8 @@ public class ClientConnection extends Connection implements Runnable {
 
 
         switch (message.getMessageType()) {
-
             case CLIENT_SUCCESS:
-               /* if (connectionHandler != null) {
-                    System.out.println("Sending message back to initiator server");
-                    connectionHandler.sendMessage(response);
-                }*/
-               /* if (client.getAtualState() == WAITING_SIGNUP || client.getAtualState() == WAITING_SIGNIN) {
-                    client.setServerIp(message.getInitialServerAddress());
-                    client.setServerPort(message.getInitialServerPort());
-                    client.setAtualState(SIGNED_IN);
-                    System.out.println("Logged in with success..");
-                } else if (client.getAtualState() == WAITING_CREATE_CHAT) {
-                    client.setAtualState(CREATING_CHAT);
-                    System.out.println("Creating chat");
-                    client.setPendingChat(new BigInteger(message.getBody()));
-                }
-                break;*/
             case CLIENT_ERROR:
-                /*if (client.getAtualState() == WAITING_SIGNUP || client.getAtualState() == WAITING_SIGNIN) {
-                    client.setAtualState(HOLDING);
-                } else if (client.getAtualState() == WAITING_CREATE_CHAT) {
-                    client.setAtualState(HOLDING);
-                }*/
                 client.verifyState(message);
                 break;
             case NEW_CHAT_INVITATION:
@@ -96,6 +75,9 @@ public class ClientConnection extends Connection implements Runnable {
     public void run() {
 
         while(true){
+
+            System.out.println("Listening...");
+
             Message message = receiveMessage();
 
             Runnable task = () -> {

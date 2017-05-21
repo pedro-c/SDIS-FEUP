@@ -320,28 +320,33 @@ public class Server extends Node implements Serializable {
 
         for (String participant_email : chat.getParticipants()) {
 
-
+            System.out.println(1);
             //if this server is responsible for this participant send client a message
             if(users.get(createHash(participant_email))!=null){
                 users.get(createHash(participant_email)).addChat(chat);
 
-                //TODO: VERFICIAR SE ESTA LOGGADO?
+                System.out.println(2);
                 if(chat.getCreatorEmail()==participant_email){
+                    System.out.println(3);
                     Message response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId),chat.getIdChat().toString(),CREATED_CHAT_WITH_SUCCESS);
                     ServerConnection serverConnection = loggedInUsers.get(createHash(participant_email));
                     serverConnection.sendMessage(response);
                 }
-                else if((loggedInUsers.get(createHash(participant_email))!=null)){ //if client is logged in
+                else if((loggedInUsers.get(createHash(participant_email))!=null)){
+                    System.out.println(4);
+                    //if client is logged in
                     Message response = new Message(NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId),chat.getIdChat().toString());
                     ServerConnection serverConnection = loggedInUsers.get(createHash(participant_email));
                     serverConnection.sendMessage(response);
                 }
                 else{
+                    System.out.println(4);
                     //If client is not logged in, server adds chat to pending requests
                     users.get(createHash(participant_email)).addPendingChat(chat);
                 }
             }
             else if (users.get(createHash(chat.getCreatorEmail())) != null) {
+                System.out.println(6);
                 Message message = new Message(CREATE_CHAT, BigInteger.valueOf(nodeId), chat);
                 Runnable task = () -> { redirect(connection, message);};
                 threadPool.submit(task);
