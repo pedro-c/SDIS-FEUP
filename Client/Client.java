@@ -261,8 +261,8 @@ public class Client extends User{
                     mainMenu();
                 }
                 else{
-                    signInMenu();
                     actualState = SIGNED_IN;
+                    signInMenu();
                 }
                 break;
             case CREATING_CHAT:
