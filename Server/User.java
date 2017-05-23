@@ -9,8 +9,8 @@ import static Utilities.Utilities.createHash;
 
 public class User {
 
-    protected String email;
-    protected BigInteger password;
+    protected static String email;
+    protected static BigInteger password;
     protected Hashtable<BigInteger, Chat> chats;
     protected Hashtable<BigInteger, Chat> pendingRequests;
 
@@ -20,6 +20,14 @@ public class User {
         chats = new Hashtable<BigInteger, Chat>();
         pendingRequests = new Hashtable<BigInteger, Chat>();
 
+    }
+
+    public boolean confirmSignIn(String newEmail, BigInteger newPassword){
+        if(email.equals(newEmail)){
+            if (password.equals(newPassword))
+                return true;
+        }
+        return false;
     }
 
     public String getEmail() {
