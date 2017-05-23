@@ -260,8 +260,10 @@ public class Client extends User{
                     printError(body[0]);
                     mainMenu();
                 }
-                else
+                else{
                     signInMenu();
+                    actualState = SIGNED_IN;
+                }
                 break;
             case CREATING_CHAT:
                 openChat(new BigInteger(body[0]));
