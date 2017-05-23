@@ -262,8 +262,10 @@ public class Client extends User{
                     printError(body[0]);
                     mainMenu();
                 }
-                else
+                else{
                     signInMenu();
+                    actualState = SIGNED_IN;
+                }
                 break;
             case WAITING_CREATE_CHAT:
                 System.out.println("Creating chat " + body[0] + " ... Loading ...");
