@@ -4,8 +4,11 @@ import Chat.Chat;
 import Messages.Message;
 import Protocols.ClientConnection;
 import Server.User;
+import com.sun.xml.internal.xsom.impl.scd.Iterators;
+
 import java.io.Console;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -110,14 +113,23 @@ public class Client extends User{
      */
     public void loadChats() {
         int i=1;
+        BigInteger[] tempChats;
+        tempChats = new BigInteger[chats.size()];
+
         if (chats.size() == 0)
             System.out.println("You don't have any chat to show...");
         else {
             for (BigInteger chatId: chats.keySet()){
-                System.out.println(i + ". " + chats.get(chatId).getChatName() + "\n");
+                tempChats[i-1] = chatId;
+                System.out.println(i + ". " + chats.get(chatId).getChatName() + " Id: " + chatId);
                 i++;
             }
         }
+
+        int option = scannerIn.nextInt();
+        BigInteger requiredChatId = tempChats[option-1];
+        Message message = new Message(GET_CHAT, getClientId(), requiredChatId);
+        connection.sendMessage(message);
     }
 
     /**
@@ -263,8 +275,8 @@ public class Client extends User{
                     mainMenu();
                 }
                 else{
-                    signInMenu();
                     actualState = SIGNED_IN;
+                    signInMenu();
                 }
                 break;
             case WAITING_CREATE_CHAT:

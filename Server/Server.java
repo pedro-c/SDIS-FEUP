@@ -353,6 +353,17 @@ public class Server extends Node implements Serializable {
     }
 
     /**
+     * Returns chat to client
+     * @param chatId
+     * @param clientId
+     * @return
+     */
+    public Message getChat(String chatId, BigInteger clientId){
+        Chat chat = users.get(clientId).getChat(new BigInteger(chatId));
+        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId),chat);
+    }
+
+    /**
      * Saves client connection
      */
     public void saveConnection(ServerConnection connection, BigInteger clientId) {
@@ -523,6 +534,10 @@ public class Server extends Node implements Serializable {
                 break;
             case SIGNOUT:
                 response = signOutUser(message.getSenderId());
+                break;
+            case GET_CHAT:
+                response = getChat(body[0],message.getSenderId());
+                break;
             default:
                 break;
         }

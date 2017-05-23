@@ -34,6 +34,8 @@ public class User {
         chats.put(chat.getIdChat(), chat);
     }
 
+    public Chat getChat(BigInteger chatId){ return chats.get(chatId); }
+
     public void addPendingChat(Chat chat){ pendingRequests.put(chat.getIdChat(),chat);}
 
     public BigInteger getUserId() {
