@@ -36,6 +36,8 @@ public class Constants {
     //CREATECHAT SenderId Chat
     //CLIENT_SUCCESS SenderId chatId
     public static final String CREATE_CHAT = "CREATECHAT";
+
+    //NEW_CHAT_INVITATION CHAT_ID CHAT_NAME
     public static final String NEW_CHAT_INVITATION = "NEW_CHAT_INVITATION";
 
     //SIGNOUT SenderId userId
