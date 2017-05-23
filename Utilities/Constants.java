@@ -77,6 +77,7 @@ public class Constants {
     public static final String USER_ADDED = "1";
     public static final String SENT_INVITATIONS = "2";
     public static final String CREATED_CHAT_WITH_SUCCESS = "3";
+    public static final String BACKUP_USER_DONE = "4";
 
 
 }

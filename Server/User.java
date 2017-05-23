@@ -1,5 +1,6 @@
 package Server;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Hashtable;
 
@@ -7,12 +8,12 @@ import Chat.Chat;
 
 import static Utilities.Utilities.createHash;
 
-public class User {
+public class User implements Serializable{
 
     protected String email;
     protected BigInteger password;
-    protected Hashtable<BigInteger, Chat> chats;
-    protected Hashtable<BigInteger, Chat> pendingRequests;
+    transient protected Hashtable<BigInteger, Chat> chats;
+    transient protected Hashtable<BigInteger, Chat> pendingRequests;
 
     public User(String email, BigInteger password) {
         this.email = email;

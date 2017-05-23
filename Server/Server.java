@@ -130,7 +130,12 @@ public class Server extends Node implements Serializable {
 
         ServerConnection handler = new ServerConnection(knownNode.getNodeIp(), knownNode.getNodePort(), this);
 
-        handler.connect();
+        try {
+            handler.connect();
+        } catch (IOException e) {
+            //Iniciar o protocolo
+            System.out.println("\nError connecting");
+        }
         handler.sendMessage(message);
 
     }
@@ -195,7 +200,12 @@ public class Server extends Node implements Serializable {
 
         ServerConnection handler = new ServerConnection(newNode.getNodeIp(), newNode.getNodePort(), this);
 
-        handler.connect();
+        try {
+            handler.connect();
+        } catch (IOException e) {
+            //Iniciar o protocolo
+            System.out.println("\nError connecting");
+        }
         handler.sendMessage(message);
 
     }
@@ -208,7 +218,12 @@ public class Server extends Node implements Serializable {
 
         ServerConnection handler = new ServerConnection(successor.getNodeIp(), successor.getNodePort(), this);
 
-        handler.connect();
+        try {
+            handler.connect();
+        } catch (IOException e) {
+            //Iniciar o protocolo
+            System.out.println("\nError connecting");
+        }
         handler.sendMessage(message);
 
     }
@@ -219,7 +234,12 @@ public class Server extends Node implements Serializable {
 
         ServerConnection handler = new ServerConnection(node.getNodeIp(), node.getNodePort(), this);
 
-        handler.connect();
+        try {
+            handler.connect();
+        } catch (IOException e) {
+            //Iniciar o protocolo
+            System.out.println("\nError connecting");
+        }
         handler.sendMessage(message);
 
     }
@@ -247,7 +267,7 @@ public class Server extends Node implements Serializable {
             users.put(user_email, newUser);
             message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
             System.out.println("Account created with success!");
-            //sendInfoToBackup(new Message(BACKUP_USER, BigInteger.valueOf(nodeId), email, password));
+            sendInfoToBackup(new Message(BACKUP_USER, BigInteger.valueOf(nodeId), newUser));
         }
 
         return message;
@@ -390,12 +410,19 @@ public class Server extends Node implements Serializable {
     public void sendInfoToBackup(Message message) {
         Node successor = dht.getSuccessor();
 
-        if (successor == null)
+        if (successor == null){
+            System.out.println("Successor unavailable");
             return;
+        }
 
         ServerConnection handler = new ServerConnection(successor.getNodeIp(), successor.getNodePort(), this);
 
-        handler.connect();
+        try {
+            handler.connect();
+        } catch (IOException e) {
+            //Iniciar o protocolo
+            System.out.println("\nError connecting");
+        }
         handler.sendMessage(message);
         handler.receiveMessage();
     }
@@ -412,11 +439,10 @@ public class Server extends Node implements Serializable {
 
         switch (message.getMessageType()) {
             case BACKUP_USER:
-                System.out.println("Back up user from server " + message.getSenderId());
-                body = message.getBody().split(" ");
-                User user = new User(body[0], new BigInteger(body[1]));
+                User user = (User) message.getObject();
                 backups.put(user.getUserId(), user);
-                response = new Message(SERVER_SUCCESS, BigInteger.valueOf(this.getNodeId()), USER_ADDED);
+                System.out.println("Back up user from server " + message.getSenderId());
+                response = new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), BACKUP_USER_DONE);
                 break;
             default:
                 break;
@@ -483,7 +509,12 @@ public class Server extends Node implements Serializable {
 
         Message message = null;
         ServerConnection handler = new ServerConnection(node.getNodeIp(), node.getNodePort(), this);
-        handler.connect();
+        try {
+            handler.connect();
+        } catch (IOException e) {
+            //Iniciar o protocolo
+            System.out.println("\nError connecting");
+        }
 
         for (User user : predecessorUsers) {
             //type = ADD_USER or BACKUP_USER
@@ -539,9 +570,27 @@ public class Server extends Node implements Serializable {
         Node n = dht.nodeLookUp(tempId);
 
         ServerConnection redirect = new ServerConnection(n.getNodeIp(), n.getNodePort(), this);
-        redirect.connect();
+        try {
+            redirect.connect();
+        } catch (IOException e) {
+            //Iniciar o protocolo
+            System.out.println("\nError connecting");
+        }
         redirect.sendMessage(message);
         initialConnection.sendMessage(redirect.receiveMessage());
+    }
+
+    /**
+     * Prints the code that comes from return messages (success or error)
+     *
+     * @param code
+     */
+    public void printReturnCodes(String code,BigInteger senderId){
+        switch (code) {
+            case BACKUP_USER_DONE:
+                System.out.println("\nUser backed up by server " + senderId);
+                break;
+        }
     }
 
     public DistributedHashTable getDht() {

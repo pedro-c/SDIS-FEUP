@@ -51,19 +51,12 @@ public class Connection {
     /**
      * Connects to a certain ip and port
      */
-    public void connect() {
-
-        try {
-            SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-            sslSocket = (SSLSocket) sslSocketFactory.createSocket(ip, port);
-            sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
-            outputStream = new ObjectOutputStream(sslSocket.getOutputStream());
-            inputStream = new ObjectInputStream(sslSocket.getInputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Error connecting to the server ssl socket...");
-        }
-
+    public void connect() throws IOException {
+        SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+        sslSocket = (SSLSocket) sslSocketFactory.createSocket(ip, port);
+        sslSocket.setEnabledCipherSuites(sslSocket.getSupportedCipherSuites());
+        outputStream = new ObjectOutputStream(sslSocket.getOutputStream());
+        inputStream = new ObjectInputStream(sslSocket.getInputStream());
     }
 
     /**
