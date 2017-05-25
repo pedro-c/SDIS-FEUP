@@ -4,11 +4,9 @@ import Chat.Chat;
 import Messages.Message;
 import Protocols.ClientConnection;
 import Server.User;
-import com.sun.xml.internal.xsom.impl.scd.Iterators;
 
 import java.io.Console;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
