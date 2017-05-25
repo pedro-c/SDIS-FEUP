@@ -608,8 +608,12 @@ public class Server extends Node implements Serializable {
         try {
             redirect.connect();
         } catch (IOException e) {
-            //Iniciar o protocolo
-            System.out.println("\nError connecting");
+            System.out.println("\n Node " + n.getNodeId() + " is down.");
+
+            Node successor = dht.nodeLookUp(tempId+1);
+
+            message = new Message(SERVER_DOWN, new BigInteger(Integer.toString(this.getNodeId())), Integer.toString(n.getNodeId()));
+            redirect = new ServerConnection(successor.getNodeIp(), successor.getNodePort(), this);
         }
         redirect.sendMessage(message);
         initialConnection.sendMessage(redirect.receiveMessage());

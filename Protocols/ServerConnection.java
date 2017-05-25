@@ -126,6 +126,11 @@ public class ServerConnection extends Connection implements Runnable {
                 body = message.getBody().split(" ");
                 server.printReturnCodes(body[0],message.getSenderId());
                 break;
+            case SERVER_DOWN:
+                body = message.getBody().split(" ");
+                System.out.println("Server " + body[0] + " is down.");
+                //TODO: Handle server down
+                break;
             default:
                 break;
         }
