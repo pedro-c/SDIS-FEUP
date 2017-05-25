@@ -4,6 +4,8 @@ import Client.Client;
 import Messages.Message;
 import Chat.Chat;
 
+import java.math.BigInteger;
+
 import static Utilities.Constants.*;
 
 public class ClientConnection extends Connection implements Runnable {
@@ -66,7 +68,10 @@ public class ClientConnection extends Connection implements Runnable {
             case NEW_CHAT_INVITATION:
                 System.out.println("Received new chat invitation..");
                 String body[] = message.getBody().split(" ");
-                Chat chat = new Chat(body[0],body[1]);
+
+
+
+                Chat chat = new Chat(new BigInteger(body[0]),body[1]);
                 client.addChat(chat);
                 break;
             default:
