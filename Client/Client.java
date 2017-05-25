@@ -5,7 +5,6 @@ import Chat.ChatMessage;
 import Messages.Message;
 import Protocols.ClientConnection;
 import Server.User;
-import com.sun.xml.internal.xsom.impl.scd.Iterators;
 
 import java.io.Console;
 import java.math.BigInteger;
