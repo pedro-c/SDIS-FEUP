@@ -1,6 +1,7 @@
 package Server;
 
 import Chat.Chat;
+import Chat.ChatMessage;
 import Messages.Message;
 import Protocols.ClientConnection;
 import Protocols.Connection;
@@ -352,6 +353,55 @@ public class Server extends Node implements Serializable {
 
     }
 
+
+    public Message sendMessage(ServerConnection connection, ChatMessage chatMessage){
+
+        Chat chat = users.get(chatMessage.getUserId()).getChat(chatMessage.getChatId());
+
+        for (String participant_email : chat.getParticipants()) {
+
+            //if this server is responsible for this participant send client a message
+            if (users.get(createHash(participant_email)) != null) {
+
+
+
+                //if participant is message sender
+                if(chatMessage.getUserId().toString().equals(createHash(participant_email).toString())){
+
+
+                    Message response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId),chat.getIdChat().toString(),CREATED_CHAT_WITH_SUCCESS);
+                    ServerConnection serverConnection = loggedInUsers.get(createHash(participant_email));
+                    serverConnection.sendMessage(response);
+
+
+                }
+                else if((loggedInUsers.get(createHash(participant_email))!=null)){
+
+
+                   System.out.println("Sending message to logged in user");
+                    Message response = new Message(NEW_MESSAGE, BigInteger.valueOf(nodeId),chatMessage);
+                    ServerConnection userConnection = loggedInUsers.get(createHash(participant_email));
+                    userConnection.sendMessage(response);
+
+
+                }
+                else{
+                    //If client is not logged in, server adds chat to pending requests
+                  //TODO: Pending Messages
+                }
+
+
+
+            }
+            else if (users.get(chatMessage.getUserId()) != null ) {
+                Message message = new Message(NEW_MESSAGE, createHash(participant_email), chatMessage);
+                Runnable task = () -> { redirect(connection, message);};
+                threadPool.submit(task);
+            }
+        }
+        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), SENT_MESSAGE);
+    }
+
     /**
      * Returns chat to client
      * @param chatId
@@ -558,6 +608,8 @@ public class Server extends Node implements Serializable {
             case GET_CHAT:
                 response = getChat(body[0],message.getSenderId());
                 break;
+            case NEW_MESSAGE:
+                response = sendMessage(connection, (ChatMessage) message.getObject());
             default:
                 break;
         }

@@ -90,6 +90,9 @@ public class ServerConnection extends Connection implements Runnable {
                     server.redirect(this,message);
                 }
                 break;
+            case NEW_MESSAGE:
+                server.isResponsible(this, message);
+                break;
             case NEWNODE:
                 body = message.getBody().split(" ");
                 server.newNode(body);

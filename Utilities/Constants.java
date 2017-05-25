@@ -42,6 +42,10 @@ public class Constants {
     //NEW_CHAT_INVITATION CHAT_ID CHAT_NAME
     public static final String NEW_CHAT_INVITATION = "NEW_CHAT_INVITATION";
 
+
+    //SIGNOUT SenderId userId
+    public static final String NEW_MESSAGE = "NEW_MESSAGE";
+
     //SIGNOUT SenderId userId
     public static final String SIGNOUT = "SIGNOUT";
 
@@ -81,6 +85,12 @@ public class Constants {
     public static final String USER_ADDED = "1";
     public static final String SENT_INVITATIONS = "2";
     public static final String CREATED_CHAT_WITH_SUCCESS = "3";
+    public static final String SENT_MESSAGE = "4";
+
+
+
+    public static final String IMAGE_MESSAGE = "image";
+    public static final String TEXT_MESSAGE = "text";
 
 
 }

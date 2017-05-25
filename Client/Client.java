@@ -1,6 +1,7 @@
 package Client;
 
 import Chat.Chat;
+import Chat.ChatMessage;
 import Messages.Message;
 import Protocols.ClientConnection;
 import Server.User;
@@ -9,6 +10,7 @@ import com.sun.xml.internal.xsom.impl.scd.Iterators;
 import java.io.Console;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -139,14 +141,47 @@ public class Client extends User{
      */
     public void openChat(BigInteger chatId) {
 
+        Console console = System.console();
+        actualState = Task.CHATTING;
         System.out.println("Opening chat ... ");
 
         if(chats.get(chatId)!=null){
             Chat chat = chats.get(chatId);
-            String menu = "\n" + "\n" + "Chat:  " + chat.getChatName() + "\n" + "\n" + "Send a message: " + "\n" + "\n" + "\n" + "\n";
+            String menu = "\n" + "\n" + "Chat:  " + chat.getChatName() + "\n" + "\n" + getLastMessages(chatId) + "\n" + "Send a message: " + "\n" + "\n" + "\n" + "\n";
             System.out.println(menu);
+
+            System.out.println(getLastMessages(chatId));
+
+            String messageToSend = console.readLine();
+
+            Date date = new Date();
+            ChatMessage chatMessage = new ChatMessage(chatId, date, getClientId(), messageToSend.getBytes(), TEXT_MESSAGE);
+             Message message = new Message(NEW_MESSAGE, getClientId(), chatMessage);
+            connection.sendMessage(message);
+
+
         }
 
+    }
+
+    public String getLastMessages(BigInteger chatId){
+
+        String messagesToprint = null;
+        if(chats.get(chatId)!=null) {
+
+            Chat chat = chats.get(chatId);
+            if(chat.getChatMessages().size()==0){
+                messagesToprint = "No messages to see ... ";
+                return messagesToprint;
+            }
+
+            for(ChatMessage message:  chat.getChatMessages()){
+                 System.out.println("Loading messages...");
+                 messagesToprint.join(new String(message.getContent()), "\n \n");
+            }
+        }
+
+        return messagesToprint;
     }
 
     /**
@@ -307,6 +342,11 @@ public class Client extends User{
                 System.out.println("\nSigned out!!");
                 mainMenu();
                 break;
+            case CHATTING:
+                ChatMessage chatMessage = (ChatMessage) message.getObject();
+                chats.get(chatMessage.getChatId()).addChatMessage(chatMessage);
+                System.out.println(new String(chatMessage.getContent()));
+                break;
             default:
                 break;
         }
@@ -354,7 +394,7 @@ public class Client extends User{
 
     public enum Task {
         HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
-        WAITING_SIGNOUT, WAITING_FOR_CHAT
+        WAITING_SIGNOUT, WAITING_FOR_CHAT, CHATTING
     }
 
     public void addChat(Chat chat){
