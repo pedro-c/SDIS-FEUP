@@ -373,6 +373,33 @@ public class Server extends Node implements Serializable {
     }
 
     /**
+     * Returns chat to client
+     * @param chatId
+     * @param clientId
+     * @return
+     */
+    public Message getChat(String chatId, BigInteger clientId){
+
+
+        printUserChats(clientId);
+
+
+        System.out.println(chatId);
+        System.out.println(new BigInteger(chatId));
+
+        Chat chat = users.get(clientId).getChat(new BigInteger(chatId));
+
+        if(chat==null)
+            System.out.println("Chat null");
+
+
+        Message message =  new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId),chat);
+
+
+        return message;
+    }
+
+    /**
      * Saves client connection
      */
     public void saveConnection(ServerConnection connection, BigInteger clientId) {
@@ -386,6 +413,10 @@ public class Server extends Node implements Serializable {
         System.out.println("Logged in users");
         loggedInUsers.forEach((k, v) -> System.out.println("LOGGED IN : " + k));
         System.out.println("");
+    }
+
+    public void printUserChats(BigInteger client){
+        users.get(client).chats.forEach((k, v) -> System.out.println("Chat : " + k));
     }
 
     /**
@@ -554,6 +585,10 @@ public class Server extends Node implements Serializable {
                 break;
             case SIGNOUT:
                 response = signOutUser(message.getSenderId());
+                break;
+            case GET_CHAT:
+                response = getChat(body[0],message.getSenderId());
+                break;
             default:
                 break;
         }

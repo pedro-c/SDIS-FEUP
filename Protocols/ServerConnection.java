@@ -80,6 +80,9 @@ public class ServerConnection extends Connection implements Runnable {
             case CREATE_CHAT:
                 server.isResponsible(this,message);
                 break;
+            case GET_CHAT:
+                server.isResponsible(this,message);
+                break;
             case INVITE_USER:
                 if (server.isResponsibleFor(message.getSenderId())) {
                     System.out.println("I'm the RESPONSIBLE server");

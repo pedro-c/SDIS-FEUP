@@ -4,6 +4,7 @@ import Chat.Chat;
 import Messages.Message;
 import Protocols.ClientConnection;
 import Server.User;
+
 import java.io.Console;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -116,14 +117,25 @@ public class Client extends User{
      */
     public void loadChats() {
         int i=1;
+        BigInteger[] tempChats;
+        tempChats = new BigInteger[chats.size()];
+
         if (chats.size() == 0)
             System.out.println("You don't have any chat to show...");
         else {
             for (BigInteger chatId: chats.keySet()){
-                System.out.println(i + ". " + chats.get(chatId).getChatName() + "\n");
+                tempChats[i-1] = chatId;
+                System.out.println(i + ". " + chats.get(chatId).getChatName() + " Id: " + chatId);
                 i++;
             }
         }
+
+        int option = scannerIn.nextInt();
+        BigInteger requiredChatId = tempChats[option-1];
+        Message message = new Message(GET_CHAT, getClientId(), requiredChatId.toString());
+        actualState = Task.WAITING_FOR_CHAT;
+        message.getBody();
+        connection.sendMessage(message);
     }
 
     /**
@@ -266,7 +278,10 @@ public class Client extends User{
             }
         }
 
-        String body[] = message.getBody().split(" ");
+        //TODO: How to do this???
+        String body[] = new String[4];
+        if(message.getBody()!=null)
+             body = message.getBody().split(" ");
 
         switch (actualState) {
             case SIGNED_IN:
@@ -286,6 +301,14 @@ public class Client extends User{
             case WAITING_CREATE_CHAT:
                 System.out.println("Creating chat " + body[0] + " ... Loading ...");
                 openChat(new BigInteger(body[0]));
+                break;
+            case WAITING_FOR_CHAT:
+                System.out.println("Received Chat");
+                Chat chat = (Chat) message.getObject();
+                System.out.println("Chat " + chat.getIdChat());
+                chats.remove(chat);
+                chats.put(chat.getIdChat(),chat);
+                openChat(chat.getIdChat());
                 break;
             case HOLDING:
                 signInMenu();
@@ -345,7 +368,7 @@ public class Client extends User{
 
     public enum Task {
         HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
-        WAITING_SIGNOUT
+        WAITING_SIGNOUT, WAITING_FOR_CHAT
     }
 
     public void addChat(Chat chat){
