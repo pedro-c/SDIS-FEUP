@@ -74,6 +74,9 @@ public class DistributedHashTable implements Serializable {
                 tempNode1 = fingerTable.get(i - 1);
                 tempNode2 = fingerTable.get(i);
             }
+            if(tempNode1.getNodeId() == tempNode2.getNodeId())
+                successor = tempNode1;
+
         }
 
         System.out.println("Successor of " + key + " : " + successor.getNodeId());
