@@ -615,18 +615,26 @@ public class Server extends Node implements Serializable {
             handler.receiveMessage();
 
             if (type.equals(ADD_USER))
-                task = () -> {sendUserChats(user, handler, ADD_USER_CHAT);sendUserChats(user, handler, ADD_USER_PENDING_CHAT);};
+                task = () -> {
+                    sendUserChats(user, handler, ADD_USER_CHAT,ADD_USER_CHAT_MESSAGE);
+                    sendUserChats(user, handler, ADD_USER_PENDING_CHAT,ADD_USER_CHAT_MESSAGE);};
             else if(type.equals(BACKUP_USER))
-                task = () -> {sendUserChats(user, handler, BACKUP_USER_CHAT); sendUserChats(user, handler, BACKUP_USER_PENDING_CHAT);};
+                task = () -> {
+                    sendUserChats(user, handler, BACKUP_USER_CHAT,ADD_USER_CHAT_MESSAGE);
+                    sendUserChats(user, handler, BACKUP_USER_PENDING_CHAT,ADD_USER_CHAT_MESSAGE);};
 
             threadPool.submit(task);
         }
     }
 
-    public void sendUserChats(User user, Connection handler, String type) {
+    public void sendUserChats(User user, Connection handler, String type1, String type2) {
 
         user.getChats().forEach((key, chat) ->{
-            Message message = new Message(type, BigInteger.valueOf(nodeId), chat, user.getUserId());
+            Message message = new Message(type1, BigInteger.valueOf(nodeId), chat, user.getUserId());
+
+            Runnable task= () -> sendChatMessages(chat, user.getUserId(), handler, type2);
+            threadPool.submit(task);
+
             handler.sendMessage(message);
             handler.receiveMessage();
         });

@@ -57,6 +57,9 @@ public class Constants {
     //BACKUP_USER_PENDING_CHAT SenderId Chat
     public static final String BACKUP_USER_PENDING_CHAT = "BACKUP_USER_PENDING_CHAT";
 
+    //BACKUP_USER_CHAT_MESSAGE SenderId ChatMessage
+    public static final String BACKUP_USER_CHAT_MESSAGE = "BACKUP_USER_CHAT_MESSAGE";
+
     //SERVER_SUCCESS SenderId code
     public static final String SERVER_SUCCESS = "SERVER_SUCCESS";
 
@@ -71,6 +74,9 @@ public class Constants {
 
     //ADD_USER_PENDING_CHAT SenderId Chat
     public static final String ADD_USER_PENDING_CHAT = "ADD_USER_PENDING_CHAT";
+
+    //ADD_USER_CHAT_MESSAGE SenderId ChatMessage
+    public static final String ADD_USER_CHAT_MESSAGE = "ADD_USER_CHAT_MESSAGE";
 
     //CREATE_CHAT_BY_INVITATION SenderId Chat
     public static final String CREATE_CHAT_BY_INVITATION = "CREATE_CHAT_BY_INVITATION";
