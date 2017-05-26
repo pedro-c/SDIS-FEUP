@@ -693,11 +693,11 @@ public class Server extends Node implements Serializable {
             case SIGNIN:
                 saveConnection(connection, message.getSenderId());
                 response = loginUser(body[0],body[1]);
-                return;
+                break;
             case SIGNUP:
                 saveConnection(connection, message.getSenderId());
                 response = addUser(body[0],body[1]);
-                return;
+                break;
             case CREATE_CHAT:
                 response = createChat(connection, message.getSenderId(), (Chat) message.getObject());
                 break;

@@ -74,6 +74,7 @@ public class ServerConnection extends Connection implements Runnable {
             case SIGNIN:
             case SIGNUP:
                 server.isResponsible(this,message);
+                break;
             case SIGNOUT:
             case CREATE_CHAT:
             case CREATE_CHAT_BY_INVITATION:
