@@ -115,18 +115,8 @@ public class ServerConnection extends Connection implements Runnable {
             case BACKUP_USER:
                 sendMessage(server.backupInfo(message));
                 break;
-            case BACKUP_USER_CHAT:
-            case BACKUP_USER_PENDING_CHAT:
-            case BACKUP_USER_CHAT_MESSAGE:
-                System.out.println("Backup chat!!");
-                break;
             case ADD_USER:
                 sendMessage(server.addUser((User) message.getObject()));
-                break;
-            case ADD_USER_CHAT:
-            case ADD_USER_PENDING_CHAT:
-            case ADD_USER_CHAT_MESSAGE:
-                System.out.println("Add user chat!!");
                 break;
             case USER_UPDATED_CONNECTION:
                 server.saveConnection(this,message.getSenderId());

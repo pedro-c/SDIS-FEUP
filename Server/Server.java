@@ -369,7 +369,8 @@ public class Server extends Node implements Serializable {
         if(loggedInUsers.get(clientId) == null){
             //If client is not logged in, server adds chat to pending requests
             System.out.println("Added to pending chats");
-            users.get(clientId).addPendingChat(chat);
+            if(users.get(clientId) != null)
+                users.get(clientId).addPendingChat(chat);
         }
         else {
             users.get(clientId).addChat(chat);
@@ -611,38 +612,6 @@ public class Server extends Node implements Serializable {
         for (User user : predecessorUsers) {
             //type = ADD_USER or BACKUP_USER
             message = new Message(type, BigInteger.valueOf(nodeId), user);
-            handler.receiveMessage();
-
-            if (type.equals(ADD_USER))
-                task = () -> {
-                    sendUserChats(user, handler, ADD_USER_CHAT,ADD_USER_CHAT_MESSAGE);
-                    sendUserChats(user, handler, ADD_USER_PENDING_CHAT,ADD_USER_CHAT_MESSAGE);};
-            else if(type.equals(BACKUP_USER))
-                task = () -> {
-                    sendUserChats(user, handler, BACKUP_USER_CHAT,ADD_USER_CHAT_MESSAGE);
-                    sendUserChats(user, handler, BACKUP_USER_PENDING_CHAT,ADD_USER_CHAT_MESSAGE);};
-
-            threadPool.submit(task);
-        }
-    }
-
-    public void sendUserChats(User user, Connection handler, String type1, String type2) {
-
-        user.getChats().forEach((key, chat) ->{
-            Message message = new Message(type1, BigInteger.valueOf(nodeId), chat, user.getUserId());
-
-            Runnable task= () -> sendChatMessages(chat, user.getUserId(), handler, type2);
-            threadPool.submit(task);
-
-            handler.sendMessage(message);
-            handler.receiveMessage();
-        });
-    }
-
-    public void sendChatMessages(Chat chat, BigInteger receiver, Connection handler, String type) {
-
-        for(ChatMessage chatMessage : chat.getChatMessages()){
-            Message message = new Message(type, BigInteger.valueOf(nodeId), chatMessage, receiver);
             handler.sendMessage(message);
             handler.receiveMessage();
         }
