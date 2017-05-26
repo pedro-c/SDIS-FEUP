@@ -292,8 +292,6 @@ public class Server extends Node implements Serializable {
 
         BigInteger userId = createHash(newUser.getEmail());
 
-        newUser.instantiateChats();
-
         users.put(userId, newUser);
         return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, USER_ADDED);
     }
@@ -556,7 +554,6 @@ public class Server extends Node implements Serializable {
         switch (message.getMessageType()) {
             case BACKUP_USER:
                 User user = (User) message.getObject();
-                user.instantiateChats();
                 backups.put(user.getUserId(), user);
                 System.out.println("Back up user from server " + message.getSenderId());
                 response = new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, BACKUP_USER_DONE);
@@ -764,6 +761,7 @@ public class Server extends Node implements Serializable {
 
         redirect.sendMessage(message);
         initialConnection.sendMessage(redirect.receiveMessage());
+        redirect.closeConnection();
     }
 
     public void serverDown(Node downNode){
