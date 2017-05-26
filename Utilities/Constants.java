@@ -7,6 +7,9 @@ public class Constants {
     public static final byte LF = 0xA;
     public static final String CRLF = "\r\n";
 
+
+    public static final int NO_CHAT_OPPEN = 0;
+
     //Messages
     public static final String FINGERTABLE = "FINGERTABLE";
     public static final String NEWNODE = "NEWNODE"; //Format: [NEWNODE] [SenderID] [NodeID] [NodeIp] [NodePort]
@@ -51,12 +54,6 @@ public class Constants {
     //BACKUP_USER SenderId User
     public static final String BACKUP_USER = "BACKUP_USER";
 
-    //BACKUP_USER_CHAT SenderId Chat
-    public static final String BACKUP_USER_CHAT = "BACKUP_USER_CHAT";
-
-    //BACKUP_USER_PENDING_CHAT SenderId Chat
-    public static final String BACKUP_USER_PENDING_CHAT = "BACKUP_USER_PENDING_CHAT";
-
     //SERVER_SUCCESS SenderId code
     public static final String SERVER_SUCCESS = "SERVER_SUCCESS";
 
@@ -65,12 +62,6 @@ public class Constants {
 
     //ADD_USER SenderId User
     public static final String ADD_USER = "ADD_USER";
-
-    //ADD_USER_CHAT SenderId Chat
-    public static final String ADD_USER_CHAT = "ADD_USER_CHAT";
-
-    //ADD_USER_PENDING_CHAT SenderId Chat
-    public static final String ADD_USER_PENDING_CHAT = "ADD_USER_PENDING_CHAT";
 
     //CREATE_CHAT_BY_INVITATION SenderId Chat
     public static final String CREATE_CHAT_BY_INVITATION = "CREATE_CHAT_BY_INVITATION";

@@ -76,11 +76,13 @@ public class ClientConnection extends Connection implements Runnable {
                 client.addChat(chat);
                 break;
             case NEW_MESSAGE:
-                System.out.println("Received new message \n" );
+                System.out.println("Received a new message\n" );
                 ChatMessage chatMessage = (ChatMessage) message.getObject();
-                if(chatMessage!=null){
-                    client.printClientChats();
-                    System.out.println(chatMessage.getChatId());
+                if(client.getCurrentChat()==NO_CHAT_OPPEN || client.getCurrentChat()!=chatMessage.getChatId().intValue()){
+                    client.getChat(chatMessage.getChatId()).addPendingChatMessage(chatMessage);
+                    System.out.println("Saved on pending chat messages");
+                }
+                else {
                     client.getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
                     System.out.println(new String(chatMessage.getContent()));
                 }

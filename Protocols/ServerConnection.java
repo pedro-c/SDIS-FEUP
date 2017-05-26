@@ -90,6 +90,7 @@ public class ServerConnection extends Connection implements Runnable {
                     server.redirect(this,message);
                 }
                 break;
+            case NEW_MESSAGE_TO_PARTICIPANT:
             case NEW_MESSAGE:
                 server.isResponsible(this, message);
                 break;
@@ -117,16 +118,8 @@ public class ServerConnection extends Connection implements Runnable {
                 sendMessage(server.backupInfo(message));
                 closeConnection();
                 break;
-            case BACKUP_USER_CHAT:
-            case BACKUP_USER_PENDING_CHAT:
-                System.out.println("Backup chat!!");
-                break;
             case ADD_USER:
                 sendMessage(server.addUser((User) message.getObject()));
-                break;
-            case ADD_USER_CHAT:
-            case ADD_USER_PENDING_CHAT:
-                System.out.println("Add user chat!!");
                 break;
             case USER_UPDATED_CONNECTION:
                 server.saveConnection(this,message.getSenderId());
@@ -138,8 +131,7 @@ public class ServerConnection extends Connection implements Runnable {
             case SERVER_DOWN:
                 body = message.getBody().split(" ");
                 System.out.println("Server " + body[0] + " is down.");
-                //TODO:
-                //server.handleNodeFailure(Integer.parseInt(body[0]));
+                server.handleNodeFailure(Integer.parseInt(body[0]));
                 break;
             default:
                 break;

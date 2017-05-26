@@ -12,8 +12,8 @@ public class User implements Serializable{
 
     protected String email;
     protected BigInteger password;
-    transient protected ConcurrentHashMap<BigInteger, Chat> chats;
-    transient protected ConcurrentHashMap<BigInteger, Chat> pendingRequests;
+    protected ConcurrentHashMap<BigInteger, Chat> chats;
+    protected ConcurrentHashMap<BigInteger, Chat> pendingRequests;
 
     public User(String email, BigInteger password) {
         this.email = email;

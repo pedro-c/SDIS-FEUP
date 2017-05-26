@@ -16,11 +16,13 @@ public class Chat implements Serializable {
     private String creatorEmail;
     private Set<String> participants;
     private ArrayList<ChatMessage> chatMessages;
+    private ArrayList<ChatMessage> pendingChatMessages;
 
     public Chat(String creatorEmail, String name) {
         this.idChat = Utilities.generateChatId(creatorEmail);
         this.creatorEmail = creatorEmail;
         this.chatMessages = new ArrayList<ChatMessage>();
+        this.pendingChatMessages = new ArrayList<ChatMessage>();
         this.participants = new HashSet<>();
         if(name==null)
             chatName = "chat default";
@@ -32,6 +34,7 @@ public class Chat implements Serializable {
         this.chatName = chatName;
         this.creatorEmail = creatorEmail;
         this.chatMessages = new ArrayList<ChatMessage>();
+        this.pendingChatMessages = new ArrayList<ChatMessage>();
         this.participants = new HashSet<>();
     }
 
@@ -61,6 +64,10 @@ public class Chat implements Serializable {
 
     public ArrayList<ChatMessage> getChatMessages() {return chatMessages;}
 
+    public ArrayList<ChatMessage> getChatPendingMessages() {return pendingChatMessages;}
+
     public void addChatMessage(ChatMessage chatMessage){chatMessages.add(chatMessage);}
+
+    public void addPendingChatMessage(ChatMessage chatMessage){pendingChatMessages.add(chatMessage);}
 
 }
