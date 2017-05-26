@@ -637,6 +637,17 @@ public class Server extends Node implements Serializable {
         }
     }
 
+    public boolean isToUseReceiver(String messageType) {
+
+        switch (messageType) {
+            case CREATE_CHAT_BY_INVITATION:
+            case NEW_MESSAGE:
+                return true;
+        }
+
+        return false;
+    }
+
 
     public void isResponsible(ServerConnection connection, Message message) {
         String[] body ={""};
@@ -645,10 +656,19 @@ public class Server extends Node implements Serializable {
 
         System.out.println("REQUEST ID: " + Integer.remainderUnsigned(message.getSenderId().intValue(), 128));
 
-        if (!isResponsibleFor(message.getSenderId())){
-            redirect(connection,message);
-            return;
+        if(isToUseReceiver(message.getMessageType())){
+            if (!isResponsibleFor(message.getReceiver())){
+                redirect(connection,message);
+                return;
+            }
         }
+        else {
+            if (!isResponsibleFor(message.getSenderId())){
+                redirect(connection,message);
+                return;
+            }
+        }
+
 
         System.out.println("I'm the RESPONSIBLE server");
 
@@ -692,7 +712,11 @@ public class Server extends Node implements Serializable {
 
     public void redirect(ServerConnection initialConnection, Message message) {
 
-        int tempId = Integer.remainderUnsigned(Math.abs(message.getSenderId().intValue()),128);
+        int tempId;
+        if(isToUseReceiver(message.getMessageType()))
+            tempId = Integer.remainderUnsigned(Math.abs(message.getReceiver().intValue()),128);
+        else
+            tempId = Integer.remainderUnsigned(Math.abs(message.getSenderId().intValue()),128);
         System.out.println("REDIRECTING ID: " + tempId);
         Node n = dht.nodeLookUp(tempId);
 
