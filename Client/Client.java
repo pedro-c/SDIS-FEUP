@@ -220,19 +220,28 @@ public class Client extends User{
 
         System.out.println("Name: ");
         String chatName = console.readLine();
-        System.out.println("Invite user to chat with you (email) : ");
-        String participantEmail = console.readLine();
 
-        while (participantEmail == null || participantEmail.equals(email)) {
-            System.out.println("You must invite one user to chat with you (email). ");
-            participantEmail = console.readLine();
+        System.out.println("How many users do you want to invite?");
+        int iterations = Integer.parseInt(console.readLine());
+        int count;
+        String[] names = new String[iterations];
+
+        //TODO: Existe email??
+        for(count = 0; count < iterations; count ++ ){
+            System.out.println("Invite user to chat with you (email) : ");
+            String participantEmail = console.readLine();
+            names[count]=participantEmail;
+            System.out.println("Invited participant " + count +" with email: "+ participantEmail);
         }
 
-        System.out.println("1: " + chatName);
         Chat newChat = new Chat(email,chatName);
-
-        newChat.addParticipant(participantEmail);
         newChat.addParticipant(email);
+
+
+        for(int i=0;i<names.length;i++){
+            newChat.addParticipant(names[i]);
+        }
+
         addChat(newChat);
         Message message = new Message(CREATE_CHAT, getClientId(), RESPONSIBLE, newChat);
         connection.sendMessage(message);
