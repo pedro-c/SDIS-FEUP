@@ -59,6 +59,7 @@ public class ServerConnection extends Connection implements Runnable {
      * Close the connection
      */
     public void closeConnection(){
+        System.out.println("Closing server connection");
         super.closeConnection();
     }
 
@@ -98,21 +99,25 @@ public class ServerConnection extends Connection implements Runnable {
                 body = message.getBody().split(" ");
                 server.newNode(body);
                 server.getDht().printFingerTable();
+                closeConnection();
                 break;
             case PREDECESSOR:
                 Node temp = (Node) message.getObject();
                 server.getDht().setPredecessor(temp);
                 server.sendFingerTableToSuccessor();
                 server.getDht().printFingerTable();
+                closeConnection();
                 break;
             case SUCCESSOR_FT:
                 ArrayList<Node> ft = (ArrayList<Node>) message.getObject();
                 server.getDht().updateFingerTableFromSuccessor(ft);
                 server.getDht().setPredecessor(ft.get(0));
                 server.getDht().printFingerTable();
+                closeConnection();
                 break;
             case BACKUP_USER:
                 sendMessage(server.backupInfo(message));
+                closeConnection();
                 break;
             case BACKUP_USER_CHAT:
             case BACKUP_USER_PENDING_CHAT:
@@ -135,7 +140,7 @@ public class ServerConnection extends Connection implements Runnable {
             case SERVER_DOWN:
                 body = message.getBody().split(" ");
                 System.out.println("Server " + body[0] + " is down.");
-                //TODO: Handle server down
+
                 break;
             default:
                 break;

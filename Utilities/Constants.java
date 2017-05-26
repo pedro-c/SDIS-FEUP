@@ -75,6 +75,9 @@ public class Constants {
     //CREATE_CHAT_BY_INVITATION SenderId Chat
     public static final String CREATE_CHAT_BY_INVITATION = "CREATE_CHAT_BY_INVITATION";
 
+    //SERVER_DOWN ServerDownId
+    public static final String SERVER_DOWN = "SERVER_DOWN";
+
     //Directories
     public static final String USER_DIRECTORY = "users";
     public static final String CHAT_DIRECTORY = "chats";

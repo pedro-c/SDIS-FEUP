@@ -133,6 +133,7 @@ public class Server extends Node implements Serializable {
             System.out.println("\nError connecting");
         }
         handler.sendMessage(message);
+        handler.closeConnection();
 
     }
 
@@ -202,6 +203,7 @@ public class Server extends Node implements Serializable {
             System.out.println("\nError connecting");
         }
         handler.sendMessage(message);
+        handler.closeConnection();
 
     }
 
@@ -220,7 +222,7 @@ public class Server extends Node implements Serializable {
             System.out.println("\nError connecting");
         }
         handler.sendMessage(message);
-
+        handler.closeConnection();
     }
 
     public void notifyNodeOfItsPredecessor(Node node, Node newNode) {
@@ -236,7 +238,7 @@ public class Server extends Node implements Serializable {
             System.out.println("\nError connecting");
         }
         handler.sendMessage(message);
-
+        handler.closeConnection();
     }
 
     /**

@@ -53,6 +53,7 @@ public class ClientConnection extends Connection implements Runnable {
      * Close the connection
      */
     public void closeConnection(){
+        System.out.println("Closing client connection");
         super.closeConnection();
     }
 
