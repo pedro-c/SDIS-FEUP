@@ -362,6 +362,8 @@ public class Client extends User{
                     mainMenu();
                 }
                 else{
+                    Message updateServerConnection = new Message(USER_UPDATED_CONNECTION, this.getClientId(), RESPONSIBLE);
+                    connection.sendMessage(updateServerConnection);
                     actualState = SIGNED_IN;
                     signInMenu();
                 }

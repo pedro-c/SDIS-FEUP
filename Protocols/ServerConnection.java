@@ -125,6 +125,7 @@ public class ServerConnection extends Connection implements Runnable {
                 sendMessage(server.addUser((User) message.getObject()));
                 break;
             case USER_UPDATED_CONNECTION:
+                System.out.println("\nEntrei\n");
                 server.saveConnection(this,message.getSenderId());
                 break;
             case SERVER_SUCCESS:
