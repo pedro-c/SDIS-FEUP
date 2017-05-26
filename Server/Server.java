@@ -393,7 +393,9 @@ public class Server extends Node implements Serializable {
 
     }
 
-    public void inviteUserToChat(Chat chat, BigInteger clientId) {
+    public Message inviteUserToChat(Chat chat, BigInteger clientId) {
+
+        printLoggedInUsers();
 
         if(loggedInUsers.get(clientId) == null){
             //If client is not logged in, server adds chat to pending requests
@@ -408,51 +410,64 @@ public class Server extends Node implements Serializable {
             System.out.println("porta: " + userConnection.getPort());
             userConnection.sendMessage(response);
         }
+
+        return new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), SENT_INVITATIONS);
     }
 
 
-    public Message sendMessage(ServerConnection connection, ChatMessage chatMessage, BigInteger clientId ){
-
-        printUserChats(clientId);
+    public Message sendMessage(ServerConnection connection, ChatMessage chatMessage, BigInteger clientId, BigInteger senderId) {
 
         Chat chat = users.get(clientId).getChat(chatMessage.getChatId());
 
-        for (String participant_email : chat.getParticipants()) {
+        printLoggedInUsers();
 
-            //if this server is responsible for this participant send client a message
-            if (users.get(createHash(participant_email)) != null) {
+        for (String participantEmail : chat.getParticipants()) {
 
-                //if participant is message sender
-                if(chatMessage.getUserId().toString().equals(createHash(participant_email).toString())){
+            BigInteger participantHash = createHash(participantEmail);
 
-                    System.out.println("Sou o user que enviou a mensagem");
+            if(users.get(participantHash)!=null){
 
-                    Message response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId),chat.getIdChat().toString(),CREATED_CHAT_WITH_SUCCESS);
-                    ServerConnection serverConnection = loggedInUsers.get(createHash(participant_email));
-                    serverConnection.sendMessage(response);
-
+                if(chatMessage.getUserId().toString().equals(participantHash.toString())){
+                    Message response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId),chat.getIdChat().toString(), SENT_MESSAGE);
+                    ServerConnection serverConnection = loggedInUsers.get(participantHash);
+                    if(serverConnection != null)
+                        serverConnection.sendMessage(response);
                 }
-                else if((loggedInUsers.get(createHash(participant_email))!=null)){
-
-                    System.out.println("Sending message to logged in user");
-                    Message response = new Message(NEW_MESSAGE, BigInteger.valueOf(nodeId),chatMessage,createHash(participant_email));
-                    ServerConnection userConnection = loggedInUsers.get(createHash(participant_email));
-                    userConnection.sendMessage(response);
-                }
-                else{
-                    //If client is not logged in, server adds chat to pending requests
-                    //TODO: Pending Messages
-                }
-
+                else sendMessageToUser(chatMessage, participantHash);
             }
-            else if (users.get(chatMessage.getUserId()) != null ) {
-                Message message = new Message(NEW_MESSAGE, createHash(participant_email), chatMessage, createHash(participant_email));
+            else {
+                System.out.println(2);
+                Message message = new Message(NEW_MESSAGE_TO_PARTICIPANT, senderId, chatMessage, participantHash);
                 Runnable task = () -> { redirect(connection, message);};
                 threadPool.submit(task);
             }
         }
-        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), SENT_MESSAGE);
+
+        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), chat.getIdChat().toString(), SENT_INVITATIONS);
+
     }
+
+    public Message sendMessageToUser(ChatMessage chatMessage, BigInteger clientId){
+
+        System.out.println(3);
+
+        if(loggedInUsers.get(clientId) == null){
+            //TODO: Add to pending messages
+            System.out.println("Added to pending messages");
+            //users.get(clientId).addPendingChat(chat);
+        }
+        else {
+
+            System.out.println(4);
+            System.out.println("Sending message to logged in user");
+            Message response = new Message(NEW_MESSAGE, BigInteger.valueOf(nodeId),chatMessage,clientId);
+            ServerConnection userConnection = loggedInUsers.get(clientId);
+            userConnection.sendMessage(response);
+        }
+
+        return new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), TEXT_MESSAGE);
+    }
+
 
     /**
      * Returns chat to client
@@ -462,10 +477,6 @@ public class Server extends Node implements Serializable {
      */
     public Message getChat(String chatId, BigInteger clientId){
 
-
-        printUserChats(clientId);
-
-
         System.out.println(chatId);
         System.out.println(new BigInteger(chatId));
 
@@ -474,10 +485,7 @@ public class Server extends Node implements Serializable {
         if(chat==null)
             System.out.println("Chat null");
 
-
         Message message =  new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId),chat);
-
-
         return message;
     }
 
@@ -633,31 +641,44 @@ public class Server extends Node implements Serializable {
         for (User user : predecessorUsers) {
             //type = ADD_USER or BACKUP_USER
             message = new Message(type, BigInteger.valueOf(nodeId), user);
-            handler.sendMessage(message);
             handler.receiveMessage();
 
             if (type.equals(ADD_USER))
-                task = () -> sendUserChats(user, handler, ADD_USER_CHAT, ADD_USER_PENDING_CHAT);
+                task = () -> {sendUserChats(user, handler, ADD_USER_CHAT);sendUserChats(user, handler, ADD_USER_PENDING_CHAT);};
             else if(type.equals(BACKUP_USER))
-                task = () -> sendUserChats(user, handler, BACKUP_USER_CHAT, BACKUP_USER_PENDING_CHAT);
+                task = () -> {sendUserChats(user, handler, BACKUP_USER_CHAT); sendUserChats(user, handler, BACKUP_USER_PENDING_CHAT);};
 
             threadPool.submit(task);
         }
     }
 
-    public void sendUserChats(User user, Connection handler, String type1, String type2) {
+    public void sendUserChats(User user, Connection handler, String type) {
 
         user.getChats().forEach((key, chat) ->{
-            Message message = new Message(type1, BigInteger.valueOf(nodeId), chat);
+            Message message = new Message(type, BigInteger.valueOf(nodeId), chat, user.getUserId());
             handler.sendMessage(message);
             handler.receiveMessage();
         });
+    }
 
-        user.getPendingRequests().forEach((key, pendingChat) ->{
-            Message message = new Message(type2, BigInteger.valueOf(nodeId), pendingChat);
+    public void sendChatMessages(Chat chat, BigInteger receiver, Connection handler, String type) {
+
+        for(ChatMessage chatMessage : chat.getChatMessages()){
+            Message message = new Message(type, BigInteger.valueOf(nodeId), chatMessage, receiver);
             handler.sendMessage(message);
             handler.receiveMessage();
-        });
+        }
+    }
+
+    public boolean isToUseReceiver(String messageType) {
+
+        switch (messageType) {
+            case CREATE_CHAT_BY_INVITATION:
+            case NEW_MESSAGE:
+                return true;
+        }
+
+        return false;
     }
 
 
@@ -668,10 +689,19 @@ public class Server extends Node implements Serializable {
 
         System.out.println("REQUEST ID: " + Integer.remainderUnsigned(message.getSenderId().intValue(), 128));
 
-        if (!isResponsibleFor(message.getSenderId())){
-            redirect(connection,message);
-            return;
+        if(isToUseReceiver(message.getMessageType())){
+            if (!isResponsibleFor(message.getReceiver())){
+                redirect(connection,message);
+                return;
+            }
         }
+        else {
+            if (!isResponsibleFor(message.getSenderId())){
+                redirect(connection,message);
+                return;
+            }
+        }
+
 
         System.out.println("I'm the RESPONSIBLE server");
 
@@ -696,12 +726,13 @@ public class Server extends Node implements Serializable {
                 response = getChat(body[0],message.getSenderId());
                 break;
             case NEW_MESSAGE:
-                ChatMessage chat = (ChatMessage) message.getObject();
-                System.out.println("Received new message with content " + new String(chat.getContent()));
-                response = sendMessage(connection, (ChatMessage) message.getObject(), message.getReceiver());
+                response = sendMessage(connection, (ChatMessage) message.getObject(), message.getReceiver(), message.getSenderId());
                 break;
             case CREATE_CHAT_BY_INVITATION:
-                inviteUserToChat((Chat) message.getObject(), message.getReceiver());
+                response = inviteUserToChat((Chat) message.getObject(), message.getReceiver());
+                break;
+            case NEW_MESSAGE_TO_PARTICIPANT:
+                response = sendMessageToUser((ChatMessage) message.getObject(), message.getReceiver());
                 break;
             default:
                 break;
@@ -714,7 +745,11 @@ public class Server extends Node implements Serializable {
 
     public void redirect(ServerConnection initialConnection, Message message) {
 
-        int tempId = Integer.remainderUnsigned(Math.abs(message.getSenderId().intValue()),128);
+        int tempId;
+        if(isToUseReceiver(message.getMessageType()))
+            tempId = Integer.remainderUnsigned(Math.abs(message.getReceiver().intValue()),128);
+        else
+            tempId = Integer.remainderUnsigned(Math.abs(message.getSenderId().intValue()),128);
         System.out.println("REDIRECTING ID: " + tempId);
         Node n = dht.nodeLookUp(tempId);
 
@@ -766,5 +801,6 @@ public class Server extends Node implements Serializable {
     public ConcurrentHashMap<BigInteger, User> getBackups() {
         return backups;
     }
+
 }
 
