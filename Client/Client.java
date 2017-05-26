@@ -159,11 +159,16 @@ public class Client extends User{
 
             
             String messageToSend = console.readLine();
+            while(!messageToSend.equals(null)){
+                System.out.println(1);
+                Date date = new Date();
+                ChatMessage chatMessage = new ChatMessage(chatId, date, getClientId(), messageToSend.getBytes(), TEXT_MESSAGE);
+                Message message = new Message(NEW_MESSAGE, getClientId(), chatMessage, getClientId());
+                connection.sendMessage(message);
+                messageToSend = null;
+                messageToSend = console.readLine();
+            }
 
-            Date date = new Date();
-            ChatMessage chatMessage = new ChatMessage(chatId, date, getClientId(), messageToSend.getBytes(), TEXT_MESSAGE);
-             Message message = new Message(NEW_MESSAGE, getClientId(), chatMessage, getClientId());
-            connection.sendMessage(message);
 
 
         }
@@ -209,7 +214,6 @@ public class Client extends User{
 
         System.out.println("1: " + chatName);
         Chat newChat = new Chat(email,chatName);
-
 
         newChat.addParticipant(participantEmail);
         newChat.addParticipant(email);
