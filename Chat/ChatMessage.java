@@ -28,7 +28,6 @@ public class ChatMessage implements Serializable {
         return chatId;
     }
 
-
     public byte[] getContent() {
         return content;
     }

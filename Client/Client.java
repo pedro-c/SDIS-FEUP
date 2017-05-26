@@ -5,6 +5,7 @@ import Chat.ChatMessage;
 import Messages.Message;
 import Protocols.ClientConnection;
 import Server.User;
+import Utilities.Constants;
 
 import java.io.Console;
 import java.io.IOException;
@@ -29,6 +30,7 @@ public class Client extends User{
     private String serverIp;
     private Task actualState;
     private ConcurrentHashMap<BigInteger, Chat> chats;
+    private int currentChat = 0;
 
     /**
      * Client
@@ -97,6 +99,7 @@ public class Client extends User{
      */
     public void signInMenu() {
         actualState = Task.HOLDING;
+        currentChat = Constants.NO_CHAT_OPPEN;
         String menu = "\n Menu " + "\n 1. Create a new Chat" + "\n 2. Open Chat" + "\n 3. Sign Out" + "\n";
         System.out.println(menu);
         int option = scannerIn.nextInt();
@@ -159,17 +162,18 @@ public class Client extends User{
 
         if(chats.get(chatId)!=null){
             Chat chat = chats.get(chatId);
-            String menu = "\n" + "\n" + "Chat:  " + chat.getChatName() + "\n" + "\n" + getLastMessages(chatId) + "\n" + "Send a message: " + "\n" + "\n" + "\n" + "\n";
+            String menu = "\n" + "\n" + "Chat:  " + chat.getChatName() + "\n";
             System.out.println(menu);
-
-            System.out.println(getLastMessages(chatId));
-
+            printChatMessages(chatId);
+            String send = "Send a message: " + "\n" + "\n" + "\n" + "\n";
+            System.out.println(send);
+            currentChat = chatId.intValue();
 
             String messageToSend = console.readLine();
             while(!messageToSend.equals("")){
-                System.out.println(1);
                 Date date = new Date();
                 ChatMessage chatMessage = new ChatMessage(chatId, date, getClientId(), messageToSend.getBytes(), TEXT_MESSAGE);
+                chats.get(chatId).addChatMessage(chatMessage);
                 Message message = new Message(NEW_MESSAGE, getClientId(), chatMessage, getClientId());
                 connection.sendMessage(message);
                 messageToSend = null;
@@ -182,7 +186,14 @@ public class Client extends User{
 
     }
 
-    public String getLastMessages(BigInteger chatId){
+    public void printChatMessages(BigInteger chatId){
+
+        for (ChatMessage message: chats.get(chatId).getChatMessages()) {
+          System.out.println(new String(message.getContent()));
+        }
+    }
+
+  /*  public String getLastMessages(BigInteger chatId){
 
         String messagesToprint = null;
         if(chats.get(chatId)!=null) {
@@ -195,12 +206,12 @@ public class Client extends User{
 
             for(ChatMessage message:  chat.getChatMessages()){
                  System.out.println("Loading messages...");
-                 messagesToprint.join(new String(message.getContent()), "\n \n");
+                 messagesToprint.join(new String(message.getContent()), " \n");
             }
         }
 
         return messagesToprint;
-    }
+    }*/
 
     /**
      * Creates a new chat
@@ -430,6 +441,10 @@ public class Client extends User{
 
     public void printClientChats(){
         chats.forEach((k, v) -> System.out.println("Chat : " + k));
+    }
+
+    public int getCurrentChat() {
+        return currentChat;
     }
 
 }

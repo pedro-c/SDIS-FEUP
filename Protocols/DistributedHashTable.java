@@ -96,10 +96,8 @@ public class DistributedHashTable implements Serializable {
             position = server.getNodeId() + distance;
             if (node.getNodeId() == server.getNodeId() && newNode.getNodeId() >= position) {
                 fingerTable.set(i, newNode);
-                System.out.println("1");
             } else if (newNode.getNodeId() >= position && newNode.getNodeId() < node.getNodeId()) {
                 fingerTable.set(i, newNode);
-                System.out.println("2");
             } else if (newNode.getNodeId() < server.getNodeId()) {
                 if (newNode.getNodeId() < node.getNodeId()) {
                     if (MAX_NUMBER_OF_NODES - position + newNode.getNodeId() >= 0 && MAX_NUMBER_OF_NODES - server.getNodeId() + node.getNodeId() > MAX_NUMBER_OF_NODES - server.getNodeId() + newNode.getNodeId()) {
