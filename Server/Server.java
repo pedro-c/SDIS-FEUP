@@ -467,10 +467,23 @@ public class Server extends Node implements Serializable {
     }
 
 
-   /* public Message getAllChats(BigInteger clientId){
+    public Message getAllChats(BigInteger clientId){
 
+        for(ConcurrentHashMap.Entry<BigInteger, Chat> entry : users.get(clientId).getChats().entrySet()) {
+            Chat chat = entry.getValue();
 
-    }*/
+            System.out.println("Tenho chat  " + chat.getChatName());
+
+            if(loggedInUsers.get(clientId) != null){
+                Message message =  new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, chat);
+                ServerConnection userConnection = loggedInUsers.get(clientId);
+                userConnection.sendMessage(message);
+            }
+        }
+
+        Message message =  new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE);
+        return message;
+    }
 
     /**
      * Saves client connection

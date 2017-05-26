@@ -111,7 +111,6 @@ public class Client extends User{
                 createNewChat();
                 break;
             case 2:
-                askForClientChats();
                 loadChats();
                 break;
             case 3:
