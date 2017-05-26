@@ -12,6 +12,7 @@ public class Message implements Serializable {
 
     private String messageType;
     private BigInteger senderId;
+    private BigInteger receiver;
     private String initialServerAddress;
     private int initialServerPort;
     private String body;
@@ -39,6 +40,19 @@ public class Message implements Serializable {
         this.initialServerPort = -1;
         this.initialServerAddress = null;
         this.senderId = senderId;
+
+        if (obj instanceof String)
+            this.body = String.join(" ", (String) obj);
+        else
+            this.object = obj;
+    }
+
+    public Message(String messageType, BigInteger senderId, Object obj, BigInteger clientId) {
+        this.messageType = messageType;
+        this.initialServerPort = -1;
+        this.initialServerAddress = null;
+        this.senderId = senderId;
+        this.receiver = clientId;
 
         if (obj instanceof String)
             this.body = String.join(" ", (String) obj);
@@ -151,4 +165,9 @@ public class Message implements Serializable {
     public void setSenderId(BigInteger senderId) {
         this.senderId = senderId;
     }
+
+    public BigInteger getReceiver() {
+        return receiver;
+    }
+
 }

@@ -59,4 +59,8 @@ public class Chat implements Serializable {
         participants.add(email);
     }
 
+    public ArrayList<ChatMessage> getChatMessages() {return chatMessages;}
+
+    public void addChatMessage(ChatMessage chatMessage){chatMessages.add(chatMessage);}
+
 }

@@ -2,11 +2,9 @@ package GUI;
 
 import javax.swing.*;
 import Client.Client;
-import javafx.util.converter.BigIntegerStringConverter;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.InputMethodListener;
 import java.math.BigInteger;
 
 public class SignInWindow extends InterfaceView {

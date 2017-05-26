@@ -78,6 +78,7 @@ public class ServerConnection extends Connection implements Runnable {
                 }
             case SIGNOUT:
             case CREATE_CHAT:
+            case CREATE_CHAT_BY_INVITATION:
                 server.isResponsible(this,message);
                 break;
             case GET_CHAT:
@@ -89,6 +90,9 @@ public class ServerConnection extends Connection implements Runnable {
                 } else {
                     server.redirect(this,message);
                 }
+                break;
+            case NEW_MESSAGE:
+                server.isResponsible(this, message);
                 break;
             case NEWNODE:
                 body = message.getBody().split(" ");
@@ -108,16 +112,18 @@ public class ServerConnection extends Connection implements Runnable {
                 server.getDht().printFingerTable();
                 break;
             case BACKUP_USER:
-                /*if (message.getObject() != null) {
-                    User user = (User) message.getObject();
-                    server.getBackups().put(createHash(user.getEmail()), user);
-                    sendMessage(new Message(SERVER_SUCCESS, BigInteger.valueOf(this.server.getNodeId()), USER_ADDED));
-                } else
-                    sendMessage(server.backupInfo(message));*/
                 sendMessage(server.backupInfo(message));
+                break;
+            case BACKUP_USER_CHAT:
+            case BACKUP_USER_PENDING_CHAT:
+                System.out.println("Backup chat!!");
                 break;
             case ADD_USER:
                 sendMessage(server.addUser((User) message.getObject()));
+                break;
+            case ADD_USER_CHAT:
+            case ADD_USER_PENDING_CHAT:
+                System.out.println("Add user chat!!");
                 break;
             case USER_UPDATED_CONNECTION:
                 server.saveConnection(this,message.getSenderId());

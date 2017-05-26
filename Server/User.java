@@ -2,7 +2,7 @@ package Server;
 
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.Hashtable;
+import java.util.concurrent.ConcurrentHashMap;
 
 import Chat.Chat;
 
@@ -12,14 +12,14 @@ public class User implements Serializable{
 
     protected String email;
     protected BigInteger password;
-    transient protected Hashtable<BigInteger, Chat> chats;
-    transient protected Hashtable<BigInteger, Chat> pendingRequests;
+    transient protected ConcurrentHashMap<BigInteger, Chat> chats;
+    transient protected ConcurrentHashMap<BigInteger, Chat> pendingRequests;
 
     public User(String email, BigInteger password) {
         this.email = email;
         this.password = password;
-        chats = new Hashtable<BigInteger, Chat>();
-        pendingRequests = new Hashtable<BigInteger, Chat>();
+        chats = new ConcurrentHashMap<BigInteger, Chat>();
+        pendingRequests = new ConcurrentHashMap<BigInteger, Chat>();
 
     }
 
@@ -51,4 +51,16 @@ public class User implements Serializable{
         return createHash(email);
     }
 
+    public ConcurrentHashMap<BigInteger, Chat> getChats() {
+        return chats;
+    }
+
+    public ConcurrentHashMap<BigInteger, Chat> getPendingRequests() {
+        return pendingRequests;
+    }
+
+    public void instantiateChats() {
+        chats = new ConcurrentHashMap<BigInteger, Chat>();
+        pendingRequests = new ConcurrentHashMap<BigInteger, Chat>();
+    }
 }

@@ -34,7 +34,6 @@ public class Constants {
     public static final String CLIENT_ERROR = "CLIENT_ERROR";
 
     //CREATECHAT SenderId Chat
-    //CLIENT_SUCCESS SenderId chatId
     public static final String CREATE_CHAT = "CREATECHAT";
 
     public static final String GET_CHAT = "GET_CHAT";
@@ -42,11 +41,21 @@ public class Constants {
     //NEW_CHAT_INVITATION CHAT_ID CHAT_NAME
     public static final String NEW_CHAT_INVITATION = "NEW_CHAT_INVITATION";
 
+
+    //SIGNOUT SenderId userId
+    public static final String NEW_MESSAGE = "NEW_MESSAGE";
+
     //SIGNOUT SenderId userId
     public static final String SIGNOUT = "SIGNOUT";
 
-    //BACKUP_USER SenderId email passwordHash
+    //BACKUP_USER SenderId User
     public static final String BACKUP_USER = "BACKUP_USER";
+
+    //BACKUP_USER_CHAT SenderId Chat
+    public static final String BACKUP_USER_CHAT = "BACKUP_USER_CHAT";
+
+    //BACKUP_USER_PENDING_CHAT SenderId Chat
+    public static final String BACKUP_USER_PENDING_CHAT = "BACKUP_USER_PENDING_CHAT";
 
     //SERVER_SUCCESS SenderId code
     public static final String SERVER_SUCCESS = "SERVER_SUCCESS";
@@ -57,8 +66,14 @@ public class Constants {
     //ADD_USER SenderId User
     public static final String ADD_USER = "ADD_USER";
 
-    //SERVER_DOWN DownServerId
-    public static final String SERVER_DOWN = "SERVER_DOWN";
+    //ADD_USER_CHAT SenderId Chat
+    public static final String ADD_USER_CHAT = "ADD_USER_CHAT";
+
+    //ADD_USER_PENDING_CHAT SenderId Chat
+    public static final String ADD_USER_PENDING_CHAT = "ADD_USER_PENDING_CHAT";
+
+    //CREATE_CHAT_BY_INVITATION SenderId Chat
+    public static final String CREATE_CHAT_BY_INVITATION = "CREATE_CHAT_BY_INVITATION";
 
     //Directories
     public static final String USER_DIRECTORY = "users";
@@ -85,6 +100,9 @@ public class Constants {
     public static final String SENT_INVITATIONS = "2";
     public static final String CREATED_CHAT_WITH_SUCCESS = "3";
     public static final String BACKUP_USER_DONE = "4";
+    public static final String SENT_MESSAGE = "4";
+    public static final String IMAGE_MESSAGE = "image";
+    public static final String TEXT_MESSAGE = "text";
 
 
 }
