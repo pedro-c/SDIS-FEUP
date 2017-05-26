@@ -164,6 +164,25 @@ public class Server extends Node implements Serializable {
         return n.getNodeId() == this.getNodeId();
     }
 
+    public Node findResponsible(BigInteger clientId){
+
+        int tempId = Math.abs(clientId.intValue());
+
+        Node n = dht.nodeLookUp(tempId);
+
+        if(n.getNodeId() == this.getNodeId()){
+            System.out.println("Redirect to successor");
+            n = dht.getFingerTable().get(1);
+            return n;
+        }else if(n.getNodeId() == dht.getFingerTable().get(1).getNodeId()){
+            System.out.println("Responsible for " + tempId + " is " + n.getNodeId());
+            return n;
+        }else{
+            System.out.println("Jumping message to " + n.getNodeId());
+            return n;
+        }
+    }
+
     /**
      * Function called when a new node message arrives to the server and forwards it to the correct server
      * @param info ip, port and id from the new server

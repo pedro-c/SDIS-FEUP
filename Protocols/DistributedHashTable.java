@@ -75,6 +75,7 @@ public class DistributedHashTable implements Serializable {
                 tempNode2 = fingerTable.get(i);
             }
         }
+
         System.out.println("Successor of " + key + " : " + successor.getNodeId());
         return successor;
     }
