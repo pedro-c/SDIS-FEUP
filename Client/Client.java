@@ -144,12 +144,12 @@ public class Client extends User{
         if(!option.equals("")) {
             System.out.println(Integer.parseInt(option));
             BigInteger requiredChatId = tempChats[Integer.parseInt(option) - 1];
-            Message message = new Message(GET_CHAT, getClientId(), requiredChatId.toString());
             actualState = Task.WAITING_FOR_CHAT;
             message.getBody();
             connection.sendMessage(message);
         }
         else signInMenu();
+            Message message = new Message(GET_CHAT, getClientId(), requiredChatId.toString());
     }
 
     /**
@@ -233,7 +233,7 @@ public class Client extends User{
         newChat.addParticipant(participantEmail);
         newChat.addParticipant(email);
         addChat(newChat);
-        Message message = new Message(CREATE_CHAT, getClientId(), newChat);
+        Message message = new Message(CREATE_CHAT, getClientId(), RESPONSIBLE, newChat);
         connection.sendMessage(message);
     }
 
@@ -243,7 +243,7 @@ public class Client extends User{
     public void signInUser() {
         actualState = WAITING_SIGNIN;
         String password = getCredentials();
-        Message message = new Message(SIGNIN, getClientId(), email, createHash(password).toString());
+        Message message = new Message(SIGNIN, getClientId(), NOT_RESPONSIBLE, email, createHash(password).toString());
         newConnectionAndSendMessage(message);
     }
 
@@ -253,7 +253,7 @@ public class Client extends User{
     public void signUpUser() {
         actualState = WAITING_SIGNUP;
         String password = getCredentials();
-        Message message = new Message(SIGNUP, getClientId(), email, createHash(password).toString());
+        Message message = new Message(SIGNUP, getClientId(), NOT_RESPONSIBLE, email, createHash(password).toString());
         newConnectionAndSendMessage(message);
     }
 
@@ -329,7 +329,7 @@ public class Client extends User{
                     System.out.println("\nError connecting");
                 }
                 threadPool.submit(connection);
-                Message connectToServer = new Message(USER_UPDATED_CONNECTION, this.getClientId());
+                Message connectToServer = new Message(USER_UPDATED_CONNECTION, this.getClientId(), RESPONSIBLE);
                 connection.sendMessage(connectToServer);
             }
         }
@@ -417,7 +417,7 @@ public class Client extends User{
 
         BigInteger clientId = getClientId();
 
-        Message message = new Message(SIGNOUT, clientId, clientId.toString());
+        Message message = new Message(SIGNOUT, clientId, RESPONSIBLE, clientId.toString());
 
         connection.sendMessage(message);
     }

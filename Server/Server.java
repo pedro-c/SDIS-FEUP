@@ -6,6 +6,7 @@ import Messages.Message;
 import Protocols.Connection;
 import Protocols.DistributedHashTable;
 import Protocols.ServerConnection;
+import com.sun.org.apache.regexp.internal.RE;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -122,17 +123,31 @@ public class Server extends Node implements Serializable {
      */
     public void joinNetwork(Node newNode, Node knownNode) {
 
-        Message message = new Message(NEWNODE, BigInteger.valueOf(this.getNodeId()), Integer.toString(newNode.getNodeId()), newNode.getNodeIp(), Integer.toString(newNode.getNodePort()));
+        Message message = new Message(NEWNODE, BigInteger.valueOf(this.getNodeId()), RESPONSIBLE ,Integer.toString(newNode.getNodeId()), newNode.getNodeIp(), Integer.toString(newNode.getNodePort()));
 
         ServerConnection handler = new ServerConnection(knownNode.getNodeIp(), knownNode.getNodePort(), this);
 
         try {
             handler.connect();
         } catch (IOException e) {
-            //Iniciar o protocolo
-            System.out.println("\nError connecting");
+            serverDown(knownNode);
         }
         handler.sendMessage(message);
+        handler.closeConnection();
+
+    }
+
+    /**
+     * Handles a node failure, and alerts succesding node of such event
+     * @param downServerId Id of the node that is down
+     */
+    public void handleNodeFailure(int downServerId){
+
+        if(this.getDht().getPredecessor().getNodeId() == downServerId){
+            //TODO: Moeve backup table to normal table
+        }else{
+            //redirect();
+        }
 
     }
 
@@ -191,17 +206,17 @@ public class Server extends Node implements Serializable {
 
         dht.setPredecessor(newNode);
 
-        Message message = new Message(SUCCESSOR_FT, new BigInteger(Integer.toString(this.getNodeId())), dht.getFingerTable());
+        Message message = new Message(SUCCESSOR_FT, new BigInteger(Integer.toString(this.getNodeId())), RESPONSIBLE, dht.getFingerTable());
 
         ServerConnection handler = new ServerConnection(newNode.getNodeIp(), newNode.getNodePort(), this);
 
         try {
             handler.connect();
         } catch (IOException e) {
-            //Iniciar o protocolo
-            System.out.println("\nError connecting");
+            serverDown(newNode);
         }
         handler.sendMessage(message);
+        handler.closeConnection();
 
     }
 
@@ -209,34 +224,32 @@ public class Server extends Node implements Serializable {
 
         Node successor = dht.fingerTableNode(1);
 
-        Message message = new Message(SUCCESSOR_FT, new BigInteger(Integer.toString(this.getNodeId())), dht.getFingerTable());
+        Message message = new Message(SUCCESSOR_FT, new BigInteger(Integer.toString(this.getNodeId())), RESPONSIBLE, dht.getFingerTable());
 
         ServerConnection handler = new ServerConnection(successor.getNodeIp(), successor.getNodePort(), this);
 
         try {
             handler.connect();
         } catch (IOException e) {
-            //Iniciar o protocolo
-            System.out.println("\nError connecting");
+            serverDown(successor);
         }
         handler.sendMessage(message);
-
+        handler.closeConnection();
     }
 
     public void notifyNodeOfItsPredecessor(Node node, Node newNode) {
 
-        Message message = new Message(PREDECESSOR, new BigInteger(Integer.toString(this.getNodeId())), newNode);
+        Message message = new Message(PREDECESSOR, new BigInteger(Integer.toString(this.getNodeId())), RESPONSIBLE, newNode);
 
         ServerConnection handler = new ServerConnection(node.getNodeIp(), node.getNodePort(), this);
 
         try {
             handler.connect();
         } catch (IOException e) {
-            //Iniciar o protocolo
-            System.out.println("\nError connecting");
+            serverDown(node);
         }
         handler.sendMessage(message);
-
+        handler.closeConnection();
     }
 
     /**
@@ -256,13 +269,13 @@ public class Server extends Node implements Serializable {
 
         if (users.containsKey(user_email)) {
             System.out.println("Email already exists. Try to sign in instead of sign up...");
-            message = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId), EMAIL_ALREADY_USED);
+            message = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId), RESPONSIBLE, EMAIL_ALREADY_USED);
         } else {
             User newUser = new User(email, new BigInteger(password));
             users.put(user_email, newUser);
-            message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
+            message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE);
             System.out.println("Account created with success!");
-            sendInfoToBackup(new Message(BACKUP_USER, BigInteger.valueOf(nodeId), newUser));
+            sendInfoToBackup(new Message(BACKUP_USER, BigInteger.valueOf(nodeId), RESPONSIBLE, newUser));
         }
 
         return message;
@@ -282,7 +295,7 @@ public class Server extends Node implements Serializable {
         newUser.instantiateChats();
 
         users.put(userId, newUser);
-        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), USER_ADDED);
+        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, USER_ADDED);
     }
 
     /**
@@ -300,13 +313,13 @@ public class Server extends Node implements Serializable {
 
         if (users.get(user_email) == null) {
             System.out.println("Try to create an account. Your email was not found on the database...");
-            response = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId), EMAIL_NOT_FOUND);
+            response = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId), RESPONSIBLE, EMAIL_NOT_FOUND);
         } else if (!users.get(user_email).getPassword().equals(new BigInteger(password))) {
             System.out.println("Impossible to sign in, wrong email or password...");
-            response = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId), WRONG_PASSWORD);
+            response = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId), RESPONSIBLE, WRONG_PASSWORD);
         } else {
             System.out.println("Login with success!");
-            response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId));
+            response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE);
         }
 
         return response;
@@ -344,7 +357,7 @@ public class Server extends Node implements Serializable {
                 users.get(participantHash).addChat(chat);
 
                 if(chat.getCreatorEmail().equals(participantEmail)){
-                    Message response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId),chat.getIdChat().toString(),CREATED_CHAT_WITH_SUCCESS);
+                    Message response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, chat.getIdChat().toString(),CREATED_CHAT_WITH_SUCCESS);
                     ServerConnection serverConnection = loggedInUsers.get(participantHash);
                     if(serverConnection != null)
                         serverConnection.sendMessage(response);
@@ -352,13 +365,13 @@ public class Server extends Node implements Serializable {
                 else inviteUserToChat(chat,participantHash);
             }
             else {
-                Message message = new Message(CREATE_CHAT_BY_INVITATION, senderId, chat, participantHash);
+                Message message = new Message(CREATE_CHAT_BY_INVITATION, senderId, NOT_RESPONSIBLE, chat, participantHash);
                 Runnable task = () -> { redirect(connection, message);};
                 threadPool.submit(task);
             }
         }
 
-        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), chat.getIdChat().toString(), SENT_INVITATIONS);
+        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, chat.getIdChat().toString(), SENT_INVITATIONS);
 
     }
 
@@ -379,7 +392,7 @@ public class Server extends Node implements Serializable {
             userConnection.sendMessage(response);
         }
 
-        return new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), SENT_INVITATIONS);
+        return new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_INVITATIONS);
     }
 
 
@@ -396,9 +409,8 @@ public class Server extends Node implements Serializable {
             if(users.get(participantHash)!=null){
 
                 if(chatMessage.getUserId().toString().equals(participantHash.toString())){
-
                     users.get(participantHash).getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
-                    Message response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId),chat.getIdChat().toString(), SENT_MESSAGE);
+                    Message response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, chat.getIdChat().toString(), SENT_MESSAGE);
                     ServerConnection serverConnection = loggedInUsers.get(participantHash);
                     if(serverConnection != null)
                         serverConnection.sendMessage(response);
@@ -406,13 +418,13 @@ public class Server extends Node implements Serializable {
                 else sendMessageToUser(chatMessage, participantHash);
             }
             else {
-                Message message = new Message(NEW_MESSAGE_TO_PARTICIPANT, senderId, chatMessage, participantHash);
+                Message message = new Message(NEW_MESSAGE_TO_PARTICIPANT, senderId, NOT_RESPONSIBLE, chatMessage, participantHash);
                 Runnable task = () -> { redirect(connection, message);};
                 threadPool.submit(task);
             }
         }
 
-        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), chat.getIdChat().toString(), SENT_INVITATIONS);
+        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, chat.getIdChat().toString(), SENT_INVITATIONS);
 
     }
 
@@ -425,12 +437,12 @@ public class Server extends Node implements Serializable {
         else {
             System.out.println("Sending message to logged in user");
             users.get(clientId).getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
-            Message response = new Message(NEW_MESSAGE, BigInteger.valueOf(nodeId),chatMessage,clientId);
+            Message response = new Message(NEW_MESSAGE, BigInteger.valueOf(nodeId), RESPONSIBLE, chatMessage,clientId);
             ServerConnection userConnection = loggedInUsers.get(clientId);
             userConnection.sendMessage(response);
         }
 
-        return new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), TEXT_MESSAGE);
+        return new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, TEXT_MESSAGE);
     }
 
 
@@ -450,7 +462,7 @@ public class Server extends Node implements Serializable {
         if(chat==null)
             System.out.println("Chat null");
 
-        Message message =  new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId),chat);
+        Message message =  new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, chat);
         return message;
     }
 
@@ -485,7 +497,7 @@ public class Server extends Node implements Serializable {
             System.out.println("\nSigned out user with id: " + userId);
         }
 
-        return (new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId)));
+        return (new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE));
     }
 
     /**
@@ -506,8 +518,7 @@ public class Server extends Node implements Serializable {
         try {
             handler.connect();
         } catch (IOException e) {
-            //Iniciar o protocolo
-            System.out.println("\nError connecting");
+            serverDown(successor);
         }
         handler.sendMessage(message);
         handler.receiveMessage();
@@ -529,7 +540,7 @@ public class Server extends Node implements Serializable {
                 user.instantiateChats();
                 backups.put(user.getUserId(), user);
                 System.out.println("Back up user from server " + message.getSenderId());
-                response = new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), BACKUP_USER_DONE);
+                response = new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, BACKUP_USER_DONE);
                 break;
             default:
                 break;
@@ -599,8 +610,7 @@ public class Server extends Node implements Serializable {
         try {
             handler.connect();
         } catch (IOException e) {
-            //Iniciar o protocolo
-            System.out.println("\nError connecting");
+            serverDown(node);
         }
 
         Runnable task = null;
@@ -633,13 +643,13 @@ public class Server extends Node implements Serializable {
         System.out.println("REQUEST ID: " + Integer.remainderUnsigned(message.getSenderId().intValue(), 128));
 
         if(isToUseReceiver(message.getMessageType())){
-            if (!isResponsibleFor(message.getReceiver())){
+            if (message.getResponsible().equals(NOT_RESPONSIBLE)){
                 redirect(connection,message);
                 return;
             }
         }
         else {
-            if (!isResponsibleFor(message.getSenderId())){
+            if (message.getResponsible().equals(NOT_RESPONSIBLE)){
                 redirect(connection,message);
                 return;
             }
@@ -689,22 +699,62 @@ public class Server extends Node implements Serializable {
     public void redirect(ServerConnection initialConnection, Message message) {
 
         int tempId;
+        boolean foundResponsible = false;
         if(isToUseReceiver(message.getMessageType()))
             tempId = Integer.remainderUnsigned(Math.abs(message.getReceiver().intValue()),128);
         else
             tempId = Integer.remainderUnsigned(Math.abs(message.getSenderId().intValue()),128);
         System.out.println("REDIRECTING ID: " + tempId);
+
         Node n = dht.nodeLookUp(tempId);
+
+        if(n.getNodeId() == this.getNodeId()){
+            System.out.println("Redirect to successor");
+            n = dht.getFingerTable().get(1);
+        }else if(n.getNodeId() == dht.getFingerTable().get(1).getNodeId()){
+            System.out.println("Responsible for " + tempId + " is " + n.getNodeId());
+            foundResponsible = true;
+        }else{
+            n = dht.nodeLookUp(n.getNodeId());
+            if(n.getNodeId() == this.getNodeId()){
+                System.out.println("Redirect to successor");
+                n = dht.getFingerTable().get(1);
+            }
+            System.out.println("Jumping message to " + n.getNodeId());
+        }
 
         ServerConnection redirect = new ServerConnection(n.getNodeIp(), n.getNodePort(), this);
         try {
             redirect.connect();
         } catch (IOException e) {
-            //Iniciar o protocolo
-            System.out.println("\nError connecting");
+            serverDown(n);
+            return;
         }
+        if(foundResponsible){
+            message.setResponsible(RESPONSIBLE);
+        }else{
+            message.setResponsible(NOT_RESPONSIBLE);
+        }
+
         redirect.sendMessage(message);
         initialConnection.sendMessage(redirect.receiveMessage());
+    }
+
+    public void serverDown(Node downNode){
+        System.out.println("\n Node " + downNode.getNodeId() + " is down.");
+
+        Node successor = dht.nodeLookUp(downNode.getNodeId()+1);
+
+        Message message = new Message(SERVER_DOWN, new BigInteger(Integer.toString(this.getNodeId())), NOT_RESPONSIBLE, Integer.toString(downNode.getNodeId()));
+        ServerConnection redirect = new ServerConnection(successor.getNodeIp(), successor.getNodePort(), this);
+
+        try {
+            redirect.connect();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        redirect.sendMessage(message);
     }
 
     /**

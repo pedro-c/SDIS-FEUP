@@ -16,6 +16,7 @@ public class Message implements Serializable {
     private String initialServerAddress;
     private int initialServerPort;
     private String body;
+    private String responsible;
 
     private Object object;
 
@@ -26,20 +27,22 @@ public class Message implements Serializable {
      * @param senderId
      * @param body
      */
-    public Message(String messageType, BigInteger senderId, String... body) {
+    public Message(String messageType, BigInteger senderId, String responsible, String... body) {
         this.messageType = messageType;
         this.senderId = senderId;
+        this.responsible = responsible;
         this.body = String.join(" ", body);
         this.initialServerPort = -1;
         this.initialServerAddress = null;
     }
 
 
-    public Message(String messageType, BigInteger senderId, Object obj) {
+    public Message(String messageType, BigInteger senderId, String responsible, Object obj) {
         this.messageType = messageType;
         this.initialServerPort = -1;
         this.initialServerAddress = null;
         this.senderId = senderId;
+        this.responsible = responsible;
 
         if (obj instanceof String)
             this.body = String.join(" ", (String) obj);
@@ -47,12 +50,13 @@ public class Message implements Serializable {
             this.object = obj;
     }
 
-    public Message(String messageType, BigInteger senderId, Object obj, BigInteger clientId) {
+    public Message(String messageType, BigInteger senderId, String responsible, Object obj, BigInteger clientId) {
         this.messageType = messageType;
         this.initialServerPort = -1;
         this.initialServerAddress = null;
         this.senderId = senderId;
         this.receiver = clientId;
+        this.responsible = responsible;
 
         if (obj instanceof String)
             this.body = String.join(" ", (String) obj);
@@ -170,4 +174,12 @@ public class Message implements Serializable {
         return receiver;
     }
 
+
+    public String getResponsible() {
+        return responsible;
+    }
+
+    public void setResponsible(String responsible) {
+        this.responsible = responsible;
+    }
 }

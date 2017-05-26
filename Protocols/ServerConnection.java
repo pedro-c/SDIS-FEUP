@@ -59,6 +59,7 @@ public class ServerConnection extends Connection implements Runnable {
      * Close the connection
      */
     public void closeConnection(){
+        System.out.println("Closing server connection");
         super.closeConnection();
     }
 
@@ -72,10 +73,8 @@ public class ServerConnection extends Connection implements Runnable {
         switch (message.getMessageType()) {
             case SIGNIN:
             case SIGNUP:
-                if(server.isResponsibleFor(message.getSenderId())){
-                    server.saveConnection(this, message.getSenderId());
-                    server.printLoggedInUsers();
-                }
+                server.isResponsible(this,message);
+                break;
             case SIGNOUT:
             case CREATE_CHAT:
             case CREATE_CHAT_BY_INVITATION:
@@ -85,7 +84,7 @@ public class ServerConnection extends Connection implements Runnable {
                 server.isResponsible(this,message);
                 break;
             case INVITE_USER:
-                if (server.isResponsibleFor(message.getSenderId())) {
+                if (message.getResponsible().equals(RESPONSIBLE)) {
                     System.out.println("I'm the RESPONSIBLE server");
                 } else {
                     server.redirect(this,message);
@@ -99,21 +98,25 @@ public class ServerConnection extends Connection implements Runnable {
                 body = message.getBody().split(" ");
                 server.newNode(body);
                 server.getDht().printFingerTable();
+                closeConnection();
                 break;
             case PREDECESSOR:
                 Node temp = (Node) message.getObject();
                 server.getDht().setPredecessor(temp);
                 server.sendFingerTableToSuccessor();
                 server.getDht().printFingerTable();
+                closeConnection();
                 break;
             case SUCCESSOR_FT:
                 ArrayList<Node> ft = (ArrayList<Node>) message.getObject();
                 server.getDht().updateFingerTableFromSuccessor(ft);
                 server.getDht().setPredecessor(ft.get(0));
                 server.getDht().printFingerTable();
+                closeConnection();
                 break;
             case BACKUP_USER:
                 sendMessage(server.backupInfo(message));
+                closeConnection();
                 break;
             case ADD_USER:
                 sendMessage(server.addUser((User) message.getObject()));
@@ -124,6 +127,12 @@ public class ServerConnection extends Connection implements Runnable {
             case SERVER_SUCCESS:
                 body = message.getBody().split(" ");
                 server.printReturnCodes(body[0],message.getSenderId());
+                break;
+            case SERVER_DOWN:
+                body = message.getBody().split(" ");
+                System.out.println("Server " + body[0] + " is down.");
+                //TODO:
+                //server.handleNodeFailure(Integer.parseInt(body[0]));
                 break;
             default:
                 break;

@@ -85,6 +85,7 @@ public class Connection {
             return (Message) inputStream.readObject();
         } catch (IOException e) {
             System.out.println("\nError receiving message or connection closed");
+            closeConnection();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             System.out.println("\nError receiving message...");
