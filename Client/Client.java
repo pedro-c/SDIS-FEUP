@@ -96,6 +96,7 @@ public class Client extends User{
      * Logged in user menu
      */
     public void signInMenu() {
+        actualState = Task.HOLDING;
         String menu = "\n Menu " + "\n 1. Create a new Chat" + "\n 2. Open Chat" + "\n 3. Sign Out" + "\n";
         System.out.println(menu);
         int option = scannerIn.nextInt();
