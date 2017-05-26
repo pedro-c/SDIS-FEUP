@@ -17,11 +17,14 @@ public class Chat implements Serializable {
     private Set<String> participants;
     private ArrayList<ChatMessage> chatMessages;
 
-    public Chat(String creatorEmail) {
+    public Chat(String creatorEmail, String name) {
         this.idChat = Utilities.generateChatId(creatorEmail);
         this.creatorEmail = creatorEmail;
         this.chatMessages = new ArrayList<ChatMessage>();
         this.participants = new HashSet<>();
+        if(name==null)
+            chatName = "chat default";
+        else chatName = name;
     }
 
     public String getCreatorEmail() {

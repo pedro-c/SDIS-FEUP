@@ -23,6 +23,14 @@ public class User implements Serializable{
 
     }
 
+    public boolean confirmSignIn(String newEmail, BigInteger newPassword){
+        if(email.equals(newEmail)){
+            if (password.equals(newPassword))
+                return true;
+        }
+        return false;
+    }
+
     public String getEmail() {
         return email;
     }

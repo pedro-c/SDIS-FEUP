@@ -101,7 +101,7 @@ public class Client extends User{
                 createNewChat();
                 break;
             case 2:
-                loadChat();
+                loadChats();
                 break;
             case 3:
                 signOut();
@@ -114,10 +114,16 @@ public class Client extends User{
     /**
      * Loads a chat
      */
-    public void loadChat() {
+    public void loadChats() {
+        int i=1;
         if (chats.size() == 0)
             System.out.println("You don't have any chat to show...");
-        else chats.forEach((k, v) -> System.out.println(v.getChatName() + "\n"));
+        else {
+            for (BigInteger chatId: chats.keySet()){
+                System.out.println(i + ". " + chats.get(chatId).getChatName() + "\n");
+                i++;
+            }
+        }
     }
 
     /**
@@ -125,7 +131,7 @@ public class Client extends User{
      */
     public void openChat(BigInteger chatId) {
 
-        System.out.println("Openning chat ... ");
+        System.out.println("Opening chat ... ");
 
         if(chats.get(chatId)!=null){
             Chat chat = chats.get(chatId);
@@ -152,17 +158,13 @@ public class Client extends User{
             participantEmail = console.readLine();
         }
 
-        Chat newChat = new Chat(email);
-        if (chatName != null)
-            newChat.setChatName(chatName);
+        System.out.println("1: " + chatName);
+        Chat newChat = new Chat(email,chatName);
+
 
         newChat.addParticipant(participantEmail);
         newChat.addParticipant(email);
-
-        chats.put(newChat.getIdChat(), newChat);
-
-        System.out.println(newChat.getIdChat());
-        actualState = WAITING_CREATE_CHAT;
+        addChat(newChat);
         Message message = new Message(CREATE_CHAT, getClientId(), newChat);
         connection.sendMessage(message);
     }
@@ -276,10 +278,13 @@ public class Client extends User{
                     printError(body[0]);
                     mainMenu();
                 }
-                else
+                else{
+                    actualState = SIGNED_IN;
                     signInMenu();
+                }
                 break;
-            case CREATING_CHAT:
+            case WAITING_CREATE_CHAT:
+                System.out.println("Creating chat " + body[0] + " ... Loading ...");
                 openChat(new BigInteger(body[0]));
                 break;
             case HOLDING:
@@ -342,4 +347,14 @@ public class Client extends User{
         HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
         WAITING_SIGNOUT
     }
+
+    public void addChat(Chat chat){
+        System.out.println("Added new Chat with chat name: " + chat.getChatName());
+        chats.put(chat.getIdChat(),chat);
+    }
+
+    public Chat getChat(Chat chat){
+       return chats.get(chat.getIdChat());
+    }
+
 }

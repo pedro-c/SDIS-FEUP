@@ -147,4 +147,8 @@ public class Message implements Serializable {
     public void setBody(String body) {
         this.body = body;
     }
+
+    public void setSenderId(BigInteger senderId) {
+        this.senderId = senderId;
+    }
 }

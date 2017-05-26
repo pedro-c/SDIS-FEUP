@@ -349,7 +349,7 @@ public class Server extends Node implements Serializable {
                 }
                 else if((loggedInUsers.get(createHash(participant_email))!=null)){
                     System.out.println("Sending invitation to logged in user");
-                    Message response = new Message(NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId),chat.getIdChat().toString());
+                    Message response = new Message(NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId),chat.getIdChat().toString(),chat.getChatName());
                     ServerConnection userConnection = loggedInUsers.get(createHash(participant_email));
                     System.out.println("IP: " + userConnection.getIp());
                     System.out.println("porta: " + userConnection.getPort());
