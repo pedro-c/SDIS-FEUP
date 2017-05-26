@@ -140,7 +140,10 @@ public class ServerConnection extends Connection implements Runnable {
             case SERVER_DOWN:
                 body = message.getBody().split(" ");
                 System.out.println("Server " + body[0] + " is down.");
-
+                //server.handleNodeFailure(Integer.parseInt(body[0]));
+                if(server.isResponsibleFor(new BigInteger(body[0]))){
+                    System.out.println("Responsible");
+                }
                 break;
             default:
                 break;

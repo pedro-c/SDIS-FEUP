@@ -129,11 +129,24 @@ public class Server extends Node implements Serializable {
         try {
             handler.connect();
         } catch (IOException e) {
-            //Iniciar o protocolo
-            System.out.println("\nError connecting");
+            serverDown(knownNode);
         }
         handler.sendMessage(message);
         handler.closeConnection();
+
+    }
+
+    /**
+     * Handles a node failure, and alerts succesding node of such event
+     * @param downServerId Id of the node that is down
+     */
+    public void handleNodeFailure(int downServerId){
+
+        if(this.getDht().getPredecessor().getNodeId() == downServerId){
+            //TODO: Moeve backup table to normal table
+        }else{
+            //redirect();
+        }
 
     }
 
@@ -199,8 +212,7 @@ public class Server extends Node implements Serializable {
         try {
             handler.connect();
         } catch (IOException e) {
-            //Iniciar o protocolo
-            System.out.println("\nError connecting");
+            serverDown(newNode);
         }
         handler.sendMessage(message);
         handler.closeConnection();
@@ -218,8 +230,7 @@ public class Server extends Node implements Serializable {
         try {
             handler.connect();
         } catch (IOException e) {
-            //Iniciar o protocolo
-            System.out.println("\nError connecting");
+            serverDown(successor);
         }
         handler.sendMessage(message);
         handler.closeConnection();
@@ -234,8 +245,7 @@ public class Server extends Node implements Serializable {
         try {
             handler.connect();
         } catch (IOException e) {
-            //Iniciar o protocolo
-            System.out.println("\nError connecting");
+            serverDown(node);
         }
         handler.sendMessage(message);
         handler.closeConnection();
@@ -504,8 +514,7 @@ public class Server extends Node implements Serializable {
         try {
             handler.connect();
         } catch (IOException e) {
-            //Iniciar o protocolo
-            System.out.println("\nError connecting");
+            serverDown(successor);
         }
         handler.sendMessage(message);
         handler.receiveMessage();
@@ -597,8 +606,7 @@ public class Server extends Node implements Serializable {
         try {
             handler.connect();
         } catch (IOException e) {
-            //Iniciar o protocolo
-            System.out.println("\nError connecting");
+            serverDown(node);
         }
 
         Runnable task = null;
@@ -695,15 +703,28 @@ public class Server extends Node implements Serializable {
         try {
             redirect.connect();
         } catch (IOException e) {
-            System.out.println("\n Node " + n.getNodeId() + " is down.");
-
-            Node successor = dht.nodeLookUp(tempId+1);
-
-            message = new Message(SERVER_DOWN, new BigInteger(Integer.toString(this.getNodeId())), Integer.toString(n.getNodeId()));
-            redirect = new ServerConnection(successor.getNodeIp(), successor.getNodePort(), this);
+            serverDown(n);
+            return;
         }
         redirect.sendMessage(message);
         initialConnection.sendMessage(redirect.receiveMessage());
+    }
+
+    public void serverDown(Node downNode){
+        System.out.println("\n Node " + downNode.getNodeId() + " is down.");
+
+        Node successor = dht.nodeLookUp(downNode.getNodeId()+1);
+
+        Message message = new Message(SERVER_DOWN, new BigInteger(Integer.toString(this.getNodeId())), Integer.toString(downNode.getNodeId()));
+        ServerConnection redirect = new ServerConnection(successor.getNodeIp(), successor.getNodePort(), this);
+
+        try {
+            redirect.connect();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        redirect.sendMessage(message);
     }
 
     /**
