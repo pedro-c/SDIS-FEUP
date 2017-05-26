@@ -131,6 +131,9 @@ public class Server extends Node implements Serializable {
             handler.connect();
         } catch (IOException e) {
             serverDown(knownNode);
+            joinNetwork(newNode, knownNode);
+            handler.closeConnection();
+            return;
         }
         handler.sendMessage(message);
         handler.closeConnection();
@@ -141,13 +144,32 @@ public class Server extends Node implements Serializable {
      * Handles a node failure, and alerts succesding node of such event
      * @param downServerId Id of the node that is down
      */
-    public void handleNodeFailure(int downServerId){
+    public void handleNodeFailure(int downServerId, Message message){
 
         dht.removeNode(downServerId);
 
-        dht.nodeLookUp(downServerId+1);
+        if(message.getResponsible().equals(RESPONSIBLE)){
+            beginNodeFailureProtocol();
+            return;
+        }
+
+        Node downServerSuccessor = dht.nodeLookUp(downServerId+1);
+        
+        if(downServerSuccessor.getNodeId() == dht.getFingerTable().get(1).getNodeId()){
+            message.setResponsible(RESPONSIBLE);
+        }
+
+        ServerConnection redirect = new ServerConnection(downServerSuccessor.getNodeIp(), downServerSuccessor.getNodePort(), this);
+        System.out.println(message.getMessageType());
+        redirect.sendMessage(message);
+        redirect.closeConnection();
 
     }
+
+    public void beginNodeFailureProtocol(){
+
+    }
+
 
     /**
      * Verifies if this server is responsible for a given client
@@ -212,6 +234,9 @@ public class Server extends Node implements Serializable {
             handler.connect();
         } catch (IOException e) {
             serverDown(newNode);
+            sendFingerTableToPredecessor(newNode);
+            handler.closeConnection();
+            return;
         }
         handler.sendMessage(message);
         handler.closeConnection();
@@ -230,6 +255,9 @@ public class Server extends Node implements Serializable {
             handler.connect();
         } catch (IOException e) {
             serverDown(successor);
+            sendFingerTableToSuccessor();
+            handler.closeConnection();
+            return;
         }
         handler.sendMessage(message);
         handler.closeConnection();
@@ -245,6 +273,9 @@ public class Server extends Node implements Serializable {
             handler.connect();
         } catch (IOException e) {
             serverDown(node);
+            notifyNodeOfItsPredecessor(node, newNode);
+            handler.closeConnection();
+            return;
         }
         handler.sendMessage(message);
         handler.closeConnection();
@@ -517,6 +548,9 @@ public class Server extends Node implements Serializable {
             handler.connect();
         } catch (IOException e) {
             serverDown(successor);
+            sendInfoToBackup(message);
+            handler.closeConnection();
+            return;
         }
         handler.sendMessage(message);
         handler.receiveMessage();
@@ -609,6 +643,9 @@ public class Server extends Node implements Serializable {
             handler.connect();
         } catch (IOException e) {
             serverDown(node);
+            sendInfoToPredecessor(node, container,type);
+            handler.closeConnection();
+            return;
         }
 
         Runnable task = null;
@@ -730,6 +767,8 @@ public class Server extends Node implements Serializable {
             redirect.connect();
         } catch (IOException e) {
             serverDown(n);
+            redirect.closeConnection();
+            redirect(initialConnection,message);
             return;
         }
         if(foundResponsible){
@@ -747,6 +786,7 @@ public class Server extends Node implements Serializable {
 
         Node successor = dht.nodeLookUp(downNode.getNodeId()+1);
 
+
         Message message = new Message(SERVER_DOWN, new BigInteger(Integer.toString(this.getNodeId())), NOT_RESPONSIBLE, Integer.toString(downNode.getNodeId()));
         ServerConnection redirect = new ServerConnection(successor.getNodeIp(), successor.getNodePort(), this);
 
@@ -757,6 +797,8 @@ public class Server extends Node implements Serializable {
         }
 
         redirect.sendMessage(message);
+        dht.removeNode(downNode.getNodeId());
+
     }
 
     /**
