@@ -103,6 +103,7 @@ public class Client extends User{
         currentChat = Constants.NO_CHAT_OPPEN;
         String menu = "\n Menu " + "\n 1. Create a new Chat" + "\n 2. Open Chat" + "\n 3. Sign Out" + "\n";
         System.out.println(menu);
+
         int option = scannerIn.nextInt();
         switch (option) {
             case 1:
@@ -110,6 +111,7 @@ public class Client extends User{
                 createNewChat();
                 break;
             case 2:
+                askForClientChats();
                 loadChats();
                 break;
             case 3:
@@ -371,10 +373,15 @@ public class Client extends User{
             case WAITING_FOR_CHAT:
                 System.out.println("Received Chat");
                 Chat chat = (Chat) message.getObject();
-                System.out.println("Chat " + chat.getIdChat());
                 chats.remove(chat);
                 chats.put(chat.getIdChat(),chat);
                 openChat(chat.getIdChat());
+                break;
+            case RECEIVING_CHAT:
+                System.out.println("Received Chat");
+                Chat chatO = (Chat) message.getObject();
+                chats.remove(chatO);
+                chats.put(chatO.getIdChat(),chatO);
                 break;
             case HOLDING:
                 signInMenu();
@@ -434,7 +441,7 @@ public class Client extends User{
 
     public enum Task {
         HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
-        WAITING_SIGNOUT, WAITING_FOR_CHAT, CHATTING
+        WAITING_SIGNOUT, WAITING_FOR_CHAT, RECEIVING_CHAT, CHATTING
     }
 
     public void addChat(Chat chat){
@@ -454,4 +461,15 @@ public class Client extends User{
         return currentChat;
     }
 
+    public void askForChat(BigInteger chatId){
+        Message message = new Message(GET_CHAT, getClientId(), RESPONSIBLE, chatId.toString());
+        actualState = Task.RECEIVING_CHAT;
+        connection.sendMessage(message);
+    }
+
+    public void askForClientChats(){
+        Message message = new Message(GET_ALL_CHATS, getClientId(), RESPONSIBLE);
+        actualState = Task.RECEIVING_CHAT;
+        connection.sendMessage(message);
+    }
 }

@@ -466,6 +466,12 @@ public class Server extends Node implements Serializable {
         return message;
     }
 
+
+   /* public Message getAllChats(BigInteger clientId){
+
+
+    }*/
+
     /**
      * Saves client connection
      */
@@ -677,6 +683,9 @@ public class Server extends Node implements Serializable {
                 break;
             case GET_CHAT:
                 response = getChat(body[0],message.getSenderId());
+                break;
+            case GET_ALL_CHATS:
+               // response = getAllChats(message.getSenderId());
                 break;
             case NEW_MESSAGE:
                 response = sendMessage(connection, (ChatMessage) message.getObject(), message.getReceiver(), message.getSenderId());
