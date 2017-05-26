@@ -151,11 +151,12 @@ public class Client extends User{
 
             System.out.println(getLastMessages(chatId));
 
+            
             String messageToSend = console.readLine();
 
             Date date = new Date();
             ChatMessage chatMessage = new ChatMessage(chatId, date, getClientId(), messageToSend.getBytes(), TEXT_MESSAGE);
-             Message message = new Message(NEW_MESSAGE, getClientId(), chatMessage);
+             Message message = new Message(NEW_MESSAGE, getClientId(), chatMessage, getClientId());
             connection.sendMessage(message);
 
 
@@ -341,11 +342,6 @@ public class Client extends User{
                 System.out.println("\nSigned out!!");
                 mainMenu();
                 break;
-            case CHATTING:
-                ChatMessage chatMessage = (ChatMessage) message.getObject();
-                chats.get(chatMessage.getChatId()).addChatMessage(chatMessage);
-                System.out.println(new String(chatMessage.getContent()));
-                break;
             default:
                 break;
         }
@@ -401,8 +397,12 @@ public class Client extends User{
         chats.put(chat.getIdChat(),chat);
     }
 
-    public Chat getChat(Chat chat){
-       return chats.get(chat.getIdChat());
+    public Chat getChat(BigInteger chatId){
+       return chats.get(chatId);
+    }
+
+    public void printClientChats(){
+        chats.forEach((k, v) -> System.out.println("Chat : " + k));
     }
 
 }
