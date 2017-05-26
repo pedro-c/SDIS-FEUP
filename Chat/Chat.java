@@ -16,6 +16,7 @@ public class Chat implements Serializable {
     private String creatorEmail;
     private Set<String> participants;
     private ArrayList<ChatMessage> chatMessages;
+    private ArrayList<ChatMessage> pendingChatMessages;
 
     public Chat(String creatorEmail, String name) {
         this.idChat = Utilities.generateChatId(creatorEmail);
@@ -62,5 +63,7 @@ public class Chat implements Serializable {
     public ArrayList<ChatMessage> getChatMessages() {return chatMessages;}
 
     public void addChatMessage(ChatMessage chatMessage){chatMessages.add(chatMessage);}
+
+    public void addPendingChatMessage(ChatMessage chatMessage){pendingChatMessages.add(chatMessage);}
 
 }

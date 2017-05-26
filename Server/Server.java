@@ -422,9 +422,8 @@ public class Server extends Node implements Serializable {
         System.out.println(3);
 
         if(loggedInUsers.get(clientId) == null){
-            //TODO: Add to pending messages
             System.out.println("Added to pending messages");
-            //users.get(clientId).addPendingChat(chat);
+            users.get(clientId).getChat(chatMessage.getChatId()).addPendingChatMessage(chatMessage);
         }
         else {
             System.out.println(4);
