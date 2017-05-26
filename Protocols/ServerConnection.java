@@ -131,8 +131,7 @@ public class ServerConnection extends Connection implements Runnable {
             case SERVER_DOWN:
                 body = message.getBody().split(" ");
                 System.out.println("Server " + body[0] + " is down.");
-                //TODO:
-                //server.handleNodeFailure(Integer.parseInt(body[0]));
+                server.handleNodeFailure(Integer.parseInt(body[0]));
                 break;
             default:
                 break;

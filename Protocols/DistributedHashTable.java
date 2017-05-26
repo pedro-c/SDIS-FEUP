@@ -6,6 +6,7 @@ import Server.Server;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import static Utilities.Constants.MAX_FINGER_TABLE_SIZE;
 import static Utilities.Constants.MAX_NUMBER_OF_NODES;
@@ -74,10 +75,34 @@ public class DistributedHashTable implements Serializable {
                 tempNode1 = fingerTable.get(i - 1);
                 tempNode2 = fingerTable.get(i);
             }
+            if(tempNode1.getNodeId() == tempNode2.getNodeId() && tempNode1.getNodeId() != server.getNodeId())
+                successor = tempNode1;
         }
 
         System.out.println("Successor of " + key + " : " + successor.getNodeId());
         return successor;
+    }
+
+    public void removeNode(int nodeId){
+        ArrayList<Node> oldFT = fingerTable;
+
+        fingerTable.clear();
+
+        initFingerTable();
+
+        System.out.println("Old finger table:");
+        printFingerTable();
+
+        for (int i = 1; i <= MAX_FINGER_TABLE_SIZE; i++) {
+            if (oldFT.get(i).getNodeId() != nodeId) {
+                updateFingerTable(oldFT.get(i));
+            }
+        }
+        updateFingerTable(predecessor);
+
+        System.out.println("New finger table:");
+        printFingerTable();
+
     }
 
     /**

@@ -143,11 +143,9 @@ public class Server extends Node implements Serializable {
      */
     public void handleNodeFailure(int downServerId){
 
-        if(this.getDht().getPredecessor().getNodeId() == downServerId){
-            //TODO: Moeve backup table to normal table
-        }else{
-            //redirect();
-        }
+        dht.removeNode(downServerId);
+
+        dht.nodeLookUp(downServerId+1);
 
     }
 
