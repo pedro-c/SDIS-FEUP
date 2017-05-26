@@ -78,6 +78,10 @@ public class ServerConnection extends Connection implements Runnable {
                 }
             case SIGNOUT:
             case CREATE_CHAT:
+            case CREATE_CHAT_BY_INVITATION:
+                server.isResponsible(this,message);
+                break;
+            case GET_CHAT:
                 server.isResponsible(this,message);
                 break;
             case INVITE_USER:
@@ -86,6 +90,9 @@ public class ServerConnection extends Connection implements Runnable {
                 } else {
                     server.redirect(this,message);
                 }
+                break;
+            case NEW_MESSAGE:
+                server.isResponsible(this, message);
                 break;
             case NEWNODE:
                 body = message.getBody().split(" ");

@@ -36,8 +36,14 @@ public class Constants {
     //CREATECHAT SenderId Chat
     public static final String CREATE_CHAT = "CREATECHAT";
 
+    public static final String GET_CHAT = "GET_CHAT";
+
     //NEW_CHAT_INVITATION CHAT_ID CHAT_NAME
     public static final String NEW_CHAT_INVITATION = "NEW_CHAT_INVITATION";
+
+
+    //SIGNOUT SenderId userId
+    public static final String NEW_MESSAGE = "NEW_MESSAGE";
 
     //SIGNOUT SenderId userId
     public static final String SIGNOUT = "SIGNOUT";
@@ -66,6 +72,9 @@ public class Constants {
     //ADD_USER_PENDING_CHAT SenderId Chat
     public static final String ADD_USER_PENDING_CHAT = "ADD_USER_PENDING_CHAT";
 
+    //CREATE_CHAT_BY_INVITATION SenderId Chat
+    public static final String CREATE_CHAT_BY_INVITATION = "CREATE_CHAT_BY_INVITATION";
+
     //Directories
     public static final String USER_DIRECTORY = "users";
     public static final String CHAT_DIRECTORY = "chats";
@@ -91,6 +100,9 @@ public class Constants {
     public static final String SENT_INVITATIONS = "2";
     public static final String CREATED_CHAT_WITH_SUCCESS = "3";
     public static final String BACKUP_USER_DONE = "4";
+    public static final String SENT_MESSAGE = "4";
+    public static final String IMAGE_MESSAGE = "image";
+    public static final String TEXT_MESSAGE = "text";
 
 
 }

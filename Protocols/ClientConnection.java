@@ -3,6 +3,9 @@ package Protocols;
 import Client.Client;
 import Messages.Message;
 import Chat.Chat;
+import Chat.ChatMessage;
+
+import java.math.BigInteger;
 
 import java.io.IOException;
 
@@ -68,8 +71,18 @@ public class ClientConnection extends Connection implements Runnable {
             case NEW_CHAT_INVITATION:
                 System.out.println("Received new chat invitation..");
                 String body[] = message.getBody().split(" ");
-                Chat chat = new Chat(body[0],body[1]);
+                Chat chat = new Chat(new BigInteger(body[0]),body[1]);
                 client.addChat(chat);
+                break;
+            case NEW_MESSAGE:
+                System.out.println("Received new message \n" );
+                ChatMessage chatMessage = (ChatMessage) message.getObject();
+                if(chatMessage!=null){
+                    client.printClientChats();
+                    System.out.println(chatMessage.getChatId());
+                    client.getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
+                    System.out.println(new String(chatMessage.getContent()));
+                }
                 break;
             default:
                 break;

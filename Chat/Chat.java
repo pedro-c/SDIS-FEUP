@@ -27,6 +27,14 @@ public class Chat implements Serializable {
         else chatName = name;
     }
 
+    public Chat(BigInteger idChat, String chatName) {
+        this.idChat = idChat;
+        this.chatName = chatName;
+        this.creatorEmail = creatorEmail;
+        this.chatMessages = new ArrayList<ChatMessage>();
+        this.participants = new HashSet<>();
+    }
+
     public String getCreatorEmail() {
         return creatorEmail;
     }
@@ -50,5 +58,9 @@ public class Chat implements Serializable {
     public void addParticipant(String email) {
         participants.add(email);
     }
+
+    public ArrayList<ChatMessage> getChatMessages() {return chatMessages;}
+
+    public void addChatMessage(ChatMessage chatMessage){chatMessages.add(chatMessage);}
 
 }
