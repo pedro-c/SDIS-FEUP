@@ -41,6 +41,8 @@ public class Constants {
 
     public static final String GET_CHAT = "GET_CHAT";
 
+    public static final String GET_ALL_CHATS = "GET_ALL_CHATS";
+
     //NEW_CHAT_INVITATION CHAT_ID CHAT_NAME
     public static final String NEW_CHAT_INVITATION = "NEW_CHAT_INVITATION";
 

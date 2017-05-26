@@ -103,6 +103,7 @@ public class Client extends User{
         currentChat = Constants.NO_CHAT_OPPEN;
         String menu = "\n Menu " + "\n 1. Create a new Chat" + "\n 2. Open Chat" + "\n 3. Sign Out" + "\n";
         System.out.println(menu);
+
         int option = scannerIn.nextInt();
         switch (option) {
             case 1:
@@ -110,6 +111,7 @@ public class Client extends User{
                 createNewChat();
                 break;
             case 2:
+                askForClientChats();
                 loadChats();
                 break;
             case 3:
@@ -465,4 +467,9 @@ public class Client extends User{
         connection.sendMessage(message);
     }
 
+    public void askForClientChats(){
+        Message message = new Message(GET_ALL_CHATS, getClientId(), RESPONSIBLE);
+        actualState = Task.RECEIVING_CHAT;
+        connection.sendMessage(message);
+    }
 }
