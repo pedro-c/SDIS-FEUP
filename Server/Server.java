@@ -372,6 +372,7 @@ public class Server extends Node implements Serializable {
             users.get(clientId).addPendingChat(chat);
         }
         else {
+            users.get(clientId).addChat(chat);
             System.out.println("Sending invitation to logged in user");
             Message response = new Message(NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId), chat.getIdChat().toString(), chat.getChatName(), clientId.toString());
             ServerConnection userConnection = loggedInUsers.get(clientId);
@@ -426,7 +427,6 @@ public class Server extends Node implements Serializable {
             //users.get(clientId).addPendingChat(chat);
         }
         else {
-
             System.out.println(4);
             System.out.println("Sending message to logged in user");
             Message response = new Message(NEW_MESSAGE, BigInteger.valueOf(nodeId),chatMessage,clientId);
@@ -645,7 +645,7 @@ public class Server extends Node implements Serializable {
 
         switch (messageType) {
             case CREATE_CHAT_BY_INVITATION:
-            case NEW_MESSAGE:
+            case NEW_MESSAGE_TO_PARTICIPANT:
                 return true;
         }
 
