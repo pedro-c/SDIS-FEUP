@@ -5,6 +5,7 @@ import Messages.Message;
 import Protocols.ClientConnection;
 import Server.User;
 import java.io.Console;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,7 +36,12 @@ public class Client extends User{
         this.actualState = HOLDING;
         scannerIn = new Scanner(System.in);
         connection = new ClientConnection(serverIp, serverPort, this);
-        connection.connect();
+        try {
+            connection.connect();
+        } catch (IOException e) {
+            //Iniciar o protocolo
+            System.out.println("\nError connecting");
+        }
         chats = new ConcurrentHashMap<BigInteger, Chat>();
         //Listen
         threadPool.submit(connection);
@@ -185,7 +191,12 @@ public class Client extends User{
 
     public void newConnectionAndSendMessage(Message message){
         connection = new ClientConnection(serverIp, serverPort, this);
-        connection.connect();
+        try {
+            connection.connect();
+        } catch (IOException e) {
+            //Iniciar o protocolo
+            System.out.println("\nError connecting");
+        }
 
         //Listen
         threadPool.submit(connection);
@@ -243,7 +254,12 @@ public class Client extends User{
                 connection.closeConnection();
 
                 connection = new ClientConnection(serverIp, serverPort, this);
-                connection.connect();
+                try {
+                    connection.connect();
+                } catch (IOException e) {
+                    //Iniciar o protocolo
+                    System.out.println("\nError connecting");
+                }
                 threadPool.submit(connection);
                 Message connectToServer = new Message(USER_UPDATED_CONNECTION, this.getClientId());
                 connection.sendMessage(connectToServer);

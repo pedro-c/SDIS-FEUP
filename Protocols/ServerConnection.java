@@ -1,10 +1,10 @@
 package Protocols;
 
-import Chat.Chat;
 import Messages.Message;
 import Server.*;
 
 import javax.net.ssl.SSLSocket;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 
@@ -30,7 +30,7 @@ public class ServerConnection extends Connection implements Runnable {
     /**
      * Connects to a certain ip and port
      */
-    public void connect(){
+    public void connect() throws IOException {
         super.connect();
     }
 
@@ -105,18 +105,23 @@ public class ServerConnection extends Connection implements Runnable {
                 server.getDht().printFingerTable();
                 break;
             case BACKUP_USER:
-                if (message.getObject() != null) {
+                /*if (message.getObject() != null) {
                     User user = (User) message.getObject();
                     server.getBackups().put(createHash(user.getEmail()), user);
                     sendMessage(new Message(SERVER_SUCCESS, BigInteger.valueOf(this.server.getNodeId()), USER_ADDED));
                 } else
-                    sendMessage(server.backupInfo(message));
+                    sendMessage(server.backupInfo(message));*/
+                sendMessage(server.backupInfo(message));
                 break;
             case ADD_USER:
                 sendMessage(server.addUser((User) message.getObject()));
                 break;
             case USER_UPDATED_CONNECTION:
                 server.saveConnection(this,message.getSenderId());
+                break;
+            case SERVER_SUCCESS:
+                body = message.getBody().split(" ");
+                server.printReturnCodes(body[0],message.getSenderId());
                 break;
             default:
                 break;

@@ -4,6 +4,8 @@ import Client.Client;
 import Messages.Message;
 import Chat.Chat;
 
+import java.io.IOException;
+
 import static Utilities.Constants.*;
 
 public class ClientConnection extends Connection implements Runnable {
@@ -19,7 +21,7 @@ public class ClientConnection extends Connection implements Runnable {
     /**
      * Connects to a certain ip and port
      */
-    public void connect(){
+    public void connect() throws IOException {
         super.connect();
     }
 
