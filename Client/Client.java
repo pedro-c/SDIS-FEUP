@@ -144,12 +144,13 @@ public class Client extends User{
         if(!option.equals("")) {
             System.out.println(Integer.parseInt(option));
             BigInteger requiredChatId = tempChats[Integer.parseInt(option) - 1];
-            Message message = new Message(GET_CHAT, getClientId(), requiredChatId.toString());
+            Message message = new Message(GET_CHAT, getClientId(), RESPONSIBLE, requiredChatId.toString());
             actualState = Task.WAITING_FOR_CHAT;
             message.getBody();
             connection.sendMessage(message);
         }
         else signInMenu();
+
     }
 
     /**
@@ -180,7 +181,7 @@ public class Client extends User{
                 Date date = new Date();
                 ChatMessage chatMessage = new ChatMessage(chatId, date, getClientId(), messageToSend.getBytes(), TEXT_MESSAGE);
                 chats.get(chatId).addChatMessage(chatMessage);
-                Message message = new Message(NEW_MESSAGE, getClientId(), chatMessage, getClientId());
+                Message message = new Message(NEW_MESSAGE, getClientId(), RESPONSIBLE, chatMessage, getClientId());
                 connection.sendMessage(message);
                 messageToSend = null;
                 messageToSend = console.readLine();
@@ -219,21 +220,30 @@ public class Client extends User{
 
         System.out.println("Name: ");
         String chatName = console.readLine();
-        System.out.println("Invite user to chat with you (email) : ");
-        String participantEmail = console.readLine();
 
-        while (participantEmail == null || participantEmail.equals(email)) {
-            System.out.println("You must invite one user to chat with you (email). ");
-            participantEmail = console.readLine();
+        System.out.println("How many users do you want to invite?");
+        int iterations = Integer.parseInt(console.readLine());
+        int count;
+        String[] names = new String[iterations];
+
+        //TODO: Existe email??
+        for(count = 0; count < iterations; count ++ ){
+            System.out.println("Invite user to chat with you (email) : ");
+            String participantEmail = console.readLine();
+            names[count]=participantEmail;
+            System.out.println("Invited participant " + count +" with email: "+ participantEmail);
         }
 
-        System.out.println("1: " + chatName);
         Chat newChat = new Chat(email,chatName);
-
-        newChat.addParticipant(participantEmail);
         newChat.addParticipant(email);
+
+
+        for(int i=0;i<names.length;i++){
+            newChat.addParticipant(names[i]);
+        }
+
         addChat(newChat);
-        Message message = new Message(CREATE_CHAT, getClientId(), newChat);
+        Message message = new Message(CREATE_CHAT, getClientId(), RESPONSIBLE, newChat);
         connection.sendMessage(message);
     }
 
@@ -243,7 +253,7 @@ public class Client extends User{
     public void signInUser() {
         actualState = WAITING_SIGNIN;
         String password = getCredentials();
-        Message message = new Message(SIGNIN, getClientId(), email, createHash(password).toString());
+        Message message = new Message(SIGNIN, getClientId(), NOT_RESPONSIBLE, email, createHash(password).toString());
         newConnectionAndSendMessage(message);
     }
 
@@ -253,7 +263,7 @@ public class Client extends User{
     public void signUpUser() {
         actualState = WAITING_SIGNUP;
         String password = getCredentials();
-        Message message = new Message(SIGNUP, getClientId(), email, createHash(password).toString());
+        Message message = new Message(SIGNUP, getClientId(), NOT_RESPONSIBLE, email, createHash(password).toString());
         newConnectionAndSendMessage(message);
     }
 
@@ -329,7 +339,7 @@ public class Client extends User{
                     System.out.println("\nError connecting");
                 }
                 threadPool.submit(connection);
-                Message connectToServer = new Message(USER_UPDATED_CONNECTION, this.getClientId());
+                Message connectToServer = new Message(USER_UPDATED_CONNECTION, this.getClientId(), RESPONSIBLE);
                 connection.sendMessage(connectToServer);
             }
         }
@@ -361,10 +371,15 @@ public class Client extends User{
             case WAITING_FOR_CHAT:
                 System.out.println("Received Chat");
                 Chat chat = (Chat) message.getObject();
-                System.out.println("Chat " + chat.getIdChat());
                 chats.remove(chat);
                 chats.put(chat.getIdChat(),chat);
                 openChat(chat.getIdChat());
+                break;
+            case RECEIVING_CHAT:
+                System.out.println("Received Chat");
+                Chat chatO = (Chat) message.getObject();
+                chats.remove(chatO);
+                chats.put(chatO.getIdChat(),chatO);
                 break;
             case HOLDING:
                 signInMenu();
@@ -417,14 +432,14 @@ public class Client extends User{
 
         BigInteger clientId = getClientId();
 
-        Message message = new Message(SIGNOUT, clientId, clientId.toString());
+        Message message = new Message(SIGNOUT, clientId, RESPONSIBLE, clientId.toString());
 
         connection.sendMessage(message);
     }
 
     public enum Task {
         HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
-        WAITING_SIGNOUT, WAITING_FOR_CHAT, CHATTING
+        WAITING_SIGNOUT, WAITING_FOR_CHAT, RECEIVING_CHAT, CHATTING
     }
 
     public void addChat(Chat chat){
@@ -442,6 +457,12 @@ public class Client extends User{
 
     public int getCurrentChat() {
         return currentChat;
+    }
+
+    public void askForChat(BigInteger chatId){
+        Message message = new Message(GET_CHAT, getClientId(), RESPONSIBLE, chatId.toString());
+        actualState = Task.RECEIVING_CHAT;
+        connection.sendMessage(message);
     }
 
 }
