@@ -174,17 +174,16 @@ public class Server extends Node implements Serializable {
         sendFingerTableToSuccessor();
         sendFingerTableToPredecessor(dht.getPredecessor());
 
-        //TODO VER O BACKUP DE NOVO
         if (successor.getNodeId() == this.getNodeId()) {
             sendFingerTableToPredecessor(newNode);
             notifyNodeOfItsPredecessor(newNode, previousPredecessor);
-            /*sendInfoToPredecessor(newNode, users, ADD_USER);
-            sendInfoToPredecessor(newNode, backups, BACKUP_USER);*/
+            sendInfoToPredecessor(newNode, users, ADD_USER);
+            //sendInfoToPredecessor(newNode, backups, BACKUP_USER);
         } else if (newNode.getNodeId() > dht.getPredecessor().getNodeId()) {
             sendFingerTableToPredecessor(newNode);
             notifyNodeOfItsPredecessor(newNode, dht.getPredecessor());
-            /*sendInfoToPredecessor(newNode, users, ADD_USER);
-            sendInfoToPredecessor(newNode, backups, BACKUP_USER);*/
+            sendInfoToPredecessor(newNode, users, ADD_USER);
+            //sendInfoToPredecessor(newNode, backups, BACKUP_USER);
         } else {
             joinNetwork(newNode, successor);
             System.out.println("Redirecting.");
@@ -284,6 +283,8 @@ public class Server extends Node implements Serializable {
 
         BigInteger userId = createHash(newUser.getEmail());
 
+        newUser.instantiateChats();
+
         users.put(userId, newUser);
         return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), USER_ADDED);
     }
@@ -345,7 +346,8 @@ public class Server extends Node implements Serializable {
                 if(chat.getCreatorEmail().equals(participant_email)){
                     Message response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId),chat.getIdChat().toString(),CREATED_CHAT_WITH_SUCCESS);
                     ServerConnection serverConnection = loggedInUsers.get(createHash(participant_email));
-                    serverConnection.sendMessage(response);
+                    if(serverConnection != null)
+                        serverConnection.sendMessage(response);
                 }
                 else if((loggedInUsers.get(createHash(participant_email))!=null)){
                     System.out.println("Sending invitation to logged in user");
@@ -440,6 +442,7 @@ public class Server extends Node implements Serializable {
         switch (message.getMessageType()) {
             case BACKUP_USER:
                 User user = (User) message.getObject();
+                user.instantiateChats();
                 backups.put(user.getUserId(), user);
                 System.out.println("Back up user from server " + message.getSenderId());
                 response = new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), BACKUP_USER_DONE);
@@ -516,13 +519,38 @@ public class Server extends Node implements Serializable {
             System.out.println("\nError connecting");
         }
 
+        Runnable task = null;
+
         for (User user : predecessorUsers) {
             //type = ADD_USER or BACKUP_USER
             message = new Message(type, BigInteger.valueOf(nodeId), user);
             handler.sendMessage(message);
             handler.receiveMessage();
+
+            if (type.equals(ADD_USER))
+                task = () -> sendUserChats(user, handler, ADD_USER_CHAT, ADD_USER_PENDING_CHAT);
+            else if(type.equals(BACKUP_USER))
+                task = () -> sendUserChats(user, handler, BACKUP_USER_CHAT, BACKUP_USER_PENDING_CHAT);
+
+            threadPool.submit(task);
         }
     }
+
+    public void sendUserChats(User user, Connection handler, String type1, String type2) {
+
+        user.getChats().forEach((key, chat) ->{
+            Message message = new Message(type1, BigInteger.valueOf(nodeId), chat);
+            handler.sendMessage(message);
+            handler.receiveMessage();
+        });
+
+        user.getPendingRequests().forEach((key, pendingChat) ->{
+            Message message = new Message(type2, BigInteger.valueOf(nodeId), pendingChat);
+            handler.sendMessage(message);
+            handler.receiveMessage();
+        });
+    }
+
 
     public void isResponsible(ServerConnection connection, Message message) {
         String[] body ={""};

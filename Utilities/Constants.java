@@ -34,7 +34,6 @@ public class Constants {
     public static final String CLIENT_ERROR = "CLIENT_ERROR";
 
     //CREATECHAT SenderId Chat
-    //CLIENT_SUCCESS SenderId chatId
     public static final String CREATE_CHAT = "CREATECHAT";
 
     //NEW_CHAT_INVITATION CHAT_ID CHAT_NAME
@@ -43,8 +42,14 @@ public class Constants {
     //SIGNOUT SenderId userId
     public static final String SIGNOUT = "SIGNOUT";
 
-    //BACKUP_USER SenderId email passwordHash
+    //BACKUP_USER SenderId User
     public static final String BACKUP_USER = "BACKUP_USER";
+
+    //BACKUP_USER_CHAT SenderId Chat
+    public static final String BACKUP_USER_CHAT = "BACKUP_USER_CHAT";
+
+    //BACKUP_USER_PENDING_CHAT SenderId Chat
+    public static final String BACKUP_USER_PENDING_CHAT = "BACKUP_USER_PENDING_CHAT";
 
     //SERVER_SUCCESS SenderId code
     public static final String SERVER_SUCCESS = "SERVER_SUCCESS";
@@ -54,6 +59,12 @@ public class Constants {
 
     //ADD_USER SenderId User
     public static final String ADD_USER = "ADD_USER";
+
+    //ADD_USER_CHAT SenderId Chat
+    public static final String ADD_USER_CHAT = "ADD_USER_CHAT";
+
+    //ADD_USER_PENDING_CHAT SenderId Chat
+    public static final String ADD_USER_PENDING_CHAT = "ADD_USER_PENDING_CHAT";
 
     //Directories
     public static final String USER_DIRECTORY = "users";
