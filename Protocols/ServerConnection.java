@@ -91,6 +91,7 @@ public class ServerConnection extends Connection implements Runnable {
                     server.redirect(this,message);
                 }
                 break;
+            case NEW_MESSAGE_TO_PARTICIPANT:
             case NEW_MESSAGE:
                 server.isResponsible(this, message);
                 break;

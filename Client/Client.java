@@ -88,7 +88,7 @@ public class Client extends User{
                 break;
             case 3:
             default:
-                System.exit(0);
+                mainMenu();
         }
     }
 
@@ -96,6 +96,7 @@ public class Client extends User{
      * Logged in user menu
      */
     public void signInMenu() {
+        actualState = Task.HOLDING;
         String menu = "\n Menu " + "\n 1. Create a new Chat" + "\n 2. Open Chat" + "\n 3. Sign Out" + "\n";
         System.out.println(menu);
         int option = scannerIn.nextInt();
@@ -111,7 +112,8 @@ public class Client extends User{
                 signOut();
                 break;
             default:
-                System.exit(0);
+                signInMenu();
+
         }
     }
 
@@ -122,9 +124,10 @@ public class Client extends User{
         int i=1;
         BigInteger[] tempChats;
         tempChats = new BigInteger[chats.size()];
+        Console console = System.console();
 
         if (chats.size() == 0)
-            System.out.println("You don't have any chat to show...");
+            System.out.println("You don't have any chat to show... Press enter to go back");
         else {
             for (BigInteger chatId: chats.keySet()){
                 tempChats[i-1] = chatId;
@@ -133,12 +136,16 @@ public class Client extends User{
             }
         }
 
-        int option = scannerIn.nextInt();
-        BigInteger requiredChatId = tempChats[option-1];
-        Message message = new Message(GET_CHAT, getClientId(), requiredChatId.toString());
-        actualState = Task.WAITING_FOR_CHAT;
-        message.getBody();
-        connection.sendMessage(message);
+        String option = console.readLine();
+        if(!option.equals("")) {
+            System.out.println(Integer.parseInt(option));
+            BigInteger requiredChatId = tempChats[Integer.parseInt(option) - 1];
+            Message message = new Message(GET_CHAT, getClientId(), requiredChatId.toString());
+            actualState = Task.WAITING_FOR_CHAT;
+            message.getBody();
+            connection.sendMessage(message);
+        }
+        else signInMenu();
     }
 
     /**
@@ -157,14 +164,19 @@ public class Client extends User{
 
             System.out.println(getLastMessages(chatId));
 
-            
+
             String messageToSend = console.readLine();
+            while(!messageToSend.equals("")){
+                System.out.println(1);
+                Date date = new Date();
+                ChatMessage chatMessage = new ChatMessage(chatId, date, getClientId(), messageToSend.getBytes(), TEXT_MESSAGE);
+                Message message = new Message(NEW_MESSAGE, getClientId(), chatMessage, getClientId());
+                connection.sendMessage(message);
+                messageToSend = null;
+                messageToSend = console.readLine();
+            }
 
-            Date date = new Date();
-            ChatMessage chatMessage = new ChatMessage(chatId, date, getClientId(), messageToSend.getBytes(), TEXT_MESSAGE);
-             Message message = new Message(NEW_MESSAGE, getClientId(), chatMessage, getClientId());
-            connection.sendMessage(message);
-
+            signInMenu();
 
         }
 
@@ -209,7 +221,6 @@ public class Client extends User{
 
         System.out.println("1: " + chatName);
         Chat newChat = new Chat(email,chatName);
-
 
         newChat.addParticipant(participantEmail);
         newChat.addParticipant(email);
