@@ -3,6 +3,9 @@ package GUI;
 import javax.swing.*;
 import java.awt.event.*;
 
+import Client.Client;
+import Controller.Controller;
+
 public class Menu extends InterfaceView {
     private JPanel contentPane;
     private JButton signUpButton;
@@ -11,10 +14,14 @@ public class Menu extends InterfaceView {
     //private Menu dialog;
 
 
-    public Menu() {
+    public Menu(Controller controller){
+        super(controller);
         setContentPane(contentPane);
+        this.pack();
+        this.setVisible(true);
+
         //setModal(true);
-       //getRootPane().setDefaultButton(buttonOK);
+        //getRootPane().setDefaultButton(buttonOK);
 
         exitButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -22,39 +29,20 @@ public class Menu extends InterfaceView {
             }
         });
 
-//        buttonOK.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent e) {
-//                onOK();
-//            }
-//        });
-//
-//        buttonCancel.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent e) {
-//                onCancel();
-//            }
-//        });
-//
-//        // call onCancel() when cross is clicked
-//        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-//        addWindowListener(new WindowAdapter() {
-//            public void windowClosing(WindowEvent e) {
-//                onCancel();
-//            }
-//        });
-//
-//        // call onCancel() on ESCAPE
-//        contentPane.registerKeyboardAction(new ActionListener() {
-//            public void actionPerformed(ActionEvent e) {
-//                onCancel();
-//            }
-//        }, KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-
         signInButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                dispose();
+                new SignInView(controller).setVisible(true);
 
-                //dialog.setVisible(false);
-                new SignInWindow().setVisible(true);
+            }
+        });
+        signUpButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dispose();
+                new SignUpView(controller).setVisible(true);
+
             }
         });
     }
@@ -69,11 +57,4 @@ public class Menu extends InterfaceView {
         dispose();
         System.exit(0);
     }
-
-    /*public static void main(String[] args) {
-        Menu dialog = new Menu();
-        dialog.pack();
-        dialog.setVisible(true);
-
-    }*/
 }
