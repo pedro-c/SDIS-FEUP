@@ -7,6 +7,9 @@ public class Constants {
     public static final byte LF = 0xA;
     public static final String CRLF = "\r\n";
 
+
+    public static final int NO_CHAT_OPPEN = 0;
+
     //Messages
     public static final String FINGERTABLE = "FINGERTABLE";
     public static final String NEWNODE = "NEWNODE"; //Format: [NEWNODE] [SenderID] [NodeID] [NodeIp] [NodePort]

@@ -22,6 +22,7 @@ public class Chat implements Serializable {
         this.idChat = Utilities.generateChatId(creatorEmail);
         this.creatorEmail = creatorEmail;
         this.chatMessages = new ArrayList<ChatMessage>();
+        this.pendingChatMessages = new ArrayList<ChatMessage>();
         this.participants = new HashSet<>();
         if(name==null)
             chatName = "chat default";
@@ -33,6 +34,7 @@ public class Chat implements Serializable {
         this.chatName = chatName;
         this.creatorEmail = creatorEmail;
         this.chatMessages = new ArrayList<ChatMessage>();
+        this.pendingChatMessages = new ArrayList<ChatMessage>();
         this.participants = new HashSet<>();
     }
 
