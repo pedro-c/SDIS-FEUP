@@ -74,6 +74,8 @@ public class ClientConnection extends Connection implements Runnable {
                 String body[] = message.getBody().split(" ");
                 Chat chat = new Chat(new BigInteger(body[0]),body[1]);
                 client.addChat(chat);
+                client.askForChat(new BigInteger(body[0]));
+                System.out.println("Asked server for chat...");
                 break;
             case NEW_MESSAGE:
                 System.out.println("Received a new message\n" );

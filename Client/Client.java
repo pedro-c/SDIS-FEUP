@@ -371,10 +371,15 @@ public class Client extends User{
             case WAITING_FOR_CHAT:
                 System.out.println("Received Chat");
                 Chat chat = (Chat) message.getObject();
-                System.out.println("Chat " + chat.getIdChat());
                 chats.remove(chat);
                 chats.put(chat.getIdChat(),chat);
                 openChat(chat.getIdChat());
+                break;
+            case RECEIVING_CHAT:
+                System.out.println("Received Chat");
+                Chat chatO = (Chat) message.getObject();
+                chats.remove(chatO);
+                chats.put(chatO.getIdChat(),chatO);
                 break;
             case HOLDING:
                 signInMenu();
@@ -434,7 +439,7 @@ public class Client extends User{
 
     public enum Task {
         HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
-        WAITING_SIGNOUT, WAITING_FOR_CHAT, CHATTING
+        WAITING_SIGNOUT, WAITING_FOR_CHAT, RECEIVING_CHAT, CHATTING
     }
 
     public void addChat(Chat chat){
@@ -452,6 +457,12 @@ public class Client extends User{
 
     public int getCurrentChat() {
         return currentChat;
+    }
+
+    public void askForChat(BigInteger chatId){
+        Message message = new Message(GET_CHAT, getClientId(), RESPONSIBLE, chatId.toString());
+        actualState = Task.RECEIVING_CHAT;
+        connection.sendMessage(message);
     }
 
 }
