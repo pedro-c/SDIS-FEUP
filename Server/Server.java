@@ -700,10 +700,14 @@ public class Server extends Node implements Serializable {
 
         int tempId;
         boolean foundResponsible = false;
-        if(isToUseReceiver(message.getMessageType()))
-            tempId = Integer.remainderUnsigned(Math.abs(message.getReceiver().intValue()),128);
-        else
-            tempId = Integer.remainderUnsigned(Math.abs(message.getSenderId().intValue()),128);
+        if(isToUseReceiver(message.getMessageType())){
+            tempId = Integer.remainderUnsigned(message.getReceiver().intValue(),128);
+            System.out.println("RECEIVER");
+        }else{
+            tempId = Integer.remainderUnsigned(message.getSenderId().intValue(),128);
+            System.out.println("SENDER");
+        }
+
         System.out.println("REDIRECTING ID: " + tempId);
 
         Node n = dht.nodeLookUp(tempId);
