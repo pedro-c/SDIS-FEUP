@@ -367,7 +367,6 @@ public class Server extends Node implements Serializable {
         printLoggedInUsers();
 
         if(loggedInUsers.get(clientId) == null){
-            //If client is not logged in, server adds chat to pending requests
             System.out.println("Added to pending chats");
             if(users.get(clientId) != null)
                 users.get(clientId).addPendingChat(chat);
@@ -377,8 +376,6 @@ public class Server extends Node implements Serializable {
             System.out.println("Sending invitation to logged in user");
             Message response = new Message(NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId), chat.getIdChat().toString(), chat.getChatName(), clientId.toString());
             ServerConnection userConnection = loggedInUsers.get(clientId);
-            System.out.println("IP: " + userConnection.getIp());
-            System.out.println("porta: " + userConnection.getPort());
             userConnection.sendMessage(response);
         }
 
@@ -399,6 +396,8 @@ public class Server extends Node implements Serializable {
             if(users.get(participantHash)!=null){
 
                 if(chatMessage.getUserId().toString().equals(participantHash.toString())){
+
+                    users.get(participantHash).getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
                     Message response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId),chat.getIdChat().toString(), SENT_MESSAGE);
                     ServerConnection serverConnection = loggedInUsers.get(participantHash);
                     if(serverConnection != null)
@@ -407,7 +406,6 @@ public class Server extends Node implements Serializable {
                 else sendMessageToUser(chatMessage, participantHash);
             }
             else {
-                System.out.println(2);
                 Message message = new Message(NEW_MESSAGE_TO_PARTICIPANT, senderId, chatMessage, participantHash);
                 Runnable task = () -> { redirect(connection, message);};
                 threadPool.submit(task);
@@ -420,15 +418,13 @@ public class Server extends Node implements Serializable {
 
     public Message sendMessageToUser(ChatMessage chatMessage, BigInteger clientId){
 
-        System.out.println(3);
-
         if(loggedInUsers.get(clientId) == null){
             System.out.println("Added to pending messages");
             users.get(clientId).getChat(chatMessage.getChatId()).addPendingChatMessage(chatMessage);
         }
         else {
-            System.out.println(4);
             System.out.println("Sending message to logged in user");
+            users.get(clientId).getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
             Message response = new Message(NEW_MESSAGE, BigInteger.valueOf(nodeId),chatMessage,clientId);
             ServerConnection userConnection = loggedInUsers.get(clientId);
             userConnection.sendMessage(response);
