@@ -100,6 +100,7 @@ public class Constants {
     public static final String CREATED_CHAT_WITH_SUCCESS = "3";
     public static final String BACKUP_USER_DONE = "4";
     public static final String SENT_MESSAGE = "5";
+    public static final String SENT_CHATS = "6";
     public static final String IMAGE_MESSAGE = "image";
     public static final String TEXT_MESSAGE = "text";
 

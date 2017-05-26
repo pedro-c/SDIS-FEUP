@@ -101,6 +101,7 @@ public class Client extends User{
     public void signInMenu() {
         actualState = Task.HOLDING;
         currentChat = Constants.NO_CHAT_OPPEN;
+        askForClientChats();
         String menu = "\n Menu " + "\n 1. Create a new Chat" + "\n 2. Open Chat" + "\n 3. Sign Out" + "\n";
         System.out.println(menu);
 
@@ -372,15 +373,20 @@ public class Client extends User{
             case WAITING_FOR_CHAT:
                 System.out.println("Received Chat");
                 Chat chat = (Chat) message.getObject();
-                chats.remove(chat);
+                chats.remove(chat.getIdChat());
                 chats.put(chat.getIdChat(),chat);
                 openChat(chat.getIdChat());
                 break;
             case RECEIVING_CHAT:
                 System.out.println("Received Chat");
                 Chat chatO = (Chat) message.getObject();
-                chats.remove(chatO);
+                chats.remove(chatO.getIdChat());
                 chats.put(chatO.getIdChat(),chatO);
+                break;
+            case GET_CHATS:
+                System.out.println("Get chats.....");
+                Chat chatTemp = (Chat) message.getObject();
+                chats.put(chatTemp.getIdChat(),chatTemp);
                 break;
             case HOLDING:
                 signInMenu();
@@ -440,7 +446,7 @@ public class Client extends User{
 
     public enum Task {
         HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
-        WAITING_SIGNOUT, WAITING_FOR_CHAT, RECEIVING_CHAT, CHATTING
+        WAITING_SIGNOUT, WAITING_FOR_CHAT, RECEIVING_CHAT, CHATTING, GET_CHATS
     }
 
     public void addChat(Chat chat){
@@ -467,8 +473,10 @@ public class Client extends User{
     }
 
     public void askForClientChats(){
+
+        System.out.println("ASK FOR ALL CHATS");
         Message message = new Message(GET_ALL_CHATS, getClientId(), RESPONSIBLE);
-        actualState = Task.RECEIVING_CHAT;
+        actualState = Task.GET_CHATS;
         connection.sendMessage(message);
     }
 }

@@ -481,7 +481,7 @@ public class Server extends Node implements Serializable {
             }
         }
 
-        Message message =  new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE);
+        Message message =  new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_CHATS);
         return message;
     }
 
@@ -698,7 +698,7 @@ public class Server extends Node implements Serializable {
                 response = getChat(body[0],message.getSenderId());
                 break;
             case GET_ALL_CHATS:
-               // response = getAllChats(message.getSenderId());
+               response = getAllChats(message.getSenderId());
                 break;
             case NEW_MESSAGE:
                 response = sendMessage(connection, (ChatMessage) message.getObject(), message.getReceiver(), message.getSenderId());
