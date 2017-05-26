@@ -80,6 +80,7 @@ public class Constants {
     //SERVER_DOWN ServerDownId
     public static final String SERVER_DOWN = "SERVER_DOWN";
 
+
     //Directories
     public static final String USER_DIRECTORY = "users";
     public static final String CHAT_DIRECTORY = "chats";
@@ -108,5 +109,13 @@ public class Constants {
     public static final String SENT_MESSAGE = "5";
     public static final String IMAGE_MESSAGE = "image";
     public static final String TEXT_MESSAGE = "text";
+
+    //Message extra info
+    //SERVER_DOWN ServerDownId
+    public static final String RESPONSIBLE = "RESPONSIBLE";
+
+    //SERVER_DOWN ServerDownId
+    public static final String NOT_RESPONSIBLE = "NOT_RESPONSIBLE";
+
 
 }

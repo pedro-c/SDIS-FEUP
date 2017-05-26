@@ -73,10 +73,7 @@ public class ServerConnection extends Connection implements Runnable {
         switch (message.getMessageType()) {
             case SIGNIN:
             case SIGNUP:
-                if(server.isResponsibleFor(message.getSenderId())){
-                    server.saveConnection(this, message.getSenderId());
-                    server.printLoggedInUsers();
-                }
+                server.isResponsible(this,message);
             case SIGNOUT:
             case CREATE_CHAT:
             case CREATE_CHAT_BY_INVITATION:
@@ -86,7 +83,7 @@ public class ServerConnection extends Connection implements Runnable {
                 server.isResponsible(this,message);
                 break;
             case INVITE_USER:
-                if (server.isResponsibleFor(message.getSenderId())) {
+                if (message.getResponsible().equals(RESPONSIBLE)) {
                     System.out.println("I'm the RESPONSIBLE server");
                 } else {
                     server.redirect(this,message);
@@ -140,10 +137,8 @@ public class ServerConnection extends Connection implements Runnable {
             case SERVER_DOWN:
                 body = message.getBody().split(" ");
                 System.out.println("Server " + body[0] + " is down.");
+                //TODO:
                 //server.handleNodeFailure(Integer.parseInt(body[0]));
-                if(server.isResponsibleFor(new BigInteger(body[0]))){
-                    System.out.println("Responsible");
-                }
                 break;
             default:
                 break;
