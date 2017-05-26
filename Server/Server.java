@@ -362,7 +362,7 @@ public class Server extends Node implements Serializable {
 
     }
 
-    public void inviteUserToChat(Chat chat, BigInteger clientId) {
+    public Message inviteUserToChat(Chat chat, BigInteger clientId) {
 
         printLoggedInUsers();
 
@@ -379,6 +379,8 @@ public class Server extends Node implements Serializable {
             System.out.println("porta: " + userConnection.getPort());
             userConnection.sendMessage(response);
         }
+
+        return new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), SENT_INVITATIONS);
     }
 
 
@@ -414,7 +416,7 @@ public class Server extends Node implements Serializable {
 
     }
 
-    public void sendMessageToUser(ChatMessage chatMessage, BigInteger clientId){
+    public Message sendMessageToUser(ChatMessage chatMessage, BigInteger clientId){
 
         System.out.println(3);
 
@@ -431,6 +433,8 @@ public class Server extends Node implements Serializable {
             ServerConnection userConnection = loggedInUsers.get(clientId);
             userConnection.sendMessage(response);
         }
+
+        return new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), TEXT_MESSAGE);
     }
 
 
@@ -693,13 +697,13 @@ public class Server extends Node implements Serializable {
                 response = getChat(body[0],message.getSenderId());
                 break;
             case NEW_MESSAGE:
-                sendMessage(connection, (ChatMessage) message.getObject(), message.getReceiver(), message.getSenderId());
+                response = sendMessage(connection, (ChatMessage) message.getObject(), message.getReceiver(), message.getSenderId());
                 break;
             case CREATE_CHAT_BY_INVITATION:
-                inviteUserToChat((Chat) message.getObject(), message.getReceiver());
+                response = inviteUserToChat((Chat) message.getObject(), message.getReceiver());
                 break;
             case NEW_MESSAGE_TO_PARTICIPANT:
-                sendMessageToUser((ChatMessage) message.getObject(), message.getReceiver());
+                response = sendMessageToUser((ChatMessage) message.getObject(), message.getReceiver());
                 break;
             default:
                 break;
