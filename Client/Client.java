@@ -144,12 +144,13 @@ public class Client extends User{
         if(!option.equals("")) {
             System.out.println(Integer.parseInt(option));
             BigInteger requiredChatId = tempChats[Integer.parseInt(option) - 1];
+            Message message = new Message(GET_CHAT, getClientId(), RESPONSIBLE, requiredChatId.toString());
             actualState = Task.WAITING_FOR_CHAT;
             message.getBody();
             connection.sendMessage(message);
         }
         else signInMenu();
-            Message message = new Message(GET_CHAT, getClientId(), requiredChatId.toString());
+
     }
 
     /**
@@ -180,7 +181,7 @@ public class Client extends User{
                 Date date = new Date();
                 ChatMessage chatMessage = new ChatMessage(chatId, date, getClientId(), messageToSend.getBytes(), TEXT_MESSAGE);
                 chats.get(chatId).addChatMessage(chatMessage);
-                Message message = new Message(NEW_MESSAGE, getClientId(), chatMessage, getClientId());
+                Message message = new Message(NEW_MESSAGE, getClientId(), RESPONSIBLE, chatMessage, getClientId());
                 connection.sendMessage(message);
                 messageToSend = null;
                 messageToSend = console.readLine();
