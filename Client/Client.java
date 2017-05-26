@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -198,40 +199,16 @@ public class Client extends User{
     }
 
     public void printChatPendingMessages(BigInteger chatId){
-        for (ChatMessage message: chats.get(chatId).getChatPendingMessages()) {
-            if(message.getChatId().compareTo(chatId)==0){
+        Iterator<ChatMessage> iter = chats.get(chatId).getChatPendingMessages().iterator();
+        while(iter.hasNext()) {
+            ChatMessage message = iter.next();
+            if(message.getChatId().compareTo(chatId)==0) {
                 getChat(chatId).addChatMessage(message);
                 System.out.println(new String(message.getContent()));
+                iter.remove();
             }
         }
-
-      /*  for (ChatMessage message: chats.get(chatId).getChatPendingMessages()) {
-            if(message.getChatId().compareTo(chatId)==0){
-                chats.get(chatId).getChatPendingMessages().remove(message);
-            }
-        }
-        */
     }
-
-  /*  public String getLastMessages(BigInteger chatId){
-
-        String messagesToprint = null;
-        if(chats.get(chatId)!=null) {
-
-            Chat chat = chats.get(chatId);
-            if(chat.getChatMessages().size()==0){
-                messagesToprint = "No messages to see ... ";
-                return messagesToprint;
-            }
-
-            for(ChatMessage message:  chat.getChatMessages()){
-                 System.out.println("Loading messages...");
-                 messagesToprint.join(new String(message.getContent()), " \n");
-            }
-        }
-
-        return messagesToprint;
-    }*/
 
     /**
      * Creates a new chat
