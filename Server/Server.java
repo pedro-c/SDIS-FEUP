@@ -132,7 +132,6 @@ public class Server extends Node implements Serializable {
         } catch (IOException e) {
             serverDown(knownNode);
             joinNetwork(newNode, knownNode);
-            handler.closeConnection();
             return;
         }
         handler.sendMessage(message);
@@ -160,7 +159,11 @@ public class Server extends Node implements Serializable {
         }
 
         ServerConnection redirect = new ServerConnection(downServerSuccessor.getNodeIp(), downServerSuccessor.getNodePort(), this);
-        System.out.println(message.getMessageType());
+        try {
+            redirect.connect();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         redirect.sendMessage(message);
         redirect.closeConnection();
 
@@ -235,7 +238,6 @@ public class Server extends Node implements Serializable {
         } catch (IOException e) {
             serverDown(newNode);
             sendFingerTableToPredecessor(newNode);
-            handler.closeConnection();
             return;
         }
         handler.sendMessage(message);
@@ -256,7 +258,6 @@ public class Server extends Node implements Serializable {
         } catch (IOException e) {
             serverDown(successor);
             sendFingerTableToSuccessor();
-            handler.closeConnection();
             return;
         }
         handler.sendMessage(message);
@@ -274,7 +275,6 @@ public class Server extends Node implements Serializable {
         } catch (IOException e) {
             serverDown(node);
             notifyNodeOfItsPredecessor(node, newNode);
-            handler.closeConnection();
             return;
         }
         handler.sendMessage(message);
@@ -549,7 +549,6 @@ public class Server extends Node implements Serializable {
         } catch (IOException e) {
             serverDown(successor);
             sendInfoToBackup(message);
-            handler.closeConnection();
             return;
         }
         handler.sendMessage(message);
@@ -644,7 +643,6 @@ public class Server extends Node implements Serializable {
         } catch (IOException e) {
             serverDown(node);
             sendInfoToPredecessor(node, container,type);
-            handler.closeConnection();
             return;
         }
 
@@ -767,7 +765,6 @@ public class Server extends Node implements Serializable {
             redirect.connect();
         } catch (IOException e) {
             serverDown(n);
-            redirect.closeConnection();
             redirect(initialConnection,message);
             return;
         }

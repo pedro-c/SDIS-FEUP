@@ -84,8 +84,12 @@ public class DistributedHashTable implements Serializable {
     }
 
     public void removeNode(int nodeId){
-        ArrayList<Node> oldFT = fingerTable;
+        ArrayList<Node> oldFT = new ArrayList<Node>();
 
+        for (int i = 0; i <= MAX_FINGER_TABLE_SIZE; i++) {
+            oldFT.add(fingerTable.get(i));
+
+        }
         fingerTable.clear();
 
         initFingerTable();
@@ -98,7 +102,12 @@ public class DistributedHashTable implements Serializable {
                 updateFingerTable(oldFT.get(i));
             }
         }
-        updateFingerTable(predecessor);
+        if(predecessor.getNodeId() != nodeId){
+            updateFingerTable(predecessor);
+        }else{
+            predecessor = server;
+        }
+
 
         System.out.println("New finger table:");
         printFingerTable();
