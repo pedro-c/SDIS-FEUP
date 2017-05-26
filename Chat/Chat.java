@@ -64,6 +64,8 @@ public class Chat implements Serializable {
 
     public ArrayList<ChatMessage> getChatMessages() {return chatMessages;}
 
+    public ArrayList<ChatMessage> getChatPendingMessages() {return pendingChatMessages;}
+
     public void addChatMessage(ChatMessage chatMessage){chatMessages.add(chatMessage);}
 
     public void addPendingChatMessage(ChatMessage chatMessage){pendingChatMessages.add(chatMessage);}

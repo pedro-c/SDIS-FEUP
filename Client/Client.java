@@ -165,7 +165,12 @@ public class Client extends User{
             String menu = "\n" + "\n" + "Chat:  " + chat.getChatName() + "\n";
             System.out.println(menu);
             printChatMessages(chatId);
-            String send = "Send a message: " + "\n" + "\n" + "\n" + "\n";
+
+            String alert = "\n Checking for new messages!!! \n";
+            System.out.println(alert);
+            printChatPendingMessages(chatId);
+
+            String send = "\n \n Send a message: " + "\n" + "\n" + "\n" + "\n";
             System.out.println(send);
             currentChat = chatId.intValue();
 
@@ -187,10 +192,25 @@ public class Client extends User{
     }
 
     public void printChatMessages(BigInteger chatId){
-
         for (ChatMessage message: chats.get(chatId).getChatMessages()) {
           System.out.println(new String(message.getContent()));
         }
+    }
+
+    public void printChatPendingMessages(BigInteger chatId){
+        for (ChatMessage message: chats.get(chatId).getChatPendingMessages()) {
+            if(message.getChatId().compareTo(chatId)==0){
+                getChat(chatId).addChatMessage(message);
+                System.out.println(new String(message.getContent()));
+            }
+        }
+
+      /*  for (ChatMessage message: chats.get(chatId).getChatPendingMessages()) {
+            if(message.getChatId().compareTo(chatId)==0){
+                chats.get(chatId).getChatPendingMessages().remove(message);
+            }
+        }
+        */
     }
 
   /*  public String getLastMessages(BigInteger chatId){
