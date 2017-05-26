@@ -75,6 +75,8 @@ public class Constants {
     //CREATE_CHAT_BY_INVITATION SenderId Chat
     public static final String CREATE_CHAT_BY_INVITATION = "CREATE_CHAT_BY_INVITATION";
 
+    public static final String NEW_MESSAGE_TO_PARTICIPANT ="NEW_MESSAGE_TO_PARTICIPANT";
+
     //Directories
     public static final String USER_DIRECTORY = "users";
     public static final String CHAT_DIRECTORY = "chats";
@@ -100,9 +102,8 @@ public class Constants {
     public static final String SENT_INVITATIONS = "2";
     public static final String CREATED_CHAT_WITH_SUCCESS = "3";
     public static final String BACKUP_USER_DONE = "4";
-    public static final String SENT_MESSAGE = "4";
+    public static final String SENT_MESSAGE = "5";
     public static final String IMAGE_MESSAGE = "image";
     public static final String TEXT_MESSAGE = "text";
-
 
 }
