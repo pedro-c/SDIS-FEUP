@@ -69,9 +69,9 @@ public class DistributedHashTable implements Serializable {
         }
         if (successor == server && key > server.getNodeId()) {
 
-            for (int i = 1; i < fingerTable.size(); i++) {
-                Node tempNode1 = fingerTable.get(i);
-                Node tempNode2 = fingerTable.get(i+1);
+            for (int i = 2; i < fingerTable.size(); i++) {
+                Node tempNode1 = fingerTable.get(i-1);
+                Node tempNode2 = fingerTable.get(i);
                 System.out.println("1: " + tempNode1.getNodeId());
                 System.out.println("2: " + tempNode2.getNodeId());
 

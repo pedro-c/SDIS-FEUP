@@ -105,7 +105,7 @@ public class Client extends User{
         System.out.println(menu);
 
       //  askForPendingChats();
-       // askForClientChats();
+        askForClientChats();
 
         int option = scannerIn.nextInt();
         switch (option) {
@@ -444,8 +444,8 @@ public class Client extends User{
         BigInteger clientId = getClientId();
 
         Message message = new Message(SIGNOUT, clientId, RESPONSIBLE, clientId.toString());
-
         connection.sendMessage(message);
+        connection.closeConnection();
     }
 
     public enum Task {
