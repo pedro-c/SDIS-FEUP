@@ -438,6 +438,7 @@ public class Server extends Node implements Serializable {
                 if(!chatMessage.getUserId().toString().equals(participantHash.toString())){
                     sendMessageToUser(chatMessage, participantHash);
                 }
+                else users.get(participantHash).getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
             }
             else {
                 Message message = new Message(NEW_MESSAGE_TO_PARTICIPANT, senderId, NOT_RESPONSIBLE, chatMessage, participantHash);

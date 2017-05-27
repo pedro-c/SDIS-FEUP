@@ -104,8 +104,8 @@ public class Client extends User{
         String menu = "\n Menu " + "\n 1. Create a new Chat" + "\n 2. Open Chat" + "\n 3. Sign Out" + "\n";
         System.out.println(menu);
 
-        askForClientChats();
-        askForPendingChats();
+       // askForClientChats();
+        //askForPendingChats();
 
         int option = scannerIn.nextInt();
         switch (option) {
