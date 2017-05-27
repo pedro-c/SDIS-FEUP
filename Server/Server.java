@@ -406,14 +406,9 @@ public class Server extends Node implements Serializable {
 
             if(users.get(participantHash)!=null){
 
-                if(chatMessage.getUserId().toString().equals(participantHash.toString())){
-                    users.get(participantHash).getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
-                    Message response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, chat.getIdChat().toString(), SENT_MESSAGE);
-                    ServerConnection serverConnection = loggedInUsers.get(participantHash);
-                    if(serverConnection != null)
-                        serverConnection.sendMessage(response);
+                if(!chatMessage.getUserId().toString().equals(participantHash.toString())){
+                    sendMessageToUser(chatMessage, participantHash);
                 }
-                else sendMessageToUser(chatMessage, participantHash);
             }
             else {
                 Message message = new Message(NEW_MESSAGE_TO_PARTICIPANT, senderId, NOT_RESPONSIBLE, chatMessage, participantHash);
@@ -422,7 +417,7 @@ public class Server extends Node implements Serializable {
             }
         }
 
-        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, chat.getIdChat().toString(), SENT_INVITATIONS);
+        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, chat.getIdChat().toString(), SENT_MESSAGE);
 
     }
 
