@@ -552,8 +552,10 @@ public class Server extends Node implements Serializable {
 
             if (users.get(participantHash) != null) {
                 loadingFile(connection, message, participantHash);
-            } else {
-                Message messageParticipant = new Message(STORE_FILE_ON_PARTICIPANT, senderId, NOT_RESPONSIBLE, chatMessage, participantHash);
+            }
+            else {
+
+                Message messageParticipant = new Message(STORE_FILE_ON_PARTICIPANT, participantHash, NOT_RESPONSIBLE, chatMessage, participantHash);
                 Runnable task = () -> {
                     redirect(connection, messageParticipant);
                 };
@@ -569,7 +571,7 @@ public class Server extends Node implements Serializable {
         System.out.println(222222222);
 
         System.out.println("Sender " + message.getSenderId());
-        System.out.println("Reciver  " + message.getReceiver());
+        System.out.println("Receiver  " + message.getReceiver());
 
         ChatMessage chatMessage = (ChatMessage) message.getObject();
         String filename = new String(chatMessage.getFilename());
