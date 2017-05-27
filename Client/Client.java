@@ -7,9 +7,11 @@ import Protocols.ClientConnection;
 import Server.User;
 import Utilities.Constants;
 
-import java.io.Console;
-import java.io.IOException;
+import java.io.*;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -179,22 +181,72 @@ public class Client extends User{
         BigInteger[] tempChats;
         tempChats = new BigInteger[chats.size()];
 
-        System.out.println("To send a file ... [ChatNumber]-[Path]  \n");
+        System.out.println("To send a file ... [ChatNumber]-[filename]  \n");
         tempChats = printAndFillArrayChats();
 
         String option = console.readLine();
         if(!option.equals("")) {
 
             String[] info = option.split("-");
-            String path = info[1];
+            String filename = info[1];
 
-            System.out.println("path: " + path);
+            System.out.println("path: " + filename);
 
             String chatNumber = info[0];
             System.out.println("chatNumber " + chatNumber);
 
             BigInteger requiredChatId = tempChats[Integer.parseInt(chatNumber) - 1];
             System.out.println("chatId " + requiredChatId);
+            Date date = new Date();
+
+            FileInputStream inputStream;
+
+
+            try {
+                inputStream = new FileInputStream(filename);
+            } catch (FileNotFoundException e) {
+                System.out.println("Could not open file to backup.");
+                signInMenu();
+                return;
+            }
+
+
+            try {
+
+                int bytesRead;
+                byte[] chunk = new byte[8192];
+
+                //Não tem chatmessage
+                ChatMessage chatMessage = new ChatMessage(requiredChatId, date, getClientId(), filename.getBytes(), IMAGE_MESSAGE);
+                Message message = new Message(BEGIN_TRANSACTION, getClientId(), RESPONSIBLE, chatMessage, getClientId());
+
+                connection.sendMessage(message);
+
+                while ((bytesRead = inputStream.read(chunk)) != -1){
+
+                    System.out.println("Sending...");
+                    Message messageToSend;
+                    ChatMessage chatMessageToSend = new ChatMessage(requiredChatId, date, getClientId(), chunk, IMAGE_MESSAGE);
+
+                    if(bytesRead == 8192){
+                        System.out.println("bytes read : "+ bytesRead);
+                        System.out.println("Chunk size : "+ 8192);
+                        messageToSend = new Message(IN_TRANSACTION, getClientId(), RESPONSIBLE, chatMessageToSend, getClientId());
+                    }
+                    else{
+                        System.out.println("bytes read : "+ bytesRead);
+                        messageToSend = new Message(END_TRANSACTION, getClientId(), RESPONSIBLE, chatMessageToSend, getClientId());
+                    }
+
+                    connection.sendMessage(messageToSend);
+                }
+
+                System.out.println("Sent...");
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
 
         }
         else signInMenu();

@@ -11,10 +11,9 @@ import com.sun.org.apache.regexp.internal.RE;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
+import java.io.*;
 import java.math.BigInteger;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -538,6 +537,43 @@ public class Server extends Node implements Serializable {
         return message;
     }
 
+    public Message loadingFile(ServerConnection connection, Message message){
+
+        ChatMessage chatMessage = (ChatMessage) message.getObject();
+        String filename = new String(chatMessage.getContent());
+        users.get(message.getSenderId()).getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
+        OutputStream outputStream = null;
+        Message newMessage=null;
+
+        try {
+
+            File yourFile = new File("data/" + Integer.toString(getNodeId()) + "/" + message.getSenderId().intValue() + "/" + chatMessage.getChatId().intValue() + "/" + filename);
+            System.out.println(yourFile.getPath());
+            yourFile.getParentFile().mkdirs(); // Will create parent directories if not exists
+            yourFile.createNewFile();
+            outputStream = new FileOutputStream(yourFile);
+            do{
+
+                try {
+                    newMessage = connection.receiveMessage();
+                    System.out.println(newMessage.getMessageType());
+                    ChatMessage file = (ChatMessage) newMessage.getObject();
+                    outputStream.write(file.getContent());
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+            while (newMessage.getMessageType()!=END_TRANSACTION);
+
+            outputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Message response =  new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_FILE);
+        return response;
+    }
+
     /**
      * Saves client connection
      */
@@ -779,6 +815,10 @@ public class Server extends Node implements Serializable {
                 break;
             case NEW_MESSAGE_TO_PARTICIPANT:
                 response = sendMessageToUser((ChatMessage) message.getObject(), message.getReceiver());
+                break;
+            case BEGIN_TRANSACTION:
+                loadingFile(connection, message);
+                response = sendMessage(connection, (ChatMessage) message.getObject(), message.getReceiver(), message.getSenderId());
                 break;
             default:
                 break;

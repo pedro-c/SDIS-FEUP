@@ -51,8 +51,16 @@ public class Constants {
     //SIGNOUT SenderId userId
     public static final String NEW_MESSAGE = "NEW_MESSAGE";
 
+    public static final String BEGIN_TRANSACTION = "BEGIN_TRANSACTION";
+
+    public static final String END_TRANSACTION = "END_TRANSACTION";
+
+    public static final String IN_TRANSACTION = "IN_TRANSACTION";
+
     //SIGNOUT SenderId userId
     public static final String SIGNOUT = "SIGNOUT";
+
+    public static final String SENT_FILE= "SENT_FILE";
 
     //BACKUP_USER SenderId User
     public static final String BACKUP_USER = "BACKUP_USER";

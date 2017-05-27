@@ -32,4 +32,6 @@ public class ChatMessage implements Serializable {
         return content;
     }
 
+    public String getType() {return type;}
+
 }
