@@ -21,6 +21,8 @@ import java.util.concurrent.Executors;
 import static Client.Client.Task.*;
 import static Utilities.Constants.*;
 import static Utilities.Utilities.*;
+import Controller.Controller;
+
 
 public class Client extends User{
 
@@ -32,10 +34,17 @@ public class Client extends User{
     private Task actualState;
     private ConcurrentHashMap<BigInteger, Chat> chats;
     private int currentChat = 0;
+    private static Controller controller=null;
 
     /**
      * Client
      */
+
+  public Client(int serverPort, String serverIp, Controller controller) {
+      this(serverIp, serverPort);
+       this.controller = controller; 
+  }
+
     public Client(String serverIp, int serverPort) {
         super(null,null);
         this.serverPort = serverPort;
@@ -259,7 +268,14 @@ public class Client extends User{
         newConnectionAndSendMessage(message);
     }
 
-    /**
+
+    public void viewSignIn(String email, String pass) {
+            this.email = email;
+            Message message = new Message(SIGNIN, getClientId(), email, createHash(pass).toString());
+            newConnectionAndSendMessage(message);
+    }
+
+     /**
      * Sends a sign up message throw a ssl socket
      */
     public void signUpUser() {
@@ -448,7 +464,7 @@ public class Client extends User{
 
     public enum Task {
         HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
-        WAITING_SIGNOUT, WAITING_FOR_CHAT, RECEIVING_CHAT, CHATTING, GET_CHATS
+        WAITING_SIGNOUT, WAITING_FOR_CHAT, RECEIVING_CHAT, CHATTING, GET_CHATS, WRONG_CREDENT, BACK_TO_MENU
     }
 
     public void addChat(Chat chat){
@@ -480,5 +496,13 @@ public class Client extends User{
         Message message = new Message(GET_ALL_CHATS, getClientId(), RESPONSIBLE);
         actualState = Task.GET_CHATS;
         connection.sendMessage(message);
+    }
+
+    public Task getActualState() {
+        return actualState;
+    }
+
+    public void setActualState(Task actualState) {
+        this.actualState = actualState;
     }
 }

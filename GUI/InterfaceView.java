@@ -3,12 +3,40 @@ package GUI;
 
 import javax.swing.*;
 
-/**
- * Created by ines on 23/05/17.
- */
+import Controller.Controller;
+
+
 public class InterfaceView extends JDialog {
 
     protected JDialog window;
+    private Controller controller;
 
-    public static void main (String[] args){}
+    public InterfaceView(Controller controller) {
+        this.controller = controller;
+    }
+
+    public void showMenuWindow(){
+        window = new Menu(controller);
+        //window.pack();
+        //window.setVisible(true);
+    }
+
+    public void showSignInView(){
+        window = new SignInView(controller);
+        window.pack();
+        window.setVisible(true);
+    }
+
+    public void showSignUpView(){
+        window = new SignUpView(controller);
+        window.pack();
+        window.setVisible(true);
+    }
+
+    public void showNotificationLogin() {
+        //window = new NotificationWrongLogin(controller);
+        //window.pack();
+        //window.setVisible(true);
+    }
+
 }
