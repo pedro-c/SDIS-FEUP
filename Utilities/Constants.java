@@ -55,6 +55,10 @@ public class Constants {
 
     public static final String STORE_FILE_MESSAGE = "STORE_FILE_MESSAGE";
 
+    public static final String STORE_FILE_ON_PARTICIPANT = "STORE_FILE_ON_PARTICIPANT";
+
+    public static final String DOWNLOAD_FILE = "DOWNLOAD_FILE";
+
     //SIGNOUT SenderId userId
     public static final String SIGNOUT = "SIGNOUT";
 

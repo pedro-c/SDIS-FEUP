@@ -146,6 +146,9 @@ public class ServerConnection extends Connection implements Runnable {
             case FILE_TRANSACTION:
                 server.isResponsible(this,message);
                 break;
+            case STORE_FILE_ON_PARTICIPANT:
+                server.isResponsible(this,message);
+                break;
             case STORE_FILE_MESSAGE:
                 server.isResponsible(this,message);
                 break;

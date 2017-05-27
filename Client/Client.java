@@ -104,7 +104,7 @@ public class Client extends User {
     public void signInMenu() {
         actualState = Task.HOLDING;
         currentChat = Constants.NO_CHAT_OPPEN;
-        String menu = "\n Menu " + "\n 1. Create a new Chat" + "\n 2. Open Chat" + "\n 3. Send Files" + "\n 4. Sign Out" + "\n";
+        String menu = "\n Menu " + "\n 1. Create a new Chat" + "\n 2. Open Chat" + "\n 3. Send Files" + "\n 4. Download Files" + "\n 5. Sign Out" + "\n";
         System.out.println(menu);
 
 
@@ -124,6 +124,9 @@ public class Client extends User {
                 sendFiles();
                 break;
             case 4:
+                downloadFile();
+                break;
+            case 5:
                 signOut();
                 break;
             default:
@@ -175,6 +178,40 @@ public class Client extends User {
 
         return tempChats;
     }
+
+    public void downloadFile(){
+        Console console = System.console();
+        BigInteger[] tempChats;
+        tempChats = new BigInteger[chats.size()];
+
+        System.out.println("To send a file ... [ChatNumber]-[filename]  \n");
+        tempChats = printAndFillArrayChats();
+
+        String option = console.readLine();
+        if (!option.equals("")) {
+
+            String[] info = option.split("-");
+            String filename = info[1];
+
+            System.out.println("path: " + filename);
+
+            String chatNumber = info[0];
+            System.out.println("chatNumber " + chatNumber);
+
+            BigInteger requiredChatId = tempChats[Integer.parseInt(chatNumber) - 1];
+            System.out.println("chatId " + requiredChatId);
+
+            String path = requiredChatId.intValue() + "/" + filename;
+            System.out.println("path: " + filename);
+
+
+            //  Message saveFile = new Message(DOWNLOAD_FILE, getClientId(), RESPONSIBLE, path, getClientId());
+           // connection.sendMessage(saveFile);
+
+        }
+        else signInMenu();
+    }
+
 
     public void sendFiles() {
         Console console = System.console();
@@ -240,7 +277,7 @@ public class Client extends User {
 
                 }
 
-                System.out.println("Sent...");
+                signInMenu();
 
             } catch (IOException e) {
                 e.printStackTrace();

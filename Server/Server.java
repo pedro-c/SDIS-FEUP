@@ -538,14 +538,45 @@ public class Server extends Node implements Serializable {
         return message;
     }
 
-    public Message loadingFile(ServerConnection connection, Message message) {
+    public Message loadFileOnParticipants(ServerConnection connection, Message message, BigInteger clientId, BigInteger senderId){
+
+        ChatMessage chatMessage = (ChatMessage) message.getObject();
+
+        Chat chat = users.get(clientId).getChat(chatMessage.getChatId());
+
+        for (String participantEmail : chat.getParticipants()) {
+
+            System.out.println(1111111);
+
+            BigInteger participantHash = createHash(participantEmail);
+
+            if (users.get(participantHash) != null) {
+                loadingFile(connection, message, participantHash);
+            } else {
+                Message messageParticipant = new Message(STORE_FILE_ON_PARTICIPANT, senderId, NOT_RESPONSIBLE, chatMessage, participantHash);
+                Runnable task = () -> {
+                    redirect(connection, messageParticipant);
+                };
+                threadPool.submit(task);
+            }
+        }
+        return new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_INVITATIONS);
+    }
+
+    public Message loadingFile(ServerConnection connection, Message message, BigInteger clientId) {
+
+
+        System.out.println(222222222);
+
+        System.out.println("Sender " + message.getSenderId());
+        System.out.println("Reciver  " + message.getReceiver());
 
         ChatMessage chatMessage = (ChatMessage) message.getObject();
         String filename = new String(chatMessage.getFilename());
         OutputStream outputStream = null;
         Message newMessage = null;
 
-        File yourFile = new File("data/" + Integer.toString(getNodeId()) + "/" + message.getSenderId().intValue() + "/" + chatMessage.getChatId().intValue() + "/" + filename);
+        File yourFile = new File("data/" + Integer.toString(getNodeId()) + "/" + clientId.intValue() + "/" + chatMessage.getChatId().intValue() + "/" + filename);
         System.out.println(yourFile.getPath());
 
         if(!yourFile.exists()){
@@ -816,7 +847,12 @@ public class Server extends Node implements Serializable {
                 response = sendMessageToUser((ChatMessage) message.getObject(), message.getReceiver());
                 break;
             case FILE_TRANSACTION:
-                response = loadingFile(connection, message);
+                System.out.println("CHEGUEIIII 111111" );
+                response = loadFileOnParticipants(connection, message, message.getReceiver(), message.getSenderId());
+                break;
+            case STORE_FILE_ON_PARTICIPANT:
+                System.out.println("CHEGUEIIII");
+                response = loadingFile(connection, message, message.getReceiver());
                 break;
             case STORE_FILE_MESSAGE:
                 response = storeFileMessage(connection, (ChatMessage) message.getObject(), message.getReceiver(), message.getSenderId());
