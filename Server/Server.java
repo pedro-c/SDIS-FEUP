@@ -175,12 +175,11 @@ public class Server extends Node implements Serializable {
 
         for (ConcurrentHashMap.Entry<BigInteger, User> entry : backups.entrySet()) {
             users.put(entry.getKey(),entry.getValue());
+
+            sendInfoToBackup(new Message(BACKUP_USER, BigInteger.valueOf(nodeId), RESPONSIBLE, entry.getValue()));
         }
         backups.clear();
         System.out.println("Copied all backups to server data");
-
-
-
     }
 
 
