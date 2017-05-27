@@ -53,6 +53,8 @@ public class Constants {
 
     public static final String FILE_TRANSACTION = "FILE_TRANSACTION";
 
+    public static final String STORE_FILE_MESSAGE = "STORE_FILE_MESSAGE";
+
     //SIGNOUT SenderId userId
     public static final String SIGNOUT = "SIGNOUT";
 

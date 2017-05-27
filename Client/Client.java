@@ -210,6 +210,9 @@ public class Client extends User {
                 return;
             }
 
+            ChatMessage chatMessage = new ChatMessage(requiredChatId, date, getClientId(),null , IMAGE_MESSAGE, filename);
+            Message saveFile = new Message(STORE_FILE_MESSAGE, getClientId(), RESPONSIBLE, chatMessage, getClientId());
+            connection.sendMessage(saveFile);
 
             try {
 
@@ -219,11 +222,10 @@ public class Client extends User {
                 while ((bytesRead = inputStream.read(chunk)) != -1) {
 
                     byte[] chunkToSend = new byte[bytesRead];
-                    System.arraycopy( chunk, 0, chunkToSend, 0, bytesRead );
+                    System.arraycopy( chunk, 0, chunkToSend, 0, bytesRead);
 
                     Message messageToSend = null;
                     ChatMessage chatMessageToSend = new ChatMessage(requiredChatId, date, getClientId(), chunkToSend, IMAGE_MESSAGE, filename);
-
 
                     messageToSend = new Message(FILE_TRANSACTION, getClientId(), RESPONSIBLE, chatMessageToSend, getClientId());
 
@@ -289,7 +291,9 @@ public class Client extends User {
 
     public void printChatMessages(BigInteger chatId) {
         for (ChatMessage message : chats.get(chatId).getChatMessages()) {
-            System.out.println(new String(message.getContent()));
+            if(message.getType().equals(TEXT_MESSAGE))
+                System.out.println(new String(message.getContent()));
+            else System.out.println("Received new file with name : " + message.getFilename());
         }
     }
 
@@ -299,7 +303,9 @@ public class Client extends User {
             ChatMessage message = iter.next();
             if (message.getChatId().compareTo(chatId) == 0) {
                 getChat(chatId).addChatMessage(message);
-                System.out.println(new String(message.getContent()));
+                if(message.getType().equals(TEXT_MESSAGE))
+                    System.out.println(new String(message.getContent()));
+                else System.out.println("Received new file with name : " + message.getFilename());
                 iter.remove();
             }
         }
@@ -574,15 +580,11 @@ public class Client extends User {
         Message message = new Message(GET_ALL_CHATS, getClientId(), RESPONSIBLE);
         actualState = Task.GET_CHATS;
         connection.sendMessage(message);
-        //Message temp = connection.receiveMessage();
-        //System.out.println(temp.getMessageType());
     }
 
     public void askForPendingChats() {
         System.out.println("Checking for new chats ... ");
         Message message = new Message(GET_ALL_PENDING_CHATS, getClientId(), RESPONSIBLE);
         connection.sendMessage(message);
-        // Message temp = connection.receiveMessage();
-        //System.out.println(temp.getMessageType());
     }
 }

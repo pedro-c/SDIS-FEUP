@@ -1,5 +1,6 @@
 package Protocols;
 
+import Chat.ChatMessage;
 import Messages.Message;
 import Server.*;
 
@@ -143,6 +144,9 @@ public class ServerConnection extends Connection implements Runnable {
                 server.handleNodeFailure(Integer.parseInt(body[0]), message);
                 break;
             case FILE_TRANSACTION:
+                server.isResponsible(this,message);
+                break;
+            case STORE_FILE_MESSAGE:
                 server.isResponsible(this,message);
                 break;
             default:

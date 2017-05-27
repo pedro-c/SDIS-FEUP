@@ -542,12 +542,8 @@ public class Server extends Node implements Serializable {
 
         ChatMessage chatMessage = (ChatMessage) message.getObject();
         String filename = new String(chatMessage.getFilename());
-
-        users.get(message.getSenderId()).getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
-
         OutputStream outputStream = null;
         Message newMessage = null;
-
 
         File yourFile = new File("data/" + Integer.toString(getNodeId()) + "/" + message.getSenderId().intValue() + "/" + chatMessage.getChatId().intValue() + "/" + filename);
         System.out.println(yourFile.getPath());
@@ -560,7 +556,6 @@ public class Server extends Node implements Serializable {
                 e.printStackTrace();
             }
         }
-
         try {
             outputStream = new FileOutputStream(yourFile,true);
             System.out.println(chatMessage.getContent().length);
@@ -571,6 +566,10 @@ public class Server extends Node implements Serializable {
 
         Message response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_FILE);
         return response;
+    }
+
+    public Message storeFileMessage(ServerConnection connection, ChatMessage chatMessage, BigInteger clientId, BigInteger senderId){
+        return sendMessage(connection,chatMessage,clientId, senderId);
     }
 
     /**
@@ -819,6 +818,9 @@ public class Server extends Node implements Serializable {
             case FILE_TRANSACTION:
                 response = loadingFile(connection, message);
                 break;
+            case STORE_FILE_MESSAGE:
+                response = storeFileMessage(connection, (ChatMessage) message.getObject(), message.getReceiver(), message.getSenderId());
+                break;
             default:
                 break;
         }
@@ -929,6 +931,8 @@ public class Server extends Node implements Serializable {
     public ConcurrentHashMap<BigInteger, User> getBackups() {
         return backups;
     }
+
+    public ConcurrentHashMap<BigInteger, User> getUsers() {return users;}
 
 }
 
