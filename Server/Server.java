@@ -450,6 +450,7 @@ public class Server extends Node implements Serializable {
                 if(!chatMessage.getUserId().toString().equals(participantHash.toString())){
                     sendMessageToUser(chatMessage, participantHash);
                 }
+                else users.get(participantHash).getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
             }
             else {
                 Message message = new Message(NEW_MESSAGE_TO_PARTICIPANT, senderId, NOT_RESPONSIBLE, chatMessage, participantHash);
@@ -494,7 +495,7 @@ public class Server extends Node implements Serializable {
         Chat chat = users.get(clientId).getChat(new BigInteger(chatId));
 
         if(chat==null)
-            System.out.println("Chat null");
+            System.out.println("Null Chat");
 
         Message message =  new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, chat);
         return message;
@@ -506,8 +507,6 @@ public class Server extends Node implements Serializable {
         for(ConcurrentHashMap.Entry<BigInteger, Chat> entry : users.get(clientId).getChats().entrySet()) {
             Chat chat = entry.getValue();
 
-            System.out.println("Tenho chat  " + chat.getChatName());
-
             if(loggedInUsers.get(clientId) != null){
                 Message message =  new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, chat);
                 ServerConnection userConnection = loggedInUsers.get(clientId);
@@ -515,7 +514,27 @@ public class Server extends Node implements Serializable {
             }
         }
 
-        Message message =  new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_CHATS);
+        Message message =  new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_CHATS);
+        return message;
+    }
+
+    public Message getAllPendingChats(BigInteger clientId){
+
+
+        for(ConcurrentHashMap.Entry<BigInteger, Chat> entry : users.get(clientId).getPendingRequests().entrySet()) {
+            Chat chat = entry.getValue();
+
+            if(loggedInUsers.get(clientId) != null) {
+                users.get(clientId).addChat(chat);
+                users.get(clientId).deletePendingRequest(chat.getIdChat());
+                Message response = new Message(NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId), RESPONSIBLE, chat, clientId);
+                ServerConnection userConnection = loggedInUsers.get(clientId);
+                userConnection.sendMessage(response);
+            }
+
+        }
+
+        Message message =  new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_PENDING_CHATS);
         return message;
     }
 
@@ -576,7 +595,13 @@ public class Server extends Node implements Serializable {
             return;
         }
         handler.sendMessage(message);
-        handler.receiveMessage();
+        try {
+            handler.receiveMessage();
+        } catch (IOException e) {
+            System.out.println("Function sendInfoToBackup: Failed to receive message");
+        } catch (ClassNotFoundException e) {
+            System.out.println("Function sendInfoToBackup: Failed to receive message");
+        }
     }
 
     /**
@@ -675,7 +700,13 @@ public class Server extends Node implements Serializable {
             //type = ADD_USER or BACKUP_USER
             message = new Message(type, BigInteger.valueOf(nodeId), RESPONSIBLE, user);
             handler.sendMessage(message);
-            handler.receiveMessage();
+            try {
+                handler.receiveMessage();
+            } catch (IOException e) {
+                System.out.println("Function sendInfoToPredecessor: Failed to receive message");
+            } catch (ClassNotFoundException e) {
+                System.out.println("Function sendInfoToPredecessor: Failed to receive message");
+            }
         }
     }
 
@@ -736,6 +767,9 @@ public class Server extends Node implements Serializable {
                 break;
             case GET_ALL_CHATS:
                response = getAllChats(message.getSenderId());
+                break;
+            case GET_ALL_PENDING_CHATS:
+                response = getAllPendingChats(message.getSenderId());
                 break;
             case NEW_MESSAGE:
                 response = sendMessage(connection, (ChatMessage) message.getObject(), message.getReceiver(), message.getSenderId());
@@ -801,8 +835,20 @@ public class Server extends Node implements Serializable {
         }
 
         redirect.sendMessage(message);
-        initialConnection.sendMessage(redirect.receiveMessage());
+
+
+
+        try {
+            Message response = redirect.receiveMessage();
+            initialConnection.sendMessage(response);
+
+        } catch (IOException e) {
+            System.out.println("Function redirect: Failed to receive message");
+        } catch (ClassNotFoundException e) {
+            System.out.println("Function redirect: Failed to receive message");
+        }
         redirect.closeConnection();
+
     }
 
     public void serverDown(Node downNode){

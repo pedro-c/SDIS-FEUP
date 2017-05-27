@@ -79,19 +79,10 @@ public class Connection {
      * Receives a message
      * @return message received
      */
-    public Message receiveMessage(){
+    public Message receiveMessage() throws IOException, ClassNotFoundException {
 
-        try {
-            return (Message) inputStream.readObject();
-        } catch (IOException e) {
-            System.out.println("\nError receiving message or connection closed");
-            closeConnection();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            System.out.println("\nError receiving message...");
-        }
+        return (Message) inputStream.readObject();
 
-        return null;
     }
 
     /**
