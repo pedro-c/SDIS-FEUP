@@ -83,6 +83,9 @@ public class ServerConnection extends Connection implements Runnable {
             case GET_CHAT:
                 server.isResponsible(this,message);
                 break;
+            case GET_ALL_CHATS:
+                server.isResponsible(this,message);
+                break;
             case INVITE_USER:
                 if (message.getResponsible().equals(RESPONSIBLE)) {
                     System.out.println("I'm the RESPONSIBLE server");
@@ -122,6 +125,7 @@ public class ServerConnection extends Connection implements Runnable {
                 sendMessage(server.addUser((User) message.getObject()));
                 break;
             case USER_UPDATED_CONNECTION:
+                System.out.println("\nEntrei\n");
                 server.saveConnection(this,message.getSenderId());
                 break;
             case SERVER_SUCCESS:
