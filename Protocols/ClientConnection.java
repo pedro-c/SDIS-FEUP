@@ -90,6 +90,10 @@ public class ClientConnection extends Connection implements Runnable {
                     System.out.println(new String(chatMessage.getContent()));
                 }
                 break;
+            case SERVER_UPDATE_CONNECTION:
+                String[] body = message.getBody().split(" ");
+                client.updateConnection(body[0], Integer.parseInt(body[1]));
+                break;
             default:
                 break;
         }
@@ -118,9 +122,11 @@ public class ClientConnection extends Connection implements Runnable {
                 service.execute(task);
             } catch (IOException e) {
                 System.out.println("Closed Connection");
+                stopTasks();
                 return;
             } catch (ClassNotFoundException e) {
                 System.out.println("Closed Connection");
+                stopTasks();
                 return;
             }
 

@@ -372,23 +372,8 @@ public class Client extends User{
             if(message.getInitialServerPort() != -1){
                 System.out.println("Meu server - porta: " + message.getInitialServerPort());
                 System.out.println("Meu servidor - address: " + message.getInitialServerAddress());
-
-                serverPort = message.getInitialServerPort();
-                serverIp = message.getInitialServerAddress();
-
-                connection.stopTasks();
-                connection.closeConnection();
-
-                connection = new ClientConnection(serverIp, serverPort, this);
-                try {
-                    connection.connect();
-                } catch (IOException e) {
-                    //Iniciar o protocolo
-                    System.out.println("\nError connecting");
-                }
-                threadPool.submit(connection);
-                Message connectToServer = new Message(USER_UPDATED_CONNECTION, this.getClientId(), RESPONSIBLE);
-                connection.sendMessage(connectToServer);
+                
+                updateConnection(message.getInitialServerAddress(), message.getInitialServerPort());
             }
         }
 
@@ -537,5 +522,26 @@ public class Client extends User{
         connection.sendMessage(message);
        // Message temp = connection.receiveMessage();
         //System.out.println(temp.getMessageType());
+    }
+
+    public void updateConnection(String newServerIp, int newServerPort) {
+
+        serverPort = newServerPort;
+        serverIp = newServerIp;
+
+        connection.stopTasks();
+        connection.closeConnection();
+
+        connection = new ClientConnection(serverIp, serverPort, this);
+        try {
+            connection.connect();
+        } catch (IOException e) {
+            //Iniciar o protocolo
+            System.out.println("\nError connecting");
+        }
+        threadPool.submit(connection);
+        Message connectToServer = new Message(USER_UPDATED_CONNECTION, this.getClientId(), RESPONSIBLE);
+        connection.sendMessage(connectToServer);
+
     }
 }
