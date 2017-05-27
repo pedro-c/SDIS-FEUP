@@ -107,7 +107,7 @@ public class Constants {
     //Message extra info
     //SERVER_DOWN ServerDownId
     public static final String RESPONSIBLE = "RESPONSIBLE";
-
+ 
     //SERVER_DOWN ServerDownId
     public static final String NOT_RESPONSIBLE = "NOT_RESPONSIBLE";
 
