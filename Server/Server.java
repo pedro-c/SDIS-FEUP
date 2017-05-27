@@ -508,19 +508,14 @@ public class Server extends Node implements Serializable {
 
     public Message getAllPendingChats(BigInteger clientId){
 
-        System.out.println(1);
 
         for(ConcurrentHashMap.Entry<BigInteger, Chat> entry : users.get(clientId).getPendingRequests().entrySet()) {
             Chat chat = entry.getValue();
 
             if(loggedInUsers.get(clientId) != null) {
-                System.out.println(1);
                 users.get(clientId).addChat(chat);
-                System.out.println(2);
                 users.get(clientId).deletePendingRequest(chat.getIdChat());
-                System.out.println(3);
                 Message response = new Message(NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId), RESPONSIBLE, chat, clientId);
-                System.out.println(4);
                 ServerConnection userConnection = loggedInUsers.get(clientId);
                 userConnection.sendMessage(response);
             }
