@@ -101,10 +101,11 @@ public class Client extends User{
     public void signInMenu() {
         actualState = Task.HOLDING;
         currentChat = Constants.NO_CHAT_OPPEN;
-        askForPendingChats();
-        askForClientChats();
         String menu = "\n Menu " + "\n 1. Create a new Chat" + "\n 2. Open Chat" + "\n 3. Sign Out" + "\n";
         System.out.println(menu);
+
+        askForPendingChats();
+        askForClientChats();
 
         int option = scannerIn.nextInt();
         switch (option) {

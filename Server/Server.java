@@ -745,6 +745,7 @@ public class Server extends Node implements Serializable {
                 break;
             case GET_ALL_PENDING_CHATS:
                 response = getAllPendingChats(message.getSenderId());
+                break;
             case NEW_MESSAGE:
                 response = sendMessage(connection, (ChatMessage) message.getObject(), message.getReceiver(), message.getSenderId());
                 break;
