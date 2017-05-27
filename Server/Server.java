@@ -140,7 +140,7 @@ public class Server extends Node implements Serializable {
     }
 
     /**
-     * Handles a node failure, and alerts succesding node of such event
+     * Handles a node failure, and alerts succeeding node of such event
      * @param downServerId Id of the node that is down
      */
     public void handleNodeFailure(int downServerId, Message message){
@@ -169,7 +169,19 @@ public class Server extends Node implements Serializable {
 
     }
 
+    /**
+     * Copies all backup data from failed node to its server data
+     * and backups the new data to successor
+     */
     public void beginNodeFailureProtocol(){
+
+        for (ConcurrentHashMap.Entry<BigInteger, User> entry : backups.entrySet()) {
+            users.put(entry.getKey(),entry.getValue());
+        }
+        backups.clear();
+        System.out.println("Copied all backups to server data");
+
+
 
     }
 
@@ -593,7 +605,7 @@ public class Server extends Node implements Serializable {
     }
 
     /**
-     * Function used when a BACKUP request arrives to the server, basically depending on the request
+     * Function used when a BACKUP request arrives to the server, depending on the request
      * this function add, update or delete the information
      * @param message message with all the information and the type of the request
      * @return message of success or error
