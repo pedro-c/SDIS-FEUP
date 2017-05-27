@@ -101,11 +101,11 @@ public class Client extends User{
     public void signInMenu() {
         actualState = Task.HOLDING;
         currentChat = Constants.NO_CHAT_OPPEN;
-        String menu = "\n Menu " + "\n 1. Create a new Chat" + "\n 2. Open Chat" + "\n 3. Sign Out" + "\n";
+        String menu = "\n Menu " + "\n 1. Create a new Chat" + "\n 2. Open Chat" + "\n 3. Send Files" + "\n 4. Sign Out" + "\n";
         System.out.println(menu);
 
-        askForClientChats();
-        askForPendingChats();
+       // askForClientChats();
+        //askForPendingChats();
 
         int option = scannerIn.nextInt();
         switch (option) {
@@ -117,6 +117,9 @@ public class Client extends User{
                 loadChats();
                 break;
             case 3:
+                sendFiles();
+                break;
+            case 4:
                 signOut();
                 break;
             default:
@@ -136,25 +139,64 @@ public class Client extends User{
 
         if (chats.size() == 0)
             System.out.println("You don't have any chat to show... Press enter to go back");
-        else {
-            for (BigInteger chatId: chats.keySet()){
-                tempChats[i-1] = chatId;
-                System.out.println(i + ". " + chats.get(chatId).getChatName() + " Id: " + chatId);
-                i++;
-            }
-        }
+        else tempChats = printAndFillArrayChats();
 
         String option = console.readLine();
         if(!option.equals("")) {
             System.out.println(Integer.parseInt(option));
             BigInteger requiredChatId = tempChats[Integer.parseInt(option) - 1];
-            Message message = new Message(GET_CHAT, getClientId(), RESPONSIBLE, requiredChatId.toString());
-            actualState = Task.WAITING_FOR_CHAT;
-            message.getBody();
-            connection.sendMessage(message);
+            if(chats.containsKey(requiredChatId))
+                openChat(requiredChatId);
+            else {
+                Message message = new Message(GET_CHAT, getClientId(), RESPONSIBLE, requiredChatId.toString());
+                actualState = Task.WAITING_FOR_CHAT;
+                message.getBody();
+                connection.sendMessage(message);
+            }
         }
         else signInMenu();
 
+    }
+
+    public BigInteger[] printAndFillArrayChats(){
+
+        int i=1;
+        BigInteger[] tempChats;
+        tempChats = new BigInteger[chats.size()];
+
+        for (BigInteger chatId: chats.keySet()){
+            tempChats[i-1] = chatId;
+            System.out.println(i + ". " + chats.get(chatId).getChatName() + " Id: " + chatId);
+            i++;
+        }
+
+        return tempChats;
+    }
+
+    public void sendFiles(){
+        Console console = System.console();
+        BigInteger[] tempChats;
+        tempChats = new BigInteger[chats.size()];
+
+        System.out.println("To send a file ... [ChatNumber]-[Path]  \n");
+        tempChats = printAndFillArrayChats();
+
+        String option = console.readLine();
+        if(!option.equals("")) {
+
+            String[] info = option.split("-");
+            String path = info[1];
+
+            System.out.println("path: " + path);
+
+            String chatNumber = info[0];
+            System.out.println("chatNumber " + chatNumber);
+
+            BigInteger requiredChatId = tempChats[Integer.parseInt(chatNumber) - 1];
+            System.out.println("chatId " + requiredChatId);
+
+        }
+        else signInMenu();
     }
 
     /**
@@ -192,7 +234,6 @@ public class Client extends User{
             }
 
             signInMenu();
-
         }
 
     }
@@ -383,12 +424,12 @@ public class Client extends User{
                 chats.put(chat.getIdChat(),chat);
                 openChat(chat.getIdChat());
                 break;
-            case RECEIVING_CHAT:
+  /*          case RECEIVING_CHAT:
                 System.out.println("Received Chat");
                 Chat chatO = (Chat) message.getObject();
                 chats.remove(chatO.getIdChat());
                 chats.put(chatO.getIdChat(),chatO);
-                break;
+                break;*/
             case GET_CHATS:
                 System.out.println("Get chats.....");
                 Chat chatTemp = (Chat) message.getObject();

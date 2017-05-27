@@ -73,7 +73,6 @@ public class ClientConnection extends Connection implements Runnable {
                 break;
             case NEW_CHAT_INVITATION:
                 System.out.println(" Received new chat invitation... ");
-                //String body[] = message.getBody().split(" ");
                 Chat chat = (Chat) message.getObject();
                 client.addChat(chat);
                 //TODO: Preciso??
