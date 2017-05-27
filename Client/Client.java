@@ -258,7 +258,8 @@ public class Client extends User{
         actualState = WAITING_SIGNIN;
         String password = getCredentials();
         Message message = new Message(SIGNIN, getClientId(), NOT_RESPONSIBLE, email, createHash(password).toString());
-        newConnectionAndSendMessage(message);
+        connection.sendMessage(message);
+        //newConnectionAndSendMessage(message);
     }
 
     /**
@@ -268,7 +269,8 @@ public class Client extends User{
         actualState = WAITING_SIGNUP;
         String password = getCredentials();
         Message message = new Message(SIGNUP, getClientId(), NOT_RESPONSIBLE, email, createHash(password).toString());
-        newConnectionAndSendMessage(message);
+        connection.sendMessage(message);
+        //newConnectionAndSendMessage(message);
     }
 
     public void newConnectionAndSendMessage(Message message){
