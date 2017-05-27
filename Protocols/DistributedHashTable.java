@@ -54,29 +54,38 @@ public class DistributedHashTable implements Serializable {
             if (key > server.getNodeId()) {
                 if (node.getNodeId() > key) {
                     successor = node;
+                    System.out.println("11111111111111");
                     break;
                 }
             } else {
                 if (node.getNodeId() < previousId) {
                     if (key < node.getNodeId()) {
                         successor = node;
+                        System.out.println("22222222222222");
                     }
                     previousId = node.getNodeId();
                 }
             }
         }
         if (successor == server && key > server.getNodeId()) {
-            Node tempNode1 = fingerTable.get(1);
-            Node tempNode2 = fingerTable.get(2);
-            for (int i = 3; i < fingerTable.size(); i++) {
+
+            for (int i = 1; i < fingerTable.size(); i++) {
+                Node tempNode1 = fingerTable.get(i);
+                Node tempNode2 = fingerTable.get(i+1);
+                System.out.println("1: " + tempNode1.getNodeId());
+                System.out.println("2: " + tempNode2.getNodeId());
+
                 if (tempNode1.getNodeId() > tempNode2.getNodeId()) {
                     successor = tempNode2;
+                    System.out.println("3333333333333");
                     break;
                 }
-                tempNode1 = fingerTable.get(i - 1);
-                tempNode2 = fingerTable.get(i);
-                if(tempNode1.getNodeId() == tempNode2.getNodeId() && tempNode1.getNodeId() != server.getNodeId())
+              
+                if(tempNode1.getNodeId() == tempNode2.getNodeId() && tempNode1.getNodeId() != server.getNodeId()){
                     successor = tempNode1;
+                    System.out.println("44444444444");
+                }
+
             }
 
         }
