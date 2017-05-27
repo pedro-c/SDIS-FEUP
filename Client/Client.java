@@ -27,11 +27,16 @@ public class Client extends User{
     private Scanner scannerIn;
     private ExecutorService threadPool = Executors.newFixedThreadPool(MAX_NUMBER_OF_REQUESTS);
     private ClientConnection connection;
-    private int serverPort;
-    private String serverIp;
+
     private Task actualState;
     private ConcurrentHashMap<BigInteger, Chat> chats;
     private int currentChat = 0;
+
+    private int serverPort;
+    private String serverIp;
+
+    private int recoverServerPort;
+    private String recoverServerIp;
 
     /**
      * Client
@@ -54,14 +59,21 @@ public class Client extends User{
         threadPool.submit(connection);
     }
 
+    public Client(String serverIp, int serverPort, String recoverServerIp, int recoverServerPort) {
+        this(serverIp,serverPort);
+
+        this.recoverServerIp = recoverServerIp;
+        this.recoverServerPort = recoverServerPort;
+    }
+
     /**
      * Main
      * @param args initial arguments
      */
     public static void main(String[] args) {
 
-        if (args.length != 2) {
-            throw new IllegalArgumentException("\nUsage : java Client.Client <serverIp> <serverPort>");
+        if (args.length != 2 || args.length != 4) {
+            throw new IllegalArgumentException("\nUsage : java Client.Client <serverIp> <serverPort> (<recoverServerIp> <recoverServerPort>)");
         }
 
         String serverIp = args[0];
@@ -71,7 +83,18 @@ public class Client extends User{
             throw new IllegalArgumentException("\nThe port needs to be between 0 and 65535");
         }
 
-        Client client = new Client(serverIp, serverPort);
+        Client client;
+
+        if(args.length == 4) {
+            String recoverServerIp = args[2];
+            int recoverServerPort = Integer.parseInt(args[3]);
+
+            client = new Client(serverIp, serverPort, recoverServerIp, recoverServerPort);
+        }
+        else {
+            client = new Client(serverIp, serverPort);
+        }
+
         client.mainMenu();
     }
 
@@ -372,7 +395,7 @@ public class Client extends User{
             if(message.getInitialServerPort() != -1){
                 System.out.println("Meu server - porta: " + message.getInitialServerPort());
                 System.out.println("Meu servidor - address: " + message.getInitialServerAddress());
-                
+
                 updateConnection(message.getInitialServerAddress(), message.getInitialServerPort());
             }
         }
