@@ -121,7 +121,7 @@ public class Client extends User{
                 break;
             default:
                 signInMenu();
-
+                break;
         }
     }
 
@@ -390,7 +390,8 @@ public class Client extends User{
             case GET_CHATS:
                 System.out.println("Get chats.....");
                 Chat chatTemp = (Chat) message.getObject();
-                chats.put(chatTemp.getIdChat(),chatTemp);
+                if(chatTemp!=null)
+                    chats.put(chatTemp.getIdChat(),chatTemp);
                 break;
             case HOLDING:
                 signInMenu();
@@ -482,11 +483,15 @@ public class Client extends User{
         Message message = new Message(GET_ALL_CHATS, getClientId(), RESPONSIBLE);
         actualState = Task.GET_CHATS;
         connection.sendMessage(message);
+        //Message temp = connection.receiveMessage();
+        //System.out.println(temp.getMessageType());
     }
 
     public void askForPendingChats(){
         System.out.println("Checking for new chats ... ");
         Message message = new Message(GET_ALL_PENDING_CHATS, getClientId(), RESPONSIBLE);
         connection.sendMessage(message);
+       // Message temp = connection.receiveMessage();
+        //System.out.println(temp.getMessageType());
     }
 }

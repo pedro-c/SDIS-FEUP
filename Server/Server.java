@@ -501,7 +501,7 @@ public class Server extends Node implements Serializable {
             }
         }
 
-        Message message =  new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_CHATS);
+        Message message =  new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_CHATS);
         return message;
     }
 
@@ -526,7 +526,7 @@ public class Server extends Node implements Serializable {
 
         }
 
-        Message message =  new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_CHATS);
+        Message message =  new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_PENDING_CHATS);
         return message;
     }
 

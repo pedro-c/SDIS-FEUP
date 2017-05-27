@@ -85,6 +85,7 @@ public class ServerConnection extends Connection implements Runnable {
                 break;
             case GET_ALL_CHATS:
                 server.isResponsible(this,message);
+                System.out.print("Sending chats");
                 break;
             case GET_ALL_PENDING_CHATS:
                 System.out.println("Received Get All Pending Chats");
