@@ -3,10 +3,8 @@ package Server;
 import Chat.Chat;
 import Chat.ChatMessage;
 import Messages.Message;
-import Protocols.Connection;
 import Protocols.DistributedHashTable;
 import Protocols.ServerConnection;
-import com.sun.org.apache.regexp.internal.RE;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -41,7 +39,7 @@ public class Server extends Node implements Serializable {
     /**
      * Logged in users
      */
-    private ConcurrentHashMap<BigInteger, ServerConnection> loggedInUsers;
+    transient private ConcurrentHashMap<BigInteger, ServerConnection> loggedInUsers;
     transient private SSLServerSocket sslServerSocket;
     transient private ExecutorService threadPool = Executors.newFixedThreadPool(MAX_NUMBER_OF_REQUESTS);
 
@@ -153,7 +151,7 @@ public class Server extends Node implements Serializable {
         }
 
         Node downServerSuccessor = dht.nodeLookUp(downServerId+1);
-        
+
         if(downServerSuccessor.getNodeId() == dht.getFingerTable().get(1).getNodeId()){
             message.setResponsible(RESPONSIBLE);
         }
@@ -222,12 +220,12 @@ public class Server extends Node implements Serializable {
             sendFingerTableToPredecessor(newNode);
             notifyNodeOfItsPredecessor(newNode, previousPredecessor);
             sendInfoToPredecessor(newNode, users, ADD_USER);
-            //sendInfoToPredecessor(newNode, backups, BACKUP_USER);
+            sendInfoToPredecessor(newNode, backups, BACKUP_USER);
         } else if (newNode.getNodeId() > dht.getPredecessor().getNodeId()) {
             sendFingerTableToPredecessor(newNode);
             notifyNodeOfItsPredecessor(newNode, dht.getPredecessor());
             sendInfoToPredecessor(newNode, users, ADD_USER);
-            //sendInfoToPredecessor(newNode, backups, BACKUP_USER);
+            sendInfoToPredecessor(newNode, backups, BACKUP_USER);
         } else {
             joinNetwork(newNode, successor);
             System.out.println("Redirecting.");
@@ -658,19 +656,18 @@ public class Server extends Node implements Serializable {
 
         Queue<User> newServerUsers = new LinkedList<User>();
 
-        BigInteger newNodeId = BigInteger.valueOf(node.getNodeId());
+        int newNodeId = node.getNodeId();
 
         container.forEach((userId, user) -> {
 
-            // -1 userId is greater
-            // 0 the values are equal
-            // 1 newNodeId is greater
-            int result = newNodeId.compareTo(userId);
+            int tempUserId = Integer.remainderUnsigned(userId.intValue(), 128);
 
-            if (result == -1 || result == 0) {
+            if(tempUserId < newNodeId || (tempUserId > nodeId &&  tempUserId < MAX_NUMBER_OF_NODES)) {
+                System.out.println("VOU APAGAR USER!!! " + tempUserId);
                 newServerUsers.add(user);
-                users.remove(userId, user);
+                container.remove(userId, user);
             }
+
         });
 
         return newServerUsers;
@@ -695,6 +692,15 @@ public class Server extends Node implements Serializable {
         Runnable task = null;
 
         for (User user : predecessorUsers) {
+
+            if(type.equals(ADD_USER) && loggedInUsers.containsKey(user.getUserId())){
+                Message warnClient = new Message(SERVER_UPDATE_CONNECTION, BigInteger.valueOf(nodeId), RESPONSIBLE, node.getNodeIp(), Integer.toString(node.getNodePort()));
+                ServerConnection connection = loggedInUsers.get(user.getUserId());
+                connection.sendMessage(warnClient);
+                connection.closeConnection();
+                loggedInUsers.remove(user.getUserId());
+            }
+
             //type = ADD_USER or BACKUP_USER
             message = new Message(type, BigInteger.valueOf(nodeId), RESPONSIBLE, user);
             handler.sendMessage(message);
@@ -764,7 +770,7 @@ public class Server extends Node implements Serializable {
                 response = getChat(body[0],message.getSenderId());
                 break;
             case GET_ALL_CHATS:
-               response = getAllChats(message.getSenderId());
+                response = getAllChats(message.getSenderId());
                 break;
             case GET_ALL_PENDING_CHATS:
                 response = getAllPendingChats(message.getSenderId());
