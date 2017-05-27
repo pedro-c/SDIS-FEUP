@@ -385,7 +385,7 @@ public class Server extends Node implements Serializable {
         else {
             users.get(clientId).addChat(chat);
             System.out.println("Sending invitation to logged in user");
-            Message response = new Message(NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId), RESPONSIBLE,chat.getIdChat().toString(), chat.getChatName(), clientId.toString());
+            Message response = new Message(NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId), RESPONSIBLE, chat, clientId);
             ServerConnection userConnection = loggedInUsers.get(clientId);
             userConnection.sendMessage(response);
         }
