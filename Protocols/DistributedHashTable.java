@@ -6,6 +6,7 @@ import Server.Server;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import static Utilities.Constants.MAX_FINGER_TABLE_SIZE;
 import static Utilities.Constants.MAX_NUMBER_OF_NODES;
@@ -53,33 +54,74 @@ public class DistributedHashTable implements Serializable {
             if (key > server.getNodeId()) {
                 if (node.getNodeId() > key) {
                     successor = node;
+                    System.out.println("11111111111111");
                     break;
                 }
             } else {
                 if (node.getNodeId() < previousId) {
                     if (key < node.getNodeId()) {
                         successor = node;
+                        System.out.println("22222222222222");
                     }
+                    previousId = node.getNodeId();
                 }
             }
         }
         if (successor == server && key > server.getNodeId()) {
-            Node tempNode1 = fingerTable.get(1);
-            Node tempNode2 = fingerTable.get(2);
-            for (int i = 3; i < fingerTable.size(); i++) {
-                if (tempNode1.getNodeId() > tempNode2.getNodeId()) {   
+            for (int i = 2; i < fingerTable.size(); i++) {
+                Node tempNode1 = fingerTable.get(i-1);
+                Node tempNode2 = fingerTable.get(i);
+                System.out.println("1: " + tempNode1.getNodeId());
+                System.out.println("2: " + tempNode2.getNodeId());
+
+                if (tempNode1.getNodeId() > tempNode2.getNodeId()) {
                     successor = tempNode2;
+                    System.out.println("3333333333333");
                     break;
                 }
-                tempNode1 = fingerTable.get(i - 1);
-                tempNode2 = fingerTable.get(i);
+              
+                if(tempNode1.getNodeId() == tempNode2.getNodeId() && tempNode1.getNodeId() != server.getNodeId()){
+                    successor = tempNode1;
+                    System.out.println("44444444444");
+                }
+
             }
-            if(tempNode1.getNodeId() == tempNode2.getNodeId())
-                successor = tempNode1;
+
         }
 
         System.out.println("Successor of " + key + " : " + successor.getNodeId());
         return successor;
+    }
+
+    public void removeNode(int nodeId){
+        ArrayList<Node> oldFT = new ArrayList<Node>();
+
+        for (int i = 0; i <= MAX_FINGER_TABLE_SIZE; i++) {
+            oldFT.add(fingerTable.get(i));
+
+        }
+        fingerTable.clear();
+
+        initFingerTable();
+
+        System.out.println("Old finger table:");
+        printFingerTable();
+
+        for (int i = 1; i <= MAX_FINGER_TABLE_SIZE; i++) {
+            if (oldFT.get(i).getNodeId() != nodeId) {
+                updateFingerTable(oldFT.get(i));
+            }
+        }
+        if(predecessor.getNodeId() != nodeId){
+            updateFingerTable(predecessor);
+        }else{
+            predecessor = server;
+        }
+
+
+        System.out.println("New finger table:");
+        printFingerTable();
+
     }
 
     /**

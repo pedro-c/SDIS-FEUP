@@ -101,8 +101,12 @@ public class Client extends User{
     public void signInMenu() {
         actualState = Task.HOLDING;
         currentChat = Constants.NO_CHAT_OPPEN;
-        String menu = "\n Menu " + "\n 1. Create a new Chat" + "\n 2. Open Chat" + "\n 3. Sign Out" + "\n";
+        String menu = "\n Menu " + "\n 1. Create a new Chat" + "\n 2. Open Chat" + "\n 3. Send Files" + "\n 4. Sign Out" + "\n";
         System.out.println(menu);
+
+
+        askForClientChats();
+        //askForPendingChats();
 
         int option = scannerIn.nextInt();
         switch (option) {
@@ -111,15 +115,17 @@ public class Client extends User{
                 createNewChat();
                 break;
             case 2:
-                askForClientChats();
                 loadChats();
                 break;
             case 3:
+                sendFiles();
+                break;
+            case 4:
                 signOut();
                 break;
             default:
                 signInMenu();
-
+                break;
         }
     }
 
@@ -134,25 +140,64 @@ public class Client extends User{
 
         if (chats.size() == 0)
             System.out.println("You don't have any chat to show... Press enter to go back");
-        else {
-            for (BigInteger chatId: chats.keySet()){
-                tempChats[i-1] = chatId;
-                System.out.println(i + ". " + chats.get(chatId).getChatName() + " Id: " + chatId);
-                i++;
-            }
-        }
+        else tempChats = printAndFillArrayChats();
 
         String option = console.readLine();
         if(!option.equals("")) {
             System.out.println(Integer.parseInt(option));
             BigInteger requiredChatId = tempChats[Integer.parseInt(option) - 1];
-            Message message = new Message(GET_CHAT, getClientId(), RESPONSIBLE, requiredChatId.toString());
-            actualState = Task.WAITING_FOR_CHAT;
-            message.getBody();
-            connection.sendMessage(message);
+            if(chats.containsKey(requiredChatId))
+                openChat(requiredChatId);
+            else {
+                Message message = new Message(GET_CHAT, getClientId(), RESPONSIBLE, requiredChatId.toString());
+                actualState = Task.WAITING_FOR_CHAT;
+                message.getBody();
+                connection.sendMessage(message);
+            }
         }
         else signInMenu();
 
+    }
+
+    public BigInteger[] printAndFillArrayChats(){
+
+        int i=1;
+        BigInteger[] tempChats;
+        tempChats = new BigInteger[chats.size()];
+
+        for (BigInteger chatId: chats.keySet()){
+            tempChats[i-1] = chatId;
+            System.out.println(i + ". " + chats.get(chatId).getChatName() + " Id: " + chatId);
+            i++;
+        }
+
+        return tempChats;
+    }
+
+    public void sendFiles(){
+        Console console = System.console();
+        BigInteger[] tempChats;
+        tempChats = new BigInteger[chats.size()];
+
+        System.out.println("To send a file ... [ChatNumber]-[Path]  \n");
+        tempChats = printAndFillArrayChats();
+
+        String option = console.readLine();
+        if(!option.equals("")) {
+
+            String[] info = option.split("-");
+            String path = info[1];
+
+            System.out.println("path: " + path);
+
+            String chatNumber = info[0];
+            System.out.println("chatNumber " + chatNumber);
+
+            BigInteger requiredChatId = tempChats[Integer.parseInt(chatNumber) - 1];
+            System.out.println("chatId " + requiredChatId);
+
+        }
+        else signInMenu();
     }
 
     /**
@@ -190,7 +235,6 @@ public class Client extends User{
             }
 
             signInMenu();
-
         }
 
     }
@@ -256,7 +300,8 @@ public class Client extends User{
         actualState = WAITING_SIGNIN;
         String password = getCredentials();
         Message message = new Message(SIGNIN, getClientId(), NOT_RESPONSIBLE, email, createHash(password).toString());
-        newConnectionAndSendMessage(message);
+        connection.sendMessage(message);
+        //newConnectionAndSendMessage(message);
     }
 
     /**
@@ -266,7 +311,8 @@ public class Client extends User{
         actualState = WAITING_SIGNUP;
         String password = getCredentials();
         Message message = new Message(SIGNUP, getClientId(), NOT_RESPONSIBLE, email, createHash(password).toString());
-        newConnectionAndSendMessage(message);
+        connection.sendMessage(message);
+        //newConnectionAndSendMessage(message);
     }
 
     public void newConnectionAndSendMessage(Message message){
@@ -362,6 +408,8 @@ public class Client extends User{
                     mainMenu();
                 }
                 else{
+                    Message updateServerConnection = new Message(USER_UPDATED_CONNECTION, this.getClientId(), RESPONSIBLE);
+                    connection.sendMessage(updateServerConnection);
                     actualState = SIGNED_IN;
                     signInMenu();
                 }
@@ -373,15 +421,21 @@ public class Client extends User{
             case WAITING_FOR_CHAT:
                 System.out.println("Received Chat");
                 Chat chat = (Chat) message.getObject();
-                chats.remove(chat);
+                chats.remove(chat.getIdChat());
                 chats.put(chat.getIdChat(),chat);
                 openChat(chat.getIdChat());
                 break;
-            case RECEIVING_CHAT:
+  /*          case RECEIVING_CHAT:
                 System.out.println("Received Chat");
                 Chat chatO = (Chat) message.getObject();
-                chats.remove(chatO);
+                chats.remove(chatO.getIdChat());
                 chats.put(chatO.getIdChat(),chatO);
+                break;*/
+            case GET_CHATS:
+                System.out.println("Get chats.....");
+                Chat chatTemp = (Chat) message.getObject();
+                if(chatTemp!=null)
+                    chats.put(chatTemp.getIdChat(),chatTemp);
                 break;
             case HOLDING:
                 signInMenu();
@@ -435,13 +489,13 @@ public class Client extends User{
         BigInteger clientId = getClientId();
 
         Message message = new Message(SIGNOUT, clientId, RESPONSIBLE, clientId.toString());
-
         connection.sendMessage(message);
+        connection.closeConnection();
     }
 
     public enum Task {
         HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
-        WAITING_SIGNOUT, WAITING_FOR_CHAT, RECEIVING_CHAT, CHATTING
+        WAITING_SIGNOUT, WAITING_FOR_CHAT, RECEIVING_CHAT, CHATTING, GET_CHATS
     }
 
     public void addChat(Chat chat){
@@ -468,8 +522,20 @@ public class Client extends User{
     }
 
     public void askForClientChats(){
+
+        System.out.println("Loading your chats ... ");
         Message message = new Message(GET_ALL_CHATS, getClientId(), RESPONSIBLE);
-        actualState = Task.RECEIVING_CHAT;
+        actualState = Task.GET_CHATS;
         connection.sendMessage(message);
+        //Message temp = connection.receiveMessage();
+        //System.out.println(temp.getMessageType());
+    }
+
+    public void askForPendingChats(){
+        System.out.println("Checking for new chats ... ");
+        Message message = new Message(GET_ALL_PENDING_CHATS, getClientId(), RESPONSIBLE);
+        connection.sendMessage(message);
+       // Message temp = connection.receiveMessage();
+        //System.out.println(temp.getMessageType());
     }
 }

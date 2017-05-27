@@ -131,6 +131,8 @@ public class Server extends Node implements Serializable {
             handler.connect();
         } catch (IOException e) {
             serverDown(knownNode);
+            joinNetwork(newNode, knownNode);
+            return;
         }
         handler.sendMessage(message);
         handler.closeConnection();
@@ -138,18 +140,51 @@ public class Server extends Node implements Serializable {
     }
 
     /**
-     * Handles a node failure, and alerts succesding node of such event
+     * Handles a node failure, and alerts succeeding node of such event
      * @param downServerId Id of the node that is down
      */
-    public void handleNodeFailure(int downServerId){
+    public void handleNodeFailure(int downServerId, Message message){
 
-        if(this.getDht().getPredecessor().getNodeId() == downServerId){
-            //TODO: Moeve backup table to normal table
-        }else{
-            //redirect();
+        dht.removeNode(downServerId);
+
+        if(message.getResponsible().equals(RESPONSIBLE)){
+            beginNodeFailureProtocol();
+            return;
         }
 
+        Node downServerSuccessor = dht.nodeLookUp(downServerId+1);
+        
+        if(downServerSuccessor.getNodeId() == dht.getFingerTable().get(1).getNodeId()){
+            message.setResponsible(RESPONSIBLE);
+        }
+
+        ServerConnection redirect = new ServerConnection(downServerSuccessor.getNodeIp(), downServerSuccessor.getNodePort(), this);
+        try {
+            redirect.connect();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        redirect.sendMessage(message);
+        redirect.closeConnection();
+
     }
+
+    /**
+     * Copies all backup data from failed node to its server data
+     * and backups the new data to successor
+     */
+    public void beginNodeFailureProtocol(){
+
+        for (ConcurrentHashMap.Entry<BigInteger, User> entry : backups.entrySet()) {
+            users.put(entry.getKey(),entry.getValue());
+        }
+        backups.clear();
+        System.out.println("Copied all backups to server data");
+
+
+
+    }
+
 
     /**
      * Verifies if this server is responsible for a given client
@@ -214,6 +249,8 @@ public class Server extends Node implements Serializable {
             handler.connect();
         } catch (IOException e) {
             serverDown(newNode);
+            sendFingerTableToPredecessor(newNode);
+            return;
         }
         handler.sendMessage(message);
         handler.closeConnection();
@@ -232,6 +269,8 @@ public class Server extends Node implements Serializable {
             handler.connect();
         } catch (IOException e) {
             serverDown(successor);
+            sendFingerTableToSuccessor();
+            return;
         }
         handler.sendMessage(message);
         handler.closeConnection();
@@ -247,6 +286,8 @@ public class Server extends Node implements Serializable {
             handler.connect();
         } catch (IOException e) {
             serverDown(node);
+            notifyNodeOfItsPredecessor(node, newNode);
+            return;
         }
         handler.sendMessage(message);
         handler.closeConnection();
@@ -291,8 +332,6 @@ public class Server extends Node implements Serializable {
         System.out.println("Recebendo user do meu sucessor");
 
         BigInteger userId = createHash(newUser.getEmail());
-
-        newUser.instantiateChats();
 
         users.put(userId, newUser);
         return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, USER_ADDED);
@@ -387,7 +426,7 @@ public class Server extends Node implements Serializable {
         else {
             users.get(clientId).addChat(chat);
             System.out.println("Sending invitation to logged in user");
-            Message response = new Message(NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId), RESPONSIBLE,chat.getIdChat().toString(), chat.getChatName(), clientId.toString());
+            Message response = new Message(NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId), RESPONSIBLE, chat, clientId);
             ServerConnection userConnection = loggedInUsers.get(clientId);
             userConnection.sendMessage(response);
         }
@@ -408,14 +447,10 @@ public class Server extends Node implements Serializable {
 
             if(users.get(participantHash)!=null){
 
-                if(chatMessage.getUserId().toString().equals(participantHash.toString())){
-                    users.get(participantHash).getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
-                    Message response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, chat.getIdChat().toString(), SENT_MESSAGE);
-                    ServerConnection serverConnection = loggedInUsers.get(participantHash);
-                    if(serverConnection != null)
-                        serverConnection.sendMessage(response);
+                if(!chatMessage.getUserId().toString().equals(participantHash.toString())){
+                    sendMessageToUser(chatMessage, participantHash);
                 }
-                else sendMessageToUser(chatMessage, participantHash);
+                else users.get(participantHash).getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
             }
             else {
                 Message message = new Message(NEW_MESSAGE_TO_PARTICIPANT, senderId, NOT_RESPONSIBLE, chatMessage, participantHash);
@@ -424,7 +459,7 @@ public class Server extends Node implements Serializable {
             }
         }
 
-        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, chat.getIdChat().toString(), SENT_INVITATIONS);
+        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, chat.getIdChat().toString(), SENT_MESSAGE);
 
     }
 
@@ -460,17 +495,48 @@ public class Server extends Node implements Serializable {
         Chat chat = users.get(clientId).getChat(new BigInteger(chatId));
 
         if(chat==null)
-            System.out.println("Chat null");
+            System.out.println("Null Chat");
 
         Message message =  new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, chat);
         return message;
     }
 
 
-   /* public Message getAllChats(BigInteger clientId){
+    public Message getAllChats(BigInteger clientId){
+
+        for(ConcurrentHashMap.Entry<BigInteger, Chat> entry : users.get(clientId).getChats().entrySet()) {
+            Chat chat = entry.getValue();
+
+            if(loggedInUsers.get(clientId) != null){
+                Message message =  new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, chat);
+                ServerConnection userConnection = loggedInUsers.get(clientId);
+                userConnection.sendMessage(message);
+            }
+        }
+
+        Message message =  new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_CHATS);
+        return message;
+    }
+
+    public Message getAllPendingChats(BigInteger clientId){
 
 
-    }*/
+        for(ConcurrentHashMap.Entry<BigInteger, Chat> entry : users.get(clientId).getPendingRequests().entrySet()) {
+            Chat chat = entry.getValue();
+
+            if(loggedInUsers.get(clientId) != null) {
+                users.get(clientId).addChat(chat);
+                users.get(clientId).deletePendingRequest(chat.getIdChat());
+                Message response = new Message(NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId), RESPONSIBLE, chat, clientId);
+                ServerConnection userConnection = loggedInUsers.get(clientId);
+                userConnection.sendMessage(response);
+            }
+
+        }
+
+        Message message =  new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_PENDING_CHATS);
+        return message;
+    }
 
     /**
      * Saves client connection
@@ -525,13 +591,21 @@ public class Server extends Node implements Serializable {
             handler.connect();
         } catch (IOException e) {
             serverDown(successor);
+            sendInfoToBackup(message);
+            return;
         }
         handler.sendMessage(message);
-        handler.receiveMessage();
+        try {
+            handler.receiveMessage();
+        } catch (IOException e) {
+            System.out.println("Function sendInfoToBackup: Failed to receive message");
+        } catch (ClassNotFoundException e) {
+            System.out.println("Function sendInfoToBackup: Failed to receive message");
+        }
     }
 
     /**
-     * Function used when a BACKUP request arrives to the server, basically depending on the request
+     * Function used when a BACKUP request arrives to the server, depending on the request
      * this function add, update or delete the information
      * @param message message with all the information and the type of the request
      * @return message of success or error
@@ -543,7 +617,6 @@ public class Server extends Node implements Serializable {
         switch (message.getMessageType()) {
             case BACKUP_USER:
                 User user = (User) message.getObject();
-                user.instantiateChats();
                 backups.put(user.getUserId(), user);
                 System.out.println("Back up user from server " + message.getSenderId());
                 response = new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, BACKUP_USER_DONE);
@@ -617,6 +690,8 @@ public class Server extends Node implements Serializable {
             handler.connect();
         } catch (IOException e) {
             serverDown(node);
+            sendInfoToPredecessor(node, container,type);
+            return;
         }
 
         Runnable task = null;
@@ -625,7 +700,13 @@ public class Server extends Node implements Serializable {
             //type = ADD_USER or BACKUP_USER
             message = new Message(type, BigInteger.valueOf(nodeId), RESPONSIBLE, user);
             handler.sendMessage(message);
-            handler.receiveMessage();
+            try {
+                handler.receiveMessage();
+            } catch (IOException e) {
+                System.out.println("Function sendInfoToPredecessor: Failed to receive message");
+            } catch (ClassNotFoundException e) {
+                System.out.println("Function sendInfoToPredecessor: Failed to receive message");
+            }
         }
     }
 
@@ -685,7 +766,10 @@ public class Server extends Node implements Serializable {
                 response = getChat(body[0],message.getSenderId());
                 break;
             case GET_ALL_CHATS:
-               // response = getAllChats(message.getSenderId());
+               response = getAllChats(message.getSenderId());
+                break;
+            case GET_ALL_PENDING_CHATS:
+                response = getAllPendingChats(message.getSenderId());
                 break;
             case NEW_MESSAGE:
                 response = sendMessage(connection, (ChatMessage) message.getObject(), message.getReceiver(), message.getSenderId());
@@ -741,6 +825,7 @@ public class Server extends Node implements Serializable {
             redirect.connect();
         } catch (IOException e) {
             serverDown(n);
+            redirect(initialConnection,message);
             return;
         }
         if(foundResponsible){
@@ -750,13 +835,27 @@ public class Server extends Node implements Serializable {
         }
 
         redirect.sendMessage(message);
-        initialConnection.sendMessage(redirect.receiveMessage());
+
+
+
+        try {
+            Message response = redirect.receiveMessage();
+            initialConnection.sendMessage(response);
+
+        } catch (IOException e) {
+            System.out.println("Function redirect: Failed to receive message");
+        } catch (ClassNotFoundException e) {
+            System.out.println("Function redirect: Failed to receive message");
+        }
+        redirect.closeConnection();
+
     }
 
     public void serverDown(Node downNode){
         System.out.println("\n Node " + downNode.getNodeId() + " is down.");
 
         Node successor = dht.nodeLookUp(downNode.getNodeId()+1);
+
 
         Message message = new Message(SERVER_DOWN, new BigInteger(Integer.toString(this.getNodeId())), NOT_RESPONSIBLE, Integer.toString(downNode.getNodeId()));
         ServerConnection redirect = new ServerConnection(successor.getNodeIp(), successor.getNodePort(), this);
@@ -768,6 +867,8 @@ public class Server extends Node implements Serializable {
         }
 
         redirect.sendMessage(message);
+        dht.removeNode(downNode.getNodeId());
+
     }
 
     /**

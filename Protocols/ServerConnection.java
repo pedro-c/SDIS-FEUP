@@ -47,10 +47,10 @@ public class ServerConnection extends Connection implements Runnable {
      * Receives a message
      * @return message received
      */
-    public Message receiveMessage(){
+    public Message receiveMessage() throws IOException, ClassNotFoundException {
         Message message = super.receiveMessage();
 
-        System.out.println("\nReceiving message - Header: " + message.getMessageType() + " Sender: " + message.getSenderId() + " Body " + message.getBody());
+        System.out.println("\nReceiving message - Header: " + message.getMessageType() + " Sender: " + Integer.remainderUnsigned(message.getSenderId().intValue(),128) + " Body " + message.getBody());
 
         return message;
     }
@@ -85,6 +85,11 @@ public class ServerConnection extends Connection implements Runnable {
                 break;
             case GET_ALL_CHATS:
                 server.isResponsible(this,message);
+                System.out.print("Sending chats");
+                break;
+            case GET_ALL_PENDING_CHATS:
+                System.out.println("Received Get All Pending Chats");
+                server.isResponsible(this, message);
                 break;
             case INVITE_USER:
                 if (message.getResponsible().equals(RESPONSIBLE)) {
@@ -125,6 +130,7 @@ public class ServerConnection extends Connection implements Runnable {
                 sendMessage(server.addUser((User) message.getObject()));
                 break;
             case USER_UPDATED_CONNECTION:
+                System.out.println("\nEntrei\n");
                 server.saveConnection(this,message.getSenderId());
                 break;
             case SERVER_SUCCESS:
@@ -134,8 +140,7 @@ public class ServerConnection extends Connection implements Runnable {
             case SERVER_DOWN:
                 body = message.getBody().split(" ");
                 System.out.println("Server " + body[0] + " is down.");
-                //TODO:
-                //server.handleNodeFailure(Integer.parseInt(body[0]));
+                server.handleNodeFailure(Integer.parseInt(body[0]), message);
                 break;
             default:
                 break;
@@ -146,14 +151,25 @@ public class ServerConnection extends Connection implements Runnable {
     public void run() {
 
         while (true){
-            Message message = receiveMessage();
 
-            Runnable task = () -> {
-                handleMessage(message);
-            };
+            try {
+                Message message = receiveMessage();
 
-            service.execute(task);
+                Runnable task = () -> {
+                    handleMessage(message);
+                };
+
+                service.execute(task);
+            } catch (IOException e) {
+                System.out.println("Server closed Connection");
+                return;
+            } catch (ClassNotFoundException e) {
+                System.out.println("Server closed Connection");
+                return;
+            }
+
         }
+
     }
 
     public Server getServer() {

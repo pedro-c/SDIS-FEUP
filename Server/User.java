@@ -59,8 +59,5 @@ public class User implements Serializable{
         return pendingRequests;
     }
 
-    public void instantiateChats() {
-        chats = new ConcurrentHashMap<BigInteger, Chat>();
-        pendingRequests = new ConcurrentHashMap<BigInteger, Chat>();
-    }
+    public void deletePendingRequest(BigInteger chatId) {pendingRequests.remove(chatId);}
 }
