@@ -502,7 +502,7 @@ public class Server extends Node implements Serializable {
             }
         }
 
-        Message message =  new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_CHATS);
+        Message message =  new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_CHATS);
         return message;
     }
 
@@ -522,7 +522,7 @@ public class Server extends Node implements Serializable {
 
         }
 
-        Message message =  new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_CHATS);
+        Message message =  new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_PENDING_CHATS);
         return message;
     }
 
@@ -583,7 +583,13 @@ public class Server extends Node implements Serializable {
             return;
         }
         handler.sendMessage(message);
-        handler.receiveMessage();
+        try {
+            handler.receiveMessage();
+        } catch (IOException e) {
+            System.out.println("Function sendInfoToBackup: Failed to receive message");
+        } catch (ClassNotFoundException e) {
+            System.out.println("Function sendInfoToBackup: Failed to receive message");
+        }
     }
 
     /**
@@ -682,7 +688,13 @@ public class Server extends Node implements Serializable {
             //type = ADD_USER or BACKUP_USER
             message = new Message(type, BigInteger.valueOf(nodeId), RESPONSIBLE, user);
             handler.sendMessage(message);
-            handler.receiveMessage();
+            try {
+                handler.receiveMessage();
+            } catch (IOException e) {
+                System.out.println("Function sendInfoToPredecessor: Failed to receive message");
+            } catch (ClassNotFoundException e) {
+                System.out.println("Function sendInfoToPredecessor: Failed to receive message");
+            }
         }
     }
 
@@ -811,8 +823,20 @@ public class Server extends Node implements Serializable {
         }
 
         redirect.sendMessage(message);
-        initialConnection.sendMessage(redirect.receiveMessage());
+
+
+
+        try {
+            Message response = redirect.receiveMessage();
+            initialConnection.sendMessage(response);
+
+        } catch (IOException e) {
+            System.out.println("Function redirect: Failed to receive message");
+        } catch (ClassNotFoundException e) {
+            System.out.println("Function redirect: Failed to receive message");
+        }
         redirect.closeConnection();
+
     }
 
     public void serverDown(Node downNode){

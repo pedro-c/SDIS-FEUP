@@ -14,10 +14,11 @@ import static Utilities.Constants.*;
 public class ClientConnection extends Connection implements Runnable {
 
     private Client client;
+    private Boolean listen;
 
     public ClientConnection(String ip, int port, Client client) {
         super(ip, port);
-
+        this.listen = true;
         this.client = client;
     }
 
@@ -41,10 +42,11 @@ public class ClientConnection extends Connection implements Runnable {
      * Receives a message
      * @return message received
      */
-    public Message receiveMessage(){
+    public Message receiveMessage() throws IOException, ClassNotFoundException {
+
         Message message = super.receiveMessage();
 
-        System.out.println("\nReceiving message - Header: " + message.getMessageType() +  " Sender: " + message.getSenderId() + " Body " + message.getBody());
+        System.out.println("\nReceiving message - Header: " + message.getMessageType() +  " Sender: " + Integer.remainderUnsigned(message.getSenderId().intValue(),128) + " Body " + message.getBody());
 
         return message;
     }
@@ -93,6 +95,10 @@ public class ClientConnection extends Connection implements Runnable {
         }
     }
 
+    public void endThread(){
+        this.listen = false;
+    }
+
     @Override
     public void run() {
 
@@ -100,13 +106,24 @@ public class ClientConnection extends Connection implements Runnable {
 
             System.out.println("Listening...");
 
-            Message message = receiveMessage();
+            try {
+                Message message = receiveMessage();
 
-            Runnable task = () -> {
-                handleMessage(message);
-            };
+                System.out.println("Received message: " + message.getMessageType());
 
-            service.execute(task);
+                Runnable task = () -> {
+                    handleMessage(message);
+                };
+
+                service.execute(task);
+            } catch (IOException e) {
+                System.out.println("Closed Connection");
+                return;
+            } catch (ClassNotFoundException e) {
+                System.out.println("Closed Connection");
+                return;
+            }
+
         }
 
     }
