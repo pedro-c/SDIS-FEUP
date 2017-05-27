@@ -181,8 +181,6 @@ public class Server extends Node implements Serializable {
         backups.clear();
         System.out.println("Copied all backups to server data");
 
-
-
     }
 
 

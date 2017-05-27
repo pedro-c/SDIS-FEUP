@@ -10,7 +10,9 @@ import Utilities.Constants;
 import java.io.Console;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.ArrayList;
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Scanner;
@@ -32,6 +34,12 @@ public class Client extends User{
     private Task actualState;
     private ConcurrentHashMap<BigInteger, Chat> chats;
     private int currentChat = 0;
+    /**
+     * User private and public keys
+     * PrivateKey = pair.getPrivate();
+     * PublicKey = pair.getPublic();
+     */
+    private KeyPair userKeys;
 
     /**
      * Client
@@ -41,6 +49,14 @@ public class Client extends User{
         this.serverPort = serverPort;
         this.serverIp = serverIp;
         this.actualState = HOLDING;
+        try {
+            this.userKeys = generateUserKeys();
+            saveUserKeys();
+        } catch (NoSuchProviderException e) {
+            System.out.println("Failed to generate user keys");
+        } catch (NoSuchAlgorithmException e) {
+            System.out.println("Failed to generate user keys");
+        }
         scannerIn = new Scanner(System.in);
         connection = new ClientConnection(serverIp, serverPort, this);
         try {

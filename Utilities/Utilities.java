@@ -5,9 +5,7 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import java.io.*;
 import java.math.BigInteger;
-import java.security.InvalidKeyException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.security.*;
 import java.sql.Timestamp;
 
 public class Utilities {
@@ -104,6 +102,16 @@ public class Utilities {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public static KeyPair generateUserKeys() throws NoSuchProviderException, NoSuchAlgorithmException {
+
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+
+        SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
+        keyGen.initialize(1024, random);
+
+        return keyGen.generateKeyPair();
     }
 
 
