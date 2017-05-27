@@ -39,7 +39,7 @@ public class DistributedHashTable implements Serializable {
      *
      * @param key 256-bit identifier
      */
-    public Node nodeLookUp(int key) {
+   /* public Node nodeLookUp(int key) {
 
         key = Integer.remainderUnsigned(key, 128);
 
@@ -54,45 +54,164 @@ public class DistributedHashTable implements Serializable {
             if (key > server.getNodeId()) {
                 if (node.getNodeId() > key) {
                     successor = node;
-                    System.out.println("11111111111111");
                     break;
                 }
             } else {
                 if (node.getNodeId() < previousId) {
                     if (key < node.getNodeId()) {
                         successor = node;
-                        System.out.println("22222222222222");
                     }
                     previousId = node.getNodeId();
                 }
             }
         }
+
         if (successor == server && key > server.getNodeId()) {
+
             for (int i = 2; i < fingerTable.size(); i++) {
                 Node tempNode1 = fingerTable.get(i-1);
                 Node tempNode2 = fingerTable.get(i);
-                System.out.println("1: " + tempNode1.getNodeId());
-                System.out.println("2: " + tempNode2.getNodeId());
 
                 if (tempNode1.getNodeId() > tempNode2.getNodeId()) {
                     successor = tempNode2;
-                    System.out.println("3333333333333");
                     break;
                 }
-              
+
                 if(tempNode1.getNodeId() == tempNode2.getNodeId() && tempNode1.getNodeId() != server.getNodeId()){
                     successor = tempNode1;
-                    System.out.println("44444444444");
                 }
-
             }
 
         }
 
         System.out.println("Successor of " + key + " : " + successor.getNodeId());
         return successor;
-    }
+    }*/
 
+    /**
+     * Looks up in the finger table which server has the closest smallest key comparing to the key we want to lookup
+     *
+     * @param key 256-bit identifier
+     */
+    public Node nodeLookUp(int key) {
+
+        int goesAround = fingerTable.get(MAX_FINGER_TABLE_SIZE).getNodeId() - server.getNodeId();
+        int keyGoesAround = key - server.getNodeId();
+
+        Node successor = server;
+
+        if(goesAround <= 0){ //Goes around
+            if(keyGoesAround <= 0){
+                for (int i = 1; i < fingerTable.size(); i++) {
+                    Node tempNode1 = fingerTable.get(i);
+
+                    if(tempNode1.getNodeId() > server.getNodeId())
+                        continue;
+
+                    if(key < tempNode1.getNodeId()){
+                        successor = tempNode1;
+                        break;
+                    }
+                }
+            }
+            else {
+                if((fingerTable.get(1).getNodeId() - server.getNodeId()) < 0){
+                    successor = fingerTable.get(1);
+                }
+                else {
+                    for (int i = 1; i < fingerTable.size() - 1; i++) {
+                        Node tempNode1 = fingerTable.get(i);
+                        Node tempNode2 = fingerTable.get(i+1);
+                        if(key < tempNode1.getNodeId()){
+                            successor = tempNode1;
+                            break;
+                        }
+
+                        if(tempNode2.getNodeId() <  tempNode1.getNodeId()){
+                            successor = tempNode2;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        else { //Don't go around
+            for (int i = 7; i > 1; i--) {
+                Node tempNode1 = fingerTable.get(i);
+                Node tempNode2 = fingerTable.get(i-1);
+
+                if(key < tempNode1.getNodeId() && key > tempNode2.getNodeId()){
+                    successor = tempNode1;
+                    break;
+                }
+                if(key < tempNode1.getNodeId())
+                    successor = tempNode1;
+            }
+        }
+
+        System.out.println("Successor of " + key + " : " + successor.getNodeId());
+        return successor;
+    }
+    /*
+    public Node lookUp(int key) {
+        int goesAround = fingerTable.get(MAX_FINGER_TABLE_SIZE).getNodeId() - server.getNodeId();
+        int keyGoesAround = key - server.getNodeId();
+
+        Node successor = server;
+
+        if(goesAround < 0){ //Goes around
+            if(keyGoesAround < 0){
+                for (int i = 1; i < fingerTable.size(); i++) {
+                    Node tempNode1 = fingerTable.get(i);
+
+                    if(tempNode1.getNodeId() > server.getNodeId())
+                        continue;
+
+                    if(key < tempNode1.getNodeId()){
+                        successor = tempNode1;
+                        break;
+                    }
+                }
+            }
+            else {
+                if((fingerTable.get(1).getNodeId() - server.getNodeId()) < 0){
+                    successor = fingerTable.get(1);
+                }
+                else {
+                    for (int i = 1; i < fingerTable.size() - 1; i++) {
+                        Node tempNode1 = fingerTable.get(i);
+                        Node tempNode2 = fingerTable.get(i+1);
+
+                        if(key < tempNode1.getNodeId()){
+                            successor = tempNode1;
+                            break;
+                        }
+
+                        if(tempNode2.getNodeId() <= tempNode1.getNodeId()){
+                            successor = tempNode2;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        else { //Don't go around
+            for (int i = 7; i > 1; i++) {
+                Node tempNode1 = fingerTable.get(i);
+                Node tempNode2 = fingerTable.get(i-1);
+
+                if(key < tempNode1.getNodeId() && key > tempNode2.getNodeId()){
+                    successor = tempNode1;
+                    break;
+                }
+                if(key < tempNode1.getNodeId())
+                    successor = tempNode1;
+            }
+        }
+
+        return successor;
+    }
+*/
     public void removeNode(int nodeId){
         ArrayList<Node> oldFT = new ArrayList<Node>();
 

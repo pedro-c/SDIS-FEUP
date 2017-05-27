@@ -222,12 +222,12 @@ public class Server extends Node implements Serializable {
             sendFingerTableToPredecessor(newNode);
             notifyNodeOfItsPredecessor(newNode, previousPredecessor);
             sendInfoToPredecessor(newNode, users, ADD_USER);
-            //sendInfoToPredecessor(newNode, backups, BACKUP_USER);
+            sendInfoToPredecessor(newNode, backups, BACKUP_USER);
         } else if (newNode.getNodeId() > dht.getPredecessor().getNodeId()) {
             sendFingerTableToPredecessor(newNode);
             notifyNodeOfItsPredecessor(newNode, dht.getPredecessor());
             sendInfoToPredecessor(newNode, users, ADD_USER);
-            //sendInfoToPredecessor(newNode, backups, BACKUP_USER);
+            sendInfoToPredecessor(newNode, backups, BACKUP_USER);
         } else {
             joinNetwork(newNode, successor);
             System.out.println("Redirecting.");
