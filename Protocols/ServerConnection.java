@@ -142,7 +142,7 @@ public class ServerConnection extends Connection implements Runnable {
                 System.out.println("Server " + body[0] + " is down.");
                 server.handleNodeFailure(Integer.parseInt(body[0]), message);
                 break;
-            case BEGIN_TRANSACTION:
+            case FILE_TRANSACTION:
                 server.isResponsible(this,message);
                 break;
             default:

@@ -51,11 +51,7 @@ public class Constants {
     //SIGNOUT SenderId userId
     public static final String NEW_MESSAGE = "NEW_MESSAGE";
 
-    public static final String BEGIN_TRANSACTION = "BEGIN_TRANSACTION";
-
-    public static final String END_TRANSACTION = "END_TRANSACTION";
-
-    public static final String IN_TRANSACTION = "IN_TRANSACTION";
+    public static final String FILE_TRANSACTION = "FILE_TRANSACTION";
 
     //SIGNOUT SenderId userId
     public static final String SIGNOUT = "SIGNOUT";
