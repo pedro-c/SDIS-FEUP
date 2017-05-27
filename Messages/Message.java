@@ -2,6 +2,8 @@ package Messages;
 
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 
 import static Utilities.Constants.CRLF;
 
@@ -50,7 +52,7 @@ public class Message implements Serializable {
             this.object = obj;
     }
 
-    public Message(String messageType, BigInteger senderId, String responsible, Object obj, BigInteger clientId) {
+    public Message(String messageType, BigInteger senderId, String responsible, Object obj, BigInteger clientId, byte[] privateKey, PublicKey publicKey) {
         this.messageType = messageType;
         this.initialServerPort = -1;
         this.initialServerAddress = null;

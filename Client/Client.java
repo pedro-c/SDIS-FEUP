@@ -7,12 +7,12 @@ import Protocols.ClientConnection;
 import Server.User;
 import Utilities.Constants;
 
-import java.io.Console;
-import java.io.IOException;
+import javax.crypto.NoSuchPaddingException;
+import java.io.*;
 import java.math.BigInteger;
-import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
+import java.security.*;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Scanner;
@@ -34,12 +34,8 @@ public class Client extends User{
     private Task actualState;
     private ConcurrentHashMap<BigInteger, Chat> chats;
     private int currentChat = 0;
-    /**
-     * User private and public keys
-     * PrivateKey = pair.getPrivate();
-     * PublicKey = pair.getPublic();
-     */
-    private KeyPair userKeys;
+    private PrivateKey privateKey;
+    private PublicKey publicKey;
 
     /**
      * Client
@@ -49,14 +45,6 @@ public class Client extends User{
         this.serverPort = serverPort;
         this.serverIp = serverIp;
         this.actualState = HOLDING;
-        try {
-            this.userKeys = generateUserKeys();
-            saveUserKeys();
-        } catch (NoSuchProviderException e) {
-            System.out.println("Failed to generate user keys");
-        } catch (NoSuchAlgorithmException e) {
-            System.out.println("Failed to generate user keys");
-        }
         scannerIn = new Scanner(System.in);
         connection = new ClientConnection(serverIp, serverPort, this);
         try {
@@ -316,8 +304,9 @@ public class Client extends User{
         actualState = WAITING_SIGNIN;
         String password = getCredentials();
         Message message = new Message(SIGNIN, getClientId(), NOT_RESPONSIBLE, email, createHash(password).toString());
+
+
         connection.sendMessage(message);
-        //newConnectionAndSendMessage(message);
     }
 
     /**
@@ -327,8 +316,81 @@ public class Client extends User{
         actualState = WAITING_SIGNUP;
         String password = getCredentials();
         Message message = new Message(SIGNUP, getClientId(), NOT_RESPONSIBLE, email, createHash(password).toString());
+
+        try {
+            KeyPair userKeys = generateUserKeys(password);
+            this.privateKey = userKeys.getPrivate();
+            this.publicKey = userKeys.getPublic();
+            saveKeysToDisk(password);
+        } catch (NoSuchProviderException e) {
+            System.out.println("Failed to generate user keys");
+        } catch (NoSuchAlgorithmException e) {
+            System.out.println("Failed to generate user keys");
+        }
+
+        System.out.println("Public key: " + this.publicKey);
+
         connection.sendMessage(message);
-        //newConnectionAndSendMessage(message);
+    }
+
+    public void saveKeysToDisk(String password){
+
+
+        /* save the public key and privete key in a file */
+        byte[] pub = publicKey.getEncoded();
+        byte[] priv = privateKey.getEncoded();
+
+        FileOutputStream privFile = null;
+        FileOutputStream pubFile = null;
+        try {
+
+            privFile = new FileOutputStream("private.key");
+            pubFile = new FileOutputStream("public.key");
+            encrypt(priv,privFile,password);
+            encrypt(pub,pubFile,password);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (NoSuchPaddingException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void loadKeysFromDisk(String password){
+
+        FileInputStream privFile = null;
+        FileInputStream pubFile = null;
+        try {
+
+            privFile = new FileInputStream("private.key");
+            pubFile = new FileInputStream("public.key");
+            byte[] priv = (byte[]) decrypt(privFile,password);
+            byte[] pub = (byte []) decrypt(pubFile,password);
+
+            X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(pub);
+            X509EncodedKeySpec privKeySpec = new X509EncodedKeySpec(priv);
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            this.publicKey = keyFactory.generatePublic(pubKeySpec);
+            this.privateKey = keyFactory.generatePrivate(privKeySpec);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (NoSuchPaddingException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (InvalidKeySpecException e) {
+            e.printStackTrace();
+        }
+
+
     }
 
     public void newConnectionAndSendMessage(Message message){

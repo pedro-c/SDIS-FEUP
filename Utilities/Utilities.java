@@ -104,11 +104,11 @@ public class Utilities {
         }
     }
 
-    public static KeyPair generateUserKeys() throws NoSuchProviderException, NoSuchAlgorithmException {
+    public static KeyPair generateUserKeys(String password) throws NoSuchProviderException, NoSuchAlgorithmException {
 
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
 
-        SecureRandom random = SecureRandom.getInstance("SHA1PRNG", "SUN");
+        SecureRandom random = new SecureRandom(password.getBytes());
         keyGen.initialize(1024, random);
 
         return keyGen.generateKeyPair();
