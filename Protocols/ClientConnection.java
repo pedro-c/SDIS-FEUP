@@ -70,12 +70,12 @@ public class ClientConnection extends Connection implements Runnable {
                 client.verifyState(message);
                 break;
             case NEW_CHAT_INVITATION:
-                System.out.println("Received new chat invitation..");
+                System.out.println(" Received new chat invitation... ");
                 //String body[] = message.getBody().split(" ");
                 Chat chat = (Chat) message.getObject();
                 client.addChat(chat);
-                client.askForChat(chat.getIdChat());
-                System.out.println("Asked server for chat...");
+                //TODO: Preciso??
+                //client.askForChat(chat.getIdChat());
                 break;
             case NEW_MESSAGE:
                 System.out.println("Received a new message\n" );

@@ -101,6 +101,7 @@ public class Client extends User{
     public void signInMenu() {
         actualState = Task.HOLDING;
         currentChat = Constants.NO_CHAT_OPPEN;
+        askForPendingChats();
         askForClientChats();
         String menu = "\n Menu " + "\n 1. Create a new Chat" + "\n 2. Open Chat" + "\n 3. Sign Out" + "\n";
         System.out.println(menu);
@@ -476,9 +477,15 @@ public class Client extends User{
 
     public void askForClientChats(){
 
-        System.out.println("ASK FOR ALL CHATS");
+        System.out.println("Loading your chats ... ");
         Message message = new Message(GET_ALL_CHATS, getClientId(), RESPONSIBLE);
         actualState = Task.GET_CHATS;
+        connection.sendMessage(message);
+    }
+
+    public void askForPendingChats(){
+        System.out.println("Checking for new chats ... ");
+        Message message = new Message(GET_ALL_PENDING_CHATS, getClientId(), RESPONSIBLE);
         connection.sendMessage(message);
     }
 }

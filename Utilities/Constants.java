@@ -43,9 +43,10 @@ public class Constants {
 
     public static final String GET_ALL_CHATS = "GET_ALL_CHATS";
 
+    public static final String GET_ALL_PENDING_CHATS = "GET_ALL_PENDING_CHATS";
+
     //NEW_CHAT_INVITATION CHAT_ID CHAT_NAME
     public static final String NEW_CHAT_INVITATION = "NEW_CHAT_INVITATION";
-
 
     //SIGNOUT SenderId userId
     public static final String NEW_MESSAGE = "NEW_MESSAGE";
@@ -72,7 +73,6 @@ public class Constants {
 
     //SERVER_DOWN ServerDownId
     public static final String SERVER_DOWN = "SERVER_DOWN";
-
 
     //Directories
     public static final String USER_DIRECTORY = "users";
@@ -110,6 +110,8 @@ public class Constants {
 
     //SERVER_DOWN ServerDownId
     public static final String NOT_RESPONSIBLE = "NOT_RESPONSIBLE";
+
+
 
 
 }

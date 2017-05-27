@@ -482,7 +482,7 @@ public class Server extends Node implements Serializable {
         Chat chat = users.get(clientId).getChat(new BigInteger(chatId));
 
         if(chat==null)
-            System.out.println("Chat null");
+            System.out.println("Null Chat");
 
         Message message =  new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, chat);
         return message;
@@ -494,13 +494,31 @@ public class Server extends Node implements Serializable {
         for(ConcurrentHashMap.Entry<BigInteger, Chat> entry : users.get(clientId).getChats().entrySet()) {
             Chat chat = entry.getValue();
 
-            System.out.println("Tenho chat  " + chat.getChatName());
-
             if(loggedInUsers.get(clientId) != null){
                 Message message =  new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, chat);
                 ServerConnection userConnection = loggedInUsers.get(clientId);
                 userConnection.sendMessage(message);
             }
+        }
+
+        Message message =  new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_CHATS);
+        return message;
+    }
+
+    public Message getAllPendingChats(BigInteger clientId){
+
+        System.out.println(1);
+
+        for(ConcurrentHashMap.Entry<BigInteger, Chat> entry : users.get(clientId).getPendingRequests().entrySet()) {
+            Chat chat = entry.getValue();
+
+            System.out.println("Sending invitation to logged in user");
+            users.get(clientId).addChat(chat);
+            users.get(clientId).deletePendingRequest(chat.getIdChat());
+            Message response = new Message(NEW_CHAT_INVITATION, BigInteger.valueOf(nodeId), RESPONSIBLE, chat, clientId);
+            ServerConnection userConnection = loggedInUsers.get(clientId);
+            userConnection.sendMessage(response);
+
         }
 
         Message message =  new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_CHATS);
@@ -725,6 +743,8 @@ public class Server extends Node implements Serializable {
             case GET_ALL_CHATS:
                response = getAllChats(message.getSenderId());
                 break;
+            case GET_ALL_PENDING_CHATS:
+                response = getAllPendingChats(message.getSenderId());
             case NEW_MESSAGE:
                 response = sendMessage(connection, (ChatMessage) message.getObject(), message.getReceiver(), message.getSenderId());
                 break;
