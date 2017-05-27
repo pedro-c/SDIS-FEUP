@@ -175,13 +175,26 @@ public class Client extends User{
 
     public void sendFiles(){
         Console console = System.console();
+        BigInteger[] tempChats;
+        tempChats = new BigInteger[chats.size()];
 
-        System.out.println("To send a file ... [ChatNumber]-[Path]");
-        printAndFillArrayChats();
+        System.out.println("To send a file ... [ChatNumber]-[Path]  \n");
+        tempChats = printAndFillArrayChats();
 
         String option = console.readLine();
         if(!option.equals("")) {
-            System.out.println("Reads");
+
+            String[] info = option.split("-");
+            String path = info[1];
+
+            System.out.println("path: " + path);
+
+            String chatNumber = info[0];
+            System.out.println("chatNumber " + chatNumber);
+
+            BigInteger requiredChatId = tempChats[Integer.parseInt(chatNumber) - 1];
+            System.out.println("chatId " + requiredChatId);
+
         }
         else signInMenu();
     }
