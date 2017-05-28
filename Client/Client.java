@@ -417,18 +417,10 @@ public class Client extends User {
             newChat.addParticipant(names[i]);
         }
 
-        addChat(newChat);
         Message message = new Message(CREATE_CHAT, getClientId(), RESPONSIBLE, newChat);
         connection.sendMessage(message);
 
-        try {
-            sleep(3000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        Message response = new Message(PUBLIC_KEY, this.getClientId(), RESPONSIBLE, newChat.getIdChat().toString(), this.getPublicKey(), this.getClientId());
-        connection.sendMessage(response);
+        addChat(newChat);
     }
 
     /**
@@ -711,11 +703,15 @@ public class Client extends User {
 
     public void addChat(Chat chat) {
         System.out.println("Added new Chat with chat name: " + chat.getChatName());
-        chats.put(chat.getIdChat(), chat);
         chats.put(chat.getIdChat(),chat);
 
-        Message response = new Message(PUBLIC_KEY, this.getClientId(), RESPONSIBLE, chat.getIdChat().toString(), this.getPublicKey(), this.getClientId());
-        connection.sendMessage(response);
+        try {
+            sleep(1000);
+            Message response = new Message(PUBLIC_KEY, this.getClientId(), RESPONSIBLE, chat.getIdChat().toString(), this.getPublicKey(), this.getClientId());
+            connection.sendMessage(response);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public Chat getChat(BigInteger chatId) {
