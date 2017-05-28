@@ -367,6 +367,8 @@ public class Server extends Node implements Serializable {
             response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE);
         }
 
+        System.out.println("Size1 " + users.get(user_email).pendingRequests.size());
+
         return response;
     }
 
@@ -399,9 +401,8 @@ public class Server extends Node implements Serializable {
 
             //if this server is responsible for this participant send client a message
             if(users.get(participantHash)!=null){
-                users.get(participantHash).addChat(chat);
-
                 if(chat.getCreatorEmail().equals(participantEmail)){
+                    users.get(participantHash).addChat(chat);
                     Message response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, chat.getIdChat().toString(),CREATED_CHAT_WITH_SUCCESS);
                     ServerConnection serverConnection = loggedInUsers.get(participantHash);
                     if(serverConnection != null)
@@ -427,6 +428,8 @@ public class Server extends Node implements Serializable {
 
         if(loggedInUsers.get(clientId) == null){
             System.out.println("Added to pending chats");
+            System.out.println("Chat name " + chat.getChatName());
+            System.out.println("Client id " + clientId);
             if(users.get(clientId) != null)
                 users.get(clientId).addPendingChat(chat);
         }
@@ -479,8 +482,10 @@ public class Server extends Node implements Serializable {
 
         if(loggedInUsers.get(clientId) == null){
             System.out.println("Added to pending messages");
-            if(users.get(clientId) != null)
-                users.get(clientId).getChat(chatMessage.getChatId()).addPendingChatMessage(chatMessage);
+            if(users.get(clientId) != null){
+                if (users.get(clientId).getChats().get(chatMessage.getChatId()) != null)
+                    users.get(clientId).getChat(chatMessage.getChatId()).addPendingChatMessage(chatMessage);
+            }
         }
         else {
             System.out.println("Sending message to logged in user");

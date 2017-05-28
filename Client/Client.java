@@ -504,7 +504,6 @@ public class Client extends User{
 
         Message message = new Message(SIGNOUT, clientId, RESPONSIBLE, clientId.toString());
         connection.sendMessage(message);
-        connection.closeConnection();
     }
 
     public enum Task {

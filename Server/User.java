@@ -1,10 +1,10 @@
 package Server;
 
+import Chat.Chat;
+
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.concurrent.ConcurrentHashMap;
-
-import Chat.Chat;
 
 import static Utilities.Utilities.createHash;
 
@@ -45,7 +45,9 @@ public class User implements Serializable{
 
     public Chat getChat(BigInteger chatId){ return chats.get(chatId); }
 
-    public void addPendingChat(Chat chat){ pendingRequests.put(chat.getIdChat(),chat);}
+    public void addPendingChat(Chat chat){
+        pendingRequests.put(chat.getIdChat(),chat);
+    }
 
     public BigInteger getUserId() {
         return createHash(email);
