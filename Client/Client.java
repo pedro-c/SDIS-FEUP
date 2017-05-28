@@ -17,10 +17,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -333,8 +330,17 @@ public class Client extends User {
         Console console = System.console();
         actualState = Task.CHATTING;
         System.out.println("Opening chat ... ");
-
+        
         if (chats.get(chatId) != null) {
+
+            for (HashMap.Entry<BigInteger, PublicKey> entry : chats.get(chatId).getUsersPubKeys().entrySet()) {
+                BigInteger key = entry.getKey();
+                PublicKey value = entry.getValue();
+                System.out.println("User: " + key);
+                System.out.println("Key: " + value);
+            }
+
+
             Chat chat = chats.get(chatId);
             String menu = "\n" + "\n" + "Chat:  " + chat.getChatName() + "\n";
             System.out.println(menu);
@@ -344,7 +350,7 @@ public class Client extends User {
             System.out.println(alert);
             printChatPendingMessages(chatId);
 
-            String send = "\n \n Send a message: " + "\n" + "\n" + "\n" + "\n";
+            String send = "\n \n Send a message: " + "\n";
             System.out.println(send);
             currentChat = chatId.intValue();
 
@@ -446,7 +452,7 @@ public class Client extends User {
             KeyPair userKeys = generateUserKeys(password);
             this.privateKey = userKeys.getPrivate();
             this.publicKey = userKeys.getPublic();
-            saveKeysToDisk(password);
+            //saveKeysToDisk(password);
         } catch (NoSuchProviderException e) {
             System.out.println("Failed to generate user keys");
         } catch (NoSuchAlgorithmException e) {
