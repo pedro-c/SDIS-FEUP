@@ -70,7 +70,7 @@ public class ClientConnection extends Connection implements Runnable {
      * @param message to be processed
      */
     public void handleMessage(Message message) {
-
+        String[] body;
 
         switch (message.getMessageType()) {
             case CLIENT_SUCCESS:
@@ -97,8 +97,13 @@ public class ClientConnection extends Connection implements Runnable {
                 }
                 break;
             case SERVER_UPDATE_CONNECTION:
-                String[] body = message.getBody().split(" ");
+                body = message.getBody().split(" ");
                 client.updateConnection(body[0], Integer.parseInt(body[1]));
+                break;
+            case SERVER_SUCCESS:
+            case SERVER_ERROR:
+                body = message.getBody().split(" ");
+                client.printError(body[0]);
                 break;
             default:
                 break;

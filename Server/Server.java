@@ -406,6 +406,7 @@ public class Server extends Node implements Serializable {
                     ServerConnection serverConnection = loggedInUsers.get(participantHash);
                     if(serverConnection != null)
                         serverConnection.sendMessage(response);
+                    sendInfoToBackup(new Message(BACKUP_USER, BigInteger.valueOf(nodeId), RESPONSIBLE, users.get(participantHash)));
                 }
                 else inviteUserToChat(chat,participantHash);
             }
@@ -437,6 +438,8 @@ public class Server extends Node implements Serializable {
             userConnection.sendMessage(response);
         }
 
+        sendInfoToBackup(new Message(BACKUP_USER, BigInteger.valueOf(nodeId), RESPONSIBLE, users.get(clientId)));
+
         return new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_INVITATIONS);
     }
 
@@ -456,7 +459,10 @@ public class Server extends Node implements Serializable {
                 if(!chatMessage.getUserId().toString().equals(participantHash.toString())){
                     sendMessageToUser(chatMessage, participantHash);
                 }
-                else users.get(participantHash).getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
+                else {
+                    users.get(participantHash).getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
+                    sendInfoToBackup(new Message(BACKUP_USER, BigInteger.valueOf(nodeId), RESPONSIBLE, users.get(participantHash)));
+                }
             }
             else {
                 Message message = new Message(NEW_MESSAGE_TO_PARTICIPANT, senderId, NOT_RESPONSIBLE, chatMessage, participantHash);
@@ -473,7 +479,8 @@ public class Server extends Node implements Serializable {
 
         if(loggedInUsers.get(clientId) == null){
             System.out.println("Added to pending messages");
-            users.get(clientId).getChat(chatMessage.getChatId()).addPendingChatMessage(chatMessage);
+            if(users.get(clientId) != null)
+                users.get(clientId).getChat(chatMessage.getChatId()).addPendingChatMessage(chatMessage);
         }
         else {
             System.out.println("Sending message to logged in user");
@@ -482,6 +489,8 @@ public class Server extends Node implements Serializable {
             ServerConnection userConnection = loggedInUsers.get(clientId);
             userConnection.sendMessage(response);
         }
+
+        sendInfoToBackup(new Message(BACKUP_USER, BigInteger.valueOf(nodeId), RESPONSIBLE, users.get(clientId)));
 
         return new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, TEXT_MESSAGE);
     }
@@ -619,10 +628,12 @@ public class Server extends Node implements Serializable {
     public Message backupInfo(Message message) {
         Message response = null;
         String[] body;
+        User user;
 
         switch (message.getMessageType()) {
             case BACKUP_USER:
-                User user = (User) message.getObject();
+                user = (User) message.getObject();
+                System.out.println("EHEHEHEHHEHEHE " + user.getUserId());
                 backups.put(user.getUserId(), user);
                 System.out.println("Back up user from server " + message.getSenderId());
                 response = new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, BACKUP_USER_DONE);
@@ -789,10 +800,16 @@ public class Server extends Node implements Serializable {
                 response = sendMessage(connection, (ChatMessage) message.getObject(), message.getReceiver(), message.getSenderId());
                 break;
             case CREATE_CHAT_BY_INVITATION:
-                response = inviteUserToChat((Chat) message.getObject(), message.getReceiver());
+                if (users.containsKey(message.getReceiver()))
+                    response = inviteUserToChat((Chat) message.getObject(), message.getReceiver());
+                else
+                    response = new Message(SERVER_ERROR, BigInteger.valueOf(nodeId), RESPONSIBLE, USER_NOT_EXISTS);
                 break;
             case NEW_MESSAGE_TO_PARTICIPANT:
-                response = sendMessageToUser((ChatMessage) message.getObject(), message.getReceiver());
+                if (users.containsKey(message.getReceiver()))
+                    response = sendMessageToUser((ChatMessage) message.getObject(), message.getReceiver());
+                else
+                    response = new Message(SERVER_ERROR, BigInteger.valueOf(nodeId), RESPONSIBLE, MESSAGE_NOT_SENT);
                 break;
             default:
                 break;

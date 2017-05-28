@@ -486,6 +486,9 @@ public class Client extends User{
             case INVALID_USER_EMAIL:
                 System.out.println("\nInvalid user email. Server couldn't find any user with that email ..");
                 break;
+            case USER_NOT_EXISTS:
+                System.out.println("\nUser not found so not added to chat ..");
+                break;
             default:
                 break;
         }
