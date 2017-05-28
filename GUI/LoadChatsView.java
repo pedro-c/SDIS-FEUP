@@ -48,6 +48,7 @@ public class LoadChatsView extends InterfaceView {
             button.setVisible(true);
             System.out.println("print2");
             button.revalidate();
+            button.repaint();
             System.out.println("print3");
 
             button.addActionListener(new ActionListener() {

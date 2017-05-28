@@ -1,6 +1,7 @@
 package Protocols;
 
 import Client.Client;
+import GUI.ChatRoom;
 import Messages.Message;
 import Chat.Chat;
 import Chat.ChatMessage;
@@ -97,7 +98,11 @@ public class ClientConnection extends Connection implements Runnable {
                     client.getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
 
                     if(chatMessage.getType().equals(TEXT_MESSAGE))
-                        System.out.println(new String(chatMessage.getContent()));
+                        if(client.getController() != null){
+                            if(client.getController().getView() instanceof ChatRoom)
+                                ((ChatRoom) client.getController().getView()) .addText(chatMessage.getContent().toString());}
+                        else
+                            System.out.println(new String(chatMessage.getContent()));
                     else System.out.println("Received new file with name : " + chatMessage.getFilename());
                 }
                 break;

@@ -32,6 +32,11 @@ public class Client extends User {
     private Task actualState;
     private ConcurrentHashMap<BigInteger, Chat> chats;
     private int currentChat = 0;
+
+    public static Controller getController() {
+        return controller;
+    }
+
     private static Controller controller=null;
 
     /**
@@ -304,6 +309,7 @@ public class Client extends User {
         System.out.println("Opening chat ... ");
 
         if (chats.get(chatId) != null) {
+
             Chat chat = chats.get(chatId);
             String menu = "\n" + "\n" + "Chat:  " + chat.getChatName() + "\n";
             System.out.println(menu);
@@ -319,21 +325,24 @@ public class Client extends User {
 
             String messageToSend = console.readLine();
             while (!messageToSend.equals("")) {
-                Date date = new Date();
-                ChatMessage chatMessage = new ChatMessage(chatId, date, getClientId(), messageToSend.getBytes(), TEXT_MESSAGE);
-                chats.get(chatId).addChatMessage(chatMessage);
-                Message message = new Message(NEW_MESSAGE, getClientId(), RESPONSIBLE, chatMessage, getClientId());
-                connection.sendMessage(message);
+                sendChatMessage(chatId, messageToSend);
                 messageToSend = null;
                 messageToSend = console.readLine();
             }
 
             signInMenu();
+
+
         }
 
-        if(controller != null){
-            controller.getView().showNotificationLogin("signIn");
-        }
+    }
+
+    public void sendChatMessage(BigInteger chatId, String messageToSend){
+        Date date = new Date();
+        ChatMessage chatMessage = new ChatMessage(chatId, date, getClientId(), messageToSend.getBytes(), TEXT_MESSAGE);
+        chats.get(chatId).addChatMessage(chatMessage);
+        Message message = new Message(NEW_MESSAGE, getClientId(), RESPONSIBLE, chatMessage, getClientId());
+        connection.sendMessage(message);
 
     }
 
@@ -573,14 +582,24 @@ public class Client extends User {
                 break;
             case WAITING_CREATE_CHAT:
                 System.out.println("Creating chat " + body[0] + " ... Loading ...");
-                openChat(new BigInteger(body[0]));
+                if(controller != null){
+                    controller.getView().showChatRoom(new BigInteger(body[0]));
+                }
+                else
+                    openChat(new BigInteger(body[0]));
                 break;
             case WAITING_FOR_CHAT:
                 System.out.println("Received Chat");
                 Chat chat = (Chat) message.getObject();
                 chats.remove(chat.getIdChat());
                 chats.put(chat.getIdChat(), chat);
-                openChat(chat.getIdChat());
+
+                if(controller != null){
+                    controller.getView().showChatRoom(chat.getIdChat());
+                    System.out.println("chama chat room");
+                }
+                else
+                    openChat(chat.getIdChat());
                 break;
   /*          case RECEIVING_CHAT:
                 System.out.println("Received Chat");

@@ -4,6 +4,9 @@ package GUI;
 import javax.swing.*;
 
 import Controller.Controller;
+import Protocols.Connection;
+
+import java.math.BigInteger;
 
 
 public class InterfaceView extends JDialog {
@@ -54,6 +57,13 @@ public class InterfaceView extends JDialog {
 
     public void showLoadChats(){
         window = new LoadChatsView(controller);
+        window.pack();
+        window.setVisible(true);
+    }
+
+    public void showChatRoom(BigInteger chatId){
+        System.out.println("estou na interface view");
+        window = new ChatRoom(controller, chatId);
         window.pack();
         window.setVisible(true);
     }
