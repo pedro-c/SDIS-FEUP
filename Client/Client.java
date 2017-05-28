@@ -12,10 +12,7 @@ import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -334,6 +331,10 @@ public class Client extends User {
             signInMenu();
         }
 
+        if(controller != null){
+            controller.getView().showNotificationLogin("signIn");
+        }
+
     }
 
     public void printChatMessages(BigInteger chatId) {
@@ -387,11 +388,33 @@ public class Client extends User {
 
         for (int i = 0; i < names.length; i++) {
             newChat.addParticipant(names[i]);
+
         }
 
         addChat(newChat);
+
         Message message = new Message(CREATE_CHAT, getClientId(), RESPONSIBLE, newChat);
         connection.sendMessage(message);
+    }
+
+    public void createChatView(Vector emails, String chatname){
+        actualState = WAITING_CREATE_CHAT;
+
+        Chat newChat = new Chat(email, chatname);
+        newChat.addParticipant(email);
+
+        for (int i = 0; i < emails.size(); i++) {
+            String emailGuest = emails.get(i).toString();
+            newChat.addParticipant(emailGuest);
+        }
+
+        addChat(newChat);
+        System.out.println("Partipants " + newChat.getParticipants());
+        Message message = new Message(CREATE_CHAT, getClientId(), RESPONSIBLE, newChat);
+        connection.sendMessage(message);
+
+        printClientChats();
+
     }
 
     /**
@@ -529,19 +552,23 @@ public class Client extends User {
                         else
                             controller.getView().showNotificationLogin("signUp");
                     }
-                    else
-                        mainMenu();
+                    else {
+                        if (controller != null)
+                            controller.getView().showMenuWindow();
+                        else
+                            mainMenu();
+                    }
                 } else {
 
                     Message updateServerConnection = new Message(USER_UPDATED_CONNECTION, this.getClientId(), RESPONSIBLE);
                     connection.sendMessage(updateServerConnection);
                     actualState = SIGNED_IN;
                     if(controller != null){
-                        System.out.println("");
-                        //controller.getView().showSignedInView();
-                        }
+                        controller.getView().showSignedInView();
+                    }
                     else
                         signInMenu();
+
                 }
                 break;
             case WAITING_CREATE_CHAT:
@@ -693,7 +720,7 @@ public class Client extends User {
 
     public enum Task {
         HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
-        WAITING_SIGNOUT, WAITING_FOR_CHAT, RECEIVING_CHAT, CHATTING, GET_CHATS, DOWNLOADING_FILE, WRONG_CREDENT
+        WAITING_SIGNOUT, WAITING_FOR_CHAT, RECEIVING_CHAT, CHATTING, GET_CHATS, DOWNLOADING_FILE,
     }
 
     public Task getActualState() {
@@ -702,6 +729,10 @@ public class Client extends User {
 
     public void setActualState(Task actualState) {
         this.actualState = actualState;
+    }
+
+    public ConcurrentHashMap<BigInteger, Chat> getClientChats() {
+        return chats;
     }
 }
 

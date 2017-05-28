@@ -44,7 +44,9 @@ public class SignInView extends InterfaceView {
 
     public void onSignIn(){
         email = emailField.getText();
-        password = passwordField.getText();
+        password = new String(passwordField.getPassword());
+        System.out.println(password);
+        this.dispose();
         controller.getUser().signInUserView(email, password);
     }
 

@@ -11,8 +11,8 @@ public class SignUpView extends InterfaceView {
     private JPanel contentPane;
     private JButton buttonReturn;
     private JTextField emailField;
-    private JTextField passField;
     private JButton signUpButton;
+    private JPasswordField passwordField;
 
     private Controller controller;
     private String email=null;
@@ -45,9 +45,10 @@ public class SignUpView extends InterfaceView {
 
     public void onSignUp(){
         email = emailField.getText();
-        password = passField.getText();
+        password = new String(passwordField.getPassword());
+        System.out.println(new String(passwordField.getPassword()));
         this.dispose();
-        controller.getUser().signUpUser();
+        controller.getUser().signUpUserView(email, password);
     }
 
     public void onReturn(){
