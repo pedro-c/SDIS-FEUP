@@ -102,8 +102,10 @@ public class ClientConnection extends Connection implements Runnable {
                 } else {
                     client.getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
 
-                    if(chatMessage.getType().equals(TEXT_MESSAGE))
-                        System.out.println(chatMessage.getSenderEmail() + " : " + new String(chatMessage.getContent()));
+                    if(chatMessage.getType().equals(TEXT_MESSAGE)){
+                        System.out.println(chatMessage.getSenderEmail() + " on " + chatMessage.getCreationDate() + " sent:");
+                        System.out.println(new String(chatMessage.getContent()));
+                    }
                     else System.out.println("Received new file with name : " + chatMessage.getFilename());
                 }
                 break;

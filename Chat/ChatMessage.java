@@ -47,4 +47,8 @@ public class ChatMessage implements Serializable {
     public String getSenderEmail() {
         return senderEmail;
     }
+
+    public Date getCreationDate() {
+        return creationDate;
+    }
 }

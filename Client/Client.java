@@ -356,8 +356,10 @@ public class Client extends User {
 
     public void printChatMessages(BigInteger chatId) {
         for (ChatMessage message : chats.get(chatId).getChatMessages()) {
-            if(message.getType().equals(TEXT_MESSAGE))
-                System.out.println(message.getSenderEmail() + " : " + new String(message.getContent()));
+            if(message.getType().equals(TEXT_MESSAGE)){
+                System.out.println(message.getSenderEmail() + " on " + message.getCreationDate() + " sent:");
+                System.out.println(new String(message.getContent()));
+            }
             else System.out.println("Received new file with name : " + message.getFilename());
         }
     }
@@ -368,8 +370,10 @@ public class Client extends User {
             ChatMessage message = iter.next();
             if (message.getChatId().compareTo(chatId) == 0) {
                 getChat(chatId).addChatMessage(message);
-                if(message.getType().equals(TEXT_MESSAGE))
-                    System.out.println(message.getSenderEmail() + " : " + new String(message.getContent()));
+                if(message.getType().equals(TEXT_MESSAGE)){
+                    System.out.println(message.getSenderEmail() + " on " + message.getCreationDate() + " sent:");
+                    System.out.println(new String(message.getContent()));
+                }
                 else System.out.println("Received new file with name : " + message.getFilename());
                 iter.remove();
             }
