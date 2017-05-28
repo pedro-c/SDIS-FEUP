@@ -35,7 +35,6 @@ public class ClientConnection extends Connection implements Runnable {
      * @param message message to be sent
      */
     public void sendMessage(Message message) {
-        System.out.println("\nSending message - Header: " + message.getMessageType() + " Body " + message.getBody());
         try {
             super.sendMessage(message);
         } catch (IOException e) {
@@ -54,8 +53,6 @@ public class ClientConnection extends Connection implements Runnable {
 
         Message message = super.receiveMessage();
 
-        System.out.println("\nReceiving message - Header: " + message.getMessageType() + " Sender: " + Integer.remainderUnsigned(message.getSenderId().intValue(), 128) + " Body " + message.getBody());
-
         return message;
     }
 
@@ -63,7 +60,6 @@ public class ClientConnection extends Connection implements Runnable {
      * Close the connection
      */
     public void closeConnection() {
-        System.out.println("Closing client connection");
         super.closeConnection();
     }
 
@@ -81,7 +77,7 @@ public class ClientConnection extends Connection implements Runnable {
                 client.verifyState(message);
                 break;
             case NEW_CHAT_INVITATION:
-                System.out.println(" Received new chat invitation... ");
+                System.out.println("Received new chat invitation... ");
                 Chat chat = (Chat) message.getObject();
                 client.addChat(chat);
                 //TODO: Preciso??
@@ -135,12 +131,8 @@ public class ClientConnection extends Connection implements Runnable {
 
         while (true) {
 
-            System.out.println("Listening...");
-
             try {
                 Message message = receiveMessage();
-
-                System.out.println("Received message: " + message.getMessageType());
 
                 Runnable task = () -> {
                     handleMessage(message);
@@ -148,11 +140,9 @@ public class ClientConnection extends Connection implements Runnable {
 
                 service.execute(task);
             } catch (IOException e) {
-                System.out.println("Closed Connection");
                 stopTasks();
                 return;
             } catch (ClassNotFoundException e) {
-                System.out.println("Closed Connection");
                 stopTasks();
                 return;
             }
