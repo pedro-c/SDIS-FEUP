@@ -43,15 +43,26 @@ public class Constants {
 
     public static final String GET_ALL_CHATS = "GET_ALL_CHATS";
 
+    public static final String GET_ALL_PENDING_CHATS = "GET_ALL_PENDING_CHATS";
+
     //NEW_CHAT_INVITATION CHAT_ID CHAT_NAME
     public static final String NEW_CHAT_INVITATION = "NEW_CHAT_INVITATION";
-
 
     //SIGNOUT SenderId userId
     public static final String NEW_MESSAGE = "NEW_MESSAGE";
 
+    public static final String FILE_TRANSACTION = "FILE_TRANSACTION";
+
+    public static final String STORE_FILE_MESSAGE = "STORE_FILE_MESSAGE";
+
+    public static final String STORE_FILE_ON_PARTICIPANT = "STORE_FILE_ON_PARTICIPANT";
+
+    public static final String DOWNLOAD_FILE = "DOWNLOAD_FILE";
+
     //SIGNOUT SenderId userId
     public static final String SIGNOUT = "SIGNOUT";
+
+    public static final String SENT_FILE= "SENT_FILE";
 
     //BACKUP_USER SenderId User
     public static final String BACKUP_USER = "BACKUP_USER";
@@ -70,9 +81,10 @@ public class Constants {
 
     public static final String NEW_MESSAGE_TO_PARTICIPANT ="NEW_MESSAGE_TO_PARTICIPANT";
 
+    public static final String DOWNLOADING_FILE="DOWNLOADING_FILE";
+
     //SERVER_DOWN ServerDownId
     public static final String SERVER_DOWN = "SERVER_DOWN";
-
 
     //Directories
     public static final String USER_DIRECTORY = "users";
@@ -95,12 +107,16 @@ public class Constants {
     public static final String WRONG_PASSWORD = "-3";
     public static final String ERROR_CREATING_CHAT = "-4";
     public static final String INVALID_USER_EMAIL = "-5";
+    public static final String ERROR_DOWNLOADING_FILE="-6";
     public static final String USER_ADDED = "1";
     public static final String SENT_INVITATIONS = "2";
     public static final String CREATED_CHAT_WITH_SUCCESS = "3";
     public static final String BACKUP_USER_DONE = "4";
     public static final String SENT_MESSAGE = "5";
     public static final String SENT_CHATS = "6";
+    public static final String SENT_PENDING_CHATS = "7";
+
+
     public static final String IMAGE_MESSAGE = "image";
     public static final String TEXT_MESSAGE = "text";
 
@@ -110,6 +126,8 @@ public class Constants {
  
     //SERVER_DOWN ServerDownId
     public static final String NOT_RESPONSIBLE = "NOT_RESPONSIBLE";
+
+
 
 
 }
