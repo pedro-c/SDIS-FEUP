@@ -111,6 +111,8 @@ public class Constants {
     public static final String ERROR_CREATING_CHAT = "-4";
     public static final String INVALID_USER_EMAIL = "-5";
     public static final String ERROR_DOWNLOADING_FILE="-6";
+    public static final String USER_NOT_EXISTS = "-7";
+    public static final String MESSAGE_NOT_SENT = "-8";
     public static final String USER_ADDED = "1";
     public static final String SENT_INVITATIONS = "2";
     public static final String CREATED_CHAT_WITH_SUCCESS = "3";
@@ -118,8 +120,8 @@ public class Constants {
     public static final String SENT_MESSAGE = "5";
     public static final String SENT_CHATS = "6";
     public static final String SENT_PENDING_CHATS = "7";
-    public static final String USER_NOT_EXISTS = "-6";
-    public static final String MESSAGE_NOT_SENT = "-7";
+
+
 
 
     public static final String IMAGE_MESSAGE = "image";
