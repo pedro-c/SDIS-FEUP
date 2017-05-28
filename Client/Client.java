@@ -275,7 +275,7 @@ public class Client extends User {
                 return;
             }
 
-            ChatMessage chatMessage = new ChatMessage(requiredChatId, date, getClientId(),null , IMAGE_MESSAGE, filename);
+            ChatMessage chatMessage = new ChatMessage(requiredChatId, date, getClientId(),null , IMAGE_MESSAGE, filename,email);
             Message saveFile = new Message(STORE_FILE_MESSAGE, getClientId(), RESPONSIBLE, chatMessage, getClientId());
             connection.sendMessage(saveFile);
 
@@ -290,7 +290,7 @@ public class Client extends User {
                     System.arraycopy( chunk, 0, chunkToSend, 0, bytesRead);
 
                     Message messageToSend = null;
-                    ChatMessage chatMessageToSend = new ChatMessage(requiredChatId, date, getClientId(), chunkToSend, IMAGE_MESSAGE, filename);
+                    ChatMessage chatMessageToSend = new ChatMessage(requiredChatId, date, getClientId(), chunkToSend, IMAGE_MESSAGE, filename, email);
 
                     messageToSend = new Message(FILE_TRANSACTION, getClientId(), RESPONSIBLE, chatMessageToSend, getClientId());
 
@@ -341,7 +341,7 @@ public class Client extends User {
             String messageToSend = console.readLine();
             while (!messageToSend.equals("")) {
                 Date date = new Date();
-                ChatMessage chatMessage = new ChatMessage(chatId, date, getClientId(), messageToSend.getBytes(), TEXT_MESSAGE);
+                ChatMessage chatMessage = new ChatMessage(chatId, date, getClientId(), email, messageToSend.getBytes(), TEXT_MESSAGE);
                 chats.get(chatId).addChatMessage(chatMessage);
                 Message message = new Message(NEW_MESSAGE, getClientId(), RESPONSIBLE, chatMessage, getClientId());
                 connection.sendMessage(message);
@@ -357,7 +357,7 @@ public class Client extends User {
     public void printChatMessages(BigInteger chatId) {
         for (ChatMessage message : chats.get(chatId).getChatMessages()) {
             if(message.getType().equals(TEXT_MESSAGE))
-                System.out.println(new String(message.getContent()));
+                System.out.println(message.getSenderEmail() + " : " + new String(message.getContent()));
             else System.out.println("Received new file with name : " + message.getFilename());
         }
     }
@@ -369,7 +369,7 @@ public class Client extends User {
             if (message.getChatId().compareTo(chatId) == 0) {
                 getChat(chatId).addChatMessage(message);
                 if(message.getType().equals(TEXT_MESSAGE))
-                    System.out.println(new String(message.getContent()));
+                    System.out.println(message.getSenderEmail() + " : " + new String(message.getContent()));
                 else System.out.println("Received new file with name : " + message.getFilename());
                 iter.remove();
             }

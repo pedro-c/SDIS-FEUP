@@ -12,21 +12,19 @@ public class ChatMessage implements Serializable {
     private String type;
     private BigInteger chatId;
     private String filename;
+    private String senderEmail;
 
-    public ChatMessage(BigInteger chatId, Date creationDate, BigInteger userId, byte[] content, String type) {
+    public ChatMessage(BigInteger chatId, Date creationDate, BigInteger userId, String senderEmail, byte[] content, String type) {
         this.chatId = chatId;
         this.creationDate = creationDate;
         this.userId = userId;
         this.content = content;
         this.type = type;
+        this.senderEmail = senderEmail;
     }
 
-    public ChatMessage(BigInteger chatId, Date creationDate, BigInteger userId, byte[] content, String type, String filename) {
-        this.chatId = chatId;
-        this.creationDate = creationDate;
-        this.userId = userId;
-        this.content = content;
-        this.type = type;
+    public ChatMessage(BigInteger chatId, Date creationDate, BigInteger userId, byte[] content, String type, String filename, String senderEmail) {
+        this(chatId,creationDate,userId,senderEmail,content,type);
         this.filename = filename;
     }
 
@@ -46,4 +44,7 @@ public class ChatMessage implements Serializable {
 
     public String getFilename() {return filename;}
 
+    public String getSenderEmail() {
+        return senderEmail;
+    }
 }

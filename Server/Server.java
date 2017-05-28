@@ -596,7 +596,7 @@ public class Server extends Node implements Serializable {
 
                 Message messageToSend = null;
                 Date date = new Date();
-                ChatMessage chatMessageToSend = new ChatMessage(new BigInteger(requiredChatId), date, new BigInteger(body[1]), chunkToSend, IMAGE_MESSAGE, body[2]);
+                ChatMessage chatMessageToSend = new ChatMessage(new BigInteger(requiredChatId), date, new BigInteger(body[1]),chunkToSend, IMAGE_MESSAGE, body[2],"image");
 
                 messageToSend = new Message(DOWNLOADING_FILE, BigInteger.valueOf(nodeId), RESPONSIBLE, chatMessageToSend, new BigInteger(body[1]));
 
