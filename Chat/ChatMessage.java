@@ -46,4 +46,7 @@ public class ChatMessage implements Serializable {
 
     public String getFilename() {return filename;}
 
+    public void setContent(byte[] content) {
+        this.content = content;
+    }
 }

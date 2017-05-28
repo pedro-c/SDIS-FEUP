@@ -10,6 +10,7 @@ import java.math.BigInteger;
 import java.io.IOException;
 
 import static Utilities.Constants.*;
+import static Utilities.Utilities.decrypt;
 import static java.lang.Thread.sleep;
 
 public class ClientConnection extends Connection implements Runnable {
@@ -98,23 +99,7 @@ public class ClientConnection extends Connection implements Runnable {
                 break;
             case NEW_MESSAGE:
                 //TODO: Message Type
-
-                ChatMessage chatMessage = (ChatMessage) message.getObject();
-                if (chatMessage.getType().equals(IMAGE_MESSAGE))
-                    System.out.println("Received a new file\n");
-                else if (chatMessage.getType().equals(TEXT_MESSAGE))
-                    System.out.println("Received a new message\n");
-
-                if (client.getCurrentChat() == NO_CHAT_OPPEN || client.getCurrentChat() != chatMessage.getChatId().intValue()) {
-                    client.getChat(chatMessage.getChatId()).addPendingChatMessage(chatMessage);
-                    System.out.println("Saved on pending chat messages");
-                } else {
-                    client.getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
-
-                    if(chatMessage.getType().equals(TEXT_MESSAGE))
-                        System.out.println(new String(chatMessage.getContent()));
-                    else System.out.println("Received new file with name : " + chatMessage.getFilename());
-                }
+                handleNewMessage(message);
                 break;
             case DOWNLOADING_FILE:
                 client.storeFile((ChatMessage) message.getObject());
@@ -130,9 +115,40 @@ public class ClientConnection extends Connection implements Runnable {
                 break;
             case ADDED_PUB_KEYS:
                 client.getChat(new BigInteger(message.getChatId())).getUsersPubKeys().put(message.getReceiver(), message.getPublicKey());
+                System.out.println("Added key from user: " + message.getReceiver());
+                System.out.println("key: " + message.getPublicKey());
                 break;
             default:
                 break;
+        }
+    }
+
+    public void handleNewMessage(Message message){
+        ChatMessage chatMessage = (ChatMessage) message.getObject();
+        try {
+            chatMessage.setContent(decrypt(chatMessage.getContent(), client.getClientPrivateKey()));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (chatMessage.getType().equals(IMAGE_MESSAGE))
+            System.out.println("Received a new file\n");
+        else if (chatMessage.getType().equals(TEXT_MESSAGE))
+            System.out.println("Received a new message\n");
+
+        if (client.getCurrentChat() == NO_CHAT_OPPEN || client.getCurrentChat() != chatMessage.getChatId().intValue()) {
+            client.getChat(chatMessage.getChatId()).addPendingChatMessage(chatMessage);
+            System.out.println("Saved on pending chat messages");
+        } else {
+            client.getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
+
+            if(chatMessage.getType().equals(TEXT_MESSAGE)){
+                try {
+                    System.out.println(decrypt(chatMessage.getContent(), client.getClientPrivateKey()));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            else System.out.println("Received new file with name : " + chatMessage.getFilename());
         }
     }
 

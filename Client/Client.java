@@ -8,6 +8,7 @@ import Server.Node;
 import Server.User;
 import Utilities.Constants;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.NoSuchPaddingException;
 import java.io.*;
 import java.math.BigInteger;
@@ -359,8 +360,23 @@ public class Client extends User {
                 Date date = new Date();
                 ChatMessage chatMessage = new ChatMessage(chatId, date, getClientId(), messageToSend.getBytes(), TEXT_MESSAGE);
                 chats.get(chatId).addChatMessage(chatMessage);
-                Message message = new Message(NEW_MESSAGE, getClientId(), RESPONSIBLE, chatMessage, getClientId());
-                connection.sendMessage(message);
+
+                for(String participant : chats.get(chatId).getParticipants()){
+                    ChatMessage messageToBeSent = new ChatMessage(chatId, date, getClientId(), messageToSend.getBytes(), TEXT_MESSAGE);
+                    PublicKey pKey = chats.get(chatId).getUsersPubKeys().get(createHash(participant));
+
+                    try {
+                        System.out.println("CONTENT LENGHT");
+                        System.out.println(messageToBeSent.getContent().length);
+
+                        messageToBeSent.setContent(encrypt(messageToBeSent.getContent(),pKey));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    Message message = new Message(NEW_MESSAGE_TO_PARTICIPANT, getClientId(), NOT_RESPONSIBLE, messageToBeSent, createHash(participant));
+                    connection.sendMessage(message);
+                }
                 messageToSend = null;
                 messageToSend = console.readLine();
             }
@@ -372,8 +388,13 @@ public class Client extends User {
 
     public void printChatMessages(BigInteger chatId) {
         for (ChatMessage message : chats.get(chatId).getChatMessages()) {
-            if(message.getType().equals(TEXT_MESSAGE))
-                System.out.println(new String(message.getContent()));
+            if(message.getType().equals(TEXT_MESSAGE)){
+                try {
+                    System.out.println(new String(decrypt(message.getContent(),getClientPrivateKey())));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
             else System.out.println("Received new file with name : " + message.getFilename());
         }
     }
@@ -384,8 +405,13 @@ public class Client extends User {
             ChatMessage message = iter.next();
             if (message.getChatId().compareTo(chatId) == 0) {
                 getChat(chatId).addChatMessage(message);
-                if(message.getType().equals(TEXT_MESSAGE))
-                    System.out.println(new String(message.getContent()));
+                if(message.getType().equals(TEXT_MESSAGE)){
+                    try {
+                        System.out.println(new String(decrypt(message.getContent(),getClientPrivateKey())));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
                 else System.out.println("Received new file with name : " + message.getFilename());
                 iter.remove();
             }
@@ -418,6 +444,7 @@ public class Client extends User {
         Chat newChat = new Chat(email, chatName);
         newChat.addParticipant(email);
 
+        newChat.getUsersPubKeys().put(getClientId(), publicKey);
 
         for (int i = 0; i < names.length; i++) {
             newChat.addParticipant(names[i]);
@@ -474,66 +501,6 @@ public class Client extends User {
         System.out.println("Public key: " + this.publicKey);
 
         connection.sendMessage(message);
-    }
-
-    public void saveKeysToDisk(String password){
-
-
-        /* save the public key and privete key in a file */
-        byte[] pub = publicKey.getEncoded();
-        byte[] priv = privateKey.getEncoded();
-
-        FileOutputStream privFile = null;
-        FileOutputStream pubFile = null;
-        try {
-
-            privFile = new FileOutputStream("private.key");
-            pubFile = new FileOutputStream("public.key");
-            encrypt(priv,privFile,password);
-            encrypt(pub,pubFile,password);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (NoSuchPaddingException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    public void loadKeysFromDisk(String password){
-
-        FileInputStream privFile = null;
-        FileInputStream pubFile = null;
-        try {
-
-            privFile = new FileInputStream("private.key");
-            pubFile = new FileInputStream("public.key");
-            byte[] priv = (byte[]) decrypt(privFile,password);
-            byte[] pub = (byte []) decrypt(pubFile,password);
-
-            X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(pub);
-            X509EncodedKeySpec privKeySpec = new X509EncodedKeySpec(priv);
-            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-            this.publicKey = keyFactory.generatePublic(pubKeySpec);
-            this.privateKey = keyFactory.generatePrivate(privKeySpec);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (NoSuchPaddingException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (InvalidKeyException e) {
-            e.printStackTrace();
-        } catch (InvalidKeySpecException e) {
-            e.printStackTrace();
-        }
-
-
     }
 
     public void newConnectionAndSendMessage(Message message){
@@ -841,5 +808,10 @@ public class Client extends User {
 
         connection.sendMessage(message);
     }
+
+    public PrivateKey getClientPrivateKey() {
+        return privateKey;
+    }
+
 }
 

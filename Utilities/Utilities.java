@@ -60,50 +60,21 @@ public class Utilities {
         return createHash(String.valueOf(getTimestamp()) + email);
     }
 
-    /**
-     * Object encryption and decryption    code from: https://codereview.stackexchange.com/a/66931
-     */
-    public static void encrypt(Serializable object, OutputStream ostream, String password) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
-        try {
-            byte[] key = createHash(password).toByteArray();
 
-            // Length is 16 byte
-            SecretKeySpec sks = new SecretKeySpec(key, transformation);
-
-            // Create cipher
-            Cipher cipher = Cipher.getInstance(transformation);
-            cipher.init(Cipher.ENCRYPT_MODE, sks);
-            SealedObject sealedObject = new SealedObject(object, cipher);
-
-            // Wrap the output stream
-            CipherOutputStream cos = new CipherOutputStream(ostream, cipher);
-            ObjectOutputStream outputStream = new ObjectOutputStream(cos);
-            outputStream.writeObject(sealedObject);
-            outputStream.close();
-        } catch (IllegalBlockSizeException e) {
-            e.printStackTrace();
-        }
+    public static byte[] encrypt(byte[] inpBytes, PublicKey key) throws Exception
+    {
+        Cipher cipher = Cipher.getInstance("RSA");
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+        return cipher.doFinal(inpBytes);
     }
 
-    public static Object decrypt(InputStream istream, String password) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
-
-        byte[] key = password.getBytes();
-
-        SecretKeySpec sks = new SecretKeySpec(key, transformation);
-        Cipher cipher = Cipher.getInstance(transformation);
-        cipher.init(Cipher.DECRYPT_MODE, sks);
-
-        CipherInputStream cipherInputStream = new CipherInputStream(istream, cipher);
-        ObjectInputStream inputStream = new ObjectInputStream(cipherInputStream);
-        SealedObject sealedObject;
-        try {
-            sealedObject = (SealedObject) inputStream.readObject();
-            return sealedObject.getObject(cipher);
-        } catch (ClassNotFoundException | IllegalBlockSizeException | BadPaddingException e) {
-            e.printStackTrace();
-            return null;
-        }
+    public static byte[] decrypt(byte[] inpBytes, PrivateKey key) throws Exception
+    {
+        Cipher cipher = Cipher.getInstance("RSA");
+        cipher.init(Cipher.DECRYPT_MODE, key);
+        return cipher.doFinal(inpBytes);
     }
+
 
     public static KeyPair generateUserKeys(String password) throws NoSuchProviderException, NoSuchAlgorithmException {
 

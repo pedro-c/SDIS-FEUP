@@ -466,7 +466,7 @@ public class Server extends Node implements Serializable {
             if (users.get(participantHash) != null) {
 
                 if (!chatMessage.getUserId().toString().equals(participantHash.toString())) {
-                    sendMessageToUser(chatMessage, participantHash);
+                    sendMessageToUser(chatMessage, participantHash, senderId);
                 }
                 else {
                     users.get(participantHash).getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
@@ -486,8 +486,20 @@ public class Server extends Node implements Serializable {
 
     }
 
-    public Message sendMessageToUser(ChatMessage chatMessage, BigInteger clientId) {
+    public Message sendMessageToUser(ChatMessage chatMessage, BigInteger clientId, BigInteger senderId) {
 
+        if(senderId.compareTo(clientId) == 0){
+            if (loggedInUsers.get(clientId) == null) {
+                System.out.println("Added to pending messages");
+                if(users.get(clientId) != null){
+                    if (users.get(clientId).getChats().get(chatMessage.getChatId()) != null)
+                        users.get(clientId).getChat(chatMessage.getChatId()).addPendingChatMessage(chatMessage);
+                }
+            }else {
+                System.out.println("Sending message to logged in user");
+                users.get(clientId).getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
+            }
+        }
         if (loggedInUsers.get(clientId) == null) {
             System.out.println("Added to pending messages");
             if(users.get(clientId) != null){
@@ -1020,7 +1032,7 @@ public class Server extends Node implements Serializable {
                 break;
             case NEW_MESSAGE_TO_PARTICIPANT:
                 if (users.containsKey(message.getReceiver()))
-                    response = sendMessageToUser((ChatMessage) message.getObject(), message.getReceiver());
+                    response = sendMessageToUser((ChatMessage) message.getObject(), message.getReceiver(), message.getSenderId());
                 else
                     response = new Message(SERVER_ERROR, BigInteger.valueOf(nodeId), RESPONSIBLE, MESSAGE_NOT_SENT);
                 break;
