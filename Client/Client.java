@@ -4,6 +4,7 @@ import Chat.Chat;
 import Chat.ChatMessage;
 import Messages.Message;
 import Protocols.ClientConnection;
+import Server.Node;
 import Server.User;
 import Utilities.Constants;
 
@@ -72,7 +73,7 @@ public class Client extends User{
      */
     public static void main(String[] args) {
 
-        if (args.length != 2 || args.length != 4) {
+        if (args.length != 2 && args.length != 4) {
             throw new IllegalArgumentException("\nUsage : java Client.Client <serverIp> <serverPort> (<recoverServerIp> <recoverServerPort>)");
         }
 
@@ -92,7 +93,7 @@ public class Client extends User{
             client = new Client(serverIp, serverPort, recoverServerIp, recoverServerPort);
         }
         else {
-            client = new Client(serverIp, serverPort);
+            client = new Client(serverIp, serverPort, serverIp, serverPort);
         }
 
         client.mainMenu();
@@ -322,6 +323,7 @@ public class Client extends User{
     public void signInUser() {
         actualState = WAITING_SIGNIN;
         String password = getCredentials();
+        this.password = createHash(password);
         Message message = new Message(SIGNIN, getClientId(), NOT_RESPONSIBLE, email, createHash(password).toString());
         connection.sendMessage(message);
         //newConnectionAndSendMessage(message);
@@ -333,6 +335,7 @@ public class Client extends User{
     public void signUpUser() {
         actualState = WAITING_SIGNUP;
         String password = getCredentials();
+        this.password = createHash(password);
         Message message = new Message(SIGNUP, getClientId(), NOT_RESPONSIBLE, email, createHash(password).toString());
         connection.sendMessage(message);
         //newConnectionAndSendMessage(message);
@@ -566,5 +569,49 @@ public class Client extends User{
         Message connectToServer = new Message(USER_UPDATED_CONNECTION, this.getClientId(), RESPONSIBLE);
         connection.sendMessage(connectToServer);
 
+    }
+
+    public void recoverConnection() {
+
+        int serverId = Integer.remainderUnsigned(createHash(serverIp + Integer.toString(serverPort)).intValue()
+                ,128);
+
+        Node node = new Node(serverIp,serverPort);
+
+        System.out.println("boas: " + node.getNodeId());
+
+        if(recoverServerIp == null)
+            return;
+
+        serverPort = recoverServerPort;
+        serverIp = recoverServerIp;
+
+        recoverServerPort = 0;
+        recoverServerIp = null;
+
+        connection = new ClientConnection(serverIp, serverPort, this);
+        try {
+            connection.connect();
+        } catch (IOException e) {
+            //Iniciar o protocolo
+            System.out.println("\nError connecting");
+        }
+
+        Message connectToServer = new Message(SERVER_DOWN, getClientId(), NOT_RESPONSIBLE, Integer.toString(node.getNodeId()));
+        connection.sendMessage(connectToServer);
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+           // e.printStackTrace();
+        }
+
+        threadPool.submit(connection);
+
+        actualState = WAITING_SIGNIN;
+
+        Message message = new Message(SIGNIN, getClientId(), NOT_RESPONSIBLE, email, password.toString());
+
+        connection.sendMessage(message);
     }
 }

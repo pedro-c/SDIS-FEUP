@@ -40,7 +40,12 @@ public class ServerConnection extends Connection implements Runnable {
      */
     public void sendMessage(Message message) {
         System.out.println("\nSending message - Header: " + message.getMessageType() + " Body " + message.getBody());
-        super.sendMessage(message);
+        try {
+            super.sendMessage(message);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("\nError sending message...");
+        }
     }
 
     /**

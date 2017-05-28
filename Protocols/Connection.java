@@ -63,16 +63,12 @@ public class Connection {
      * Sends a message
      * @param message message to be sent
      */
-    public void sendMessage(Message message) {
+    public void sendMessage(Message message) throws IOException {
 
-        try {
-            if (message == null)
-                throw new IOException();
-            outputStream.writeObject(message);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("\nError sending message...");
-        }
+        if (message == null)
+            throw new IOException();
+        outputStream.writeObject(message);
+
     }
 
     /**

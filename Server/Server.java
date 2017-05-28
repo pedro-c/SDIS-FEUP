@@ -156,6 +156,15 @@ public class Server extends Node implements Serializable {
             message.setResponsible(RESPONSIBLE);
         }
 
+        if(downServerSuccessor.getNodeId() == nodeId){
+            Node successor = dht.getSuccessor();
+            if (successor == null) {
+                beginNodeFailureProtocol();
+                return;
+            }
+            downServerSuccessor = successor;
+        }
+
         ServerConnection redirect = new ServerConnection(downServerSuccessor.getNodeIp(), downServerSuccessor.getNodePort(), this);
         try {
             redirect.connect();
