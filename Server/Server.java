@@ -598,6 +598,7 @@ public class Server extends Node implements Serializable {
             if(users.get(participantHash)!=null){
                 users.get(participantHash).getChats().get(new BigInteger(chatId)).getUsersPubKeys().put(receiverId,pubKey);
                 System.out.println("ADDING pub key");
+                loggedInUsers.get(participantHash).sendMessage(new Message(ADDED_PUB_KEYS, BigInteger.valueOf(nodeId), RESPONSIBLE, chatId, pubKey, receiverId));
             }
         }
 
@@ -608,7 +609,7 @@ public class Server extends Node implements Serializable {
             System.out.println("Key: " + value);
         }
 
-        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_PUB_KEYS);
+        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, ADDED_PUB_KEYS);
     }
 
     /**

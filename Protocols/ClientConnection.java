@@ -94,6 +94,9 @@ public class ClientConnection extends Connection implements Runnable {
                 String[] body = message.getBody().split(" ");
                 client.updateConnection(body[0], Integer.parseInt(body[1]));
                 break;
+            case ADDED_PUB_KEYS:
+                client.getChat(new BigInteger(message.getChatId())).getUsersPubKeys().put(message.getReceiver(), message.getPublicKey());
+                break;
             default:
                 break;
         }

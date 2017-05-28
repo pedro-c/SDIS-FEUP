@@ -112,6 +112,7 @@ public class Constants {
     public static final String SENT_CHATS = "6";
     public static final String SENT_PENDING_CHATS = "7";
     public static final String SENT_PUB_KEYS = "8";
+    public static final String ADDED_PUB_KEYS = "9";
 
 
     public static final String IMAGE_MESSAGE = "image";
