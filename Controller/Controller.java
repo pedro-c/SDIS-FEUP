@@ -16,7 +16,7 @@ public class Controller {
 
     public Controller(String serverIp, int serverPort){
 
-        Client user = new Client(serverIp, serverPort);
+        user = new Client(serverPort, serverIp, this);
         view = new InterfaceView(this);
 
         view.showMenuWindow();
@@ -37,24 +37,33 @@ public class Controller {
         Controller controller = new Controller(serverIp, serverPort);
     }
 
+
+    public void updateScreen(Client.Task task){
+        switch (task){
+            //case WAITING_SIGNOUT:
+              //  view.showNotificationLogin();
+               // break;
+        }
+    }
+
+    public Client getUser() {
+        return user;
+    }
+
+    public InterfaceView getView() {
+        return view;
+    }
+
     public void setNewState(Client.Task state) {
         user.setActualState(state);
     }
 
     public String getClientEmail(){
         return user.getEmail();
-        }
+    }
 
     public BigInteger getClientPass(){
         return user.getPassword();
-    }
-
-    public void updateScreen(Client.Task task){
-        switch (task){
-            case WRONG_CREDENT:
-                //view.showNotificationLogin();
-                break;
-        }
     }
 }
 

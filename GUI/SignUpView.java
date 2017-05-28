@@ -14,13 +14,14 @@ public class SignUpView extends InterfaceView {
     private JTextField passField;
     private JButton signUpButton;
 
-    private Client user;
     private Controller controller;
     private String email=null;
     private String password=null;
 
     public SignUpView(Controller controller) {
         super(controller);
+        this.controller=controller;
+
         setContentPane(contentPane);
         this.pack();
         setModal(true);
@@ -46,11 +47,11 @@ public class SignUpView extends InterfaceView {
         email = emailField.getText();
         password = passField.getText();
         this.dispose();
-        user.signInUser();
+        controller.getUser().signUpUser();
     }
 
     public void onReturn(){
         this.dispose();
-        new Menu(controller).setVisible(true);
+        controller.getView().showMenuWindow();
     }
 }

@@ -13,9 +13,12 @@ public class Menu extends InterfaceView {
     private JButton signInButton;
     //private Menu dialog;
 
+    private Controller controller;
 
     public Menu(Controller controller){
         super(controller);
+        this.controller = controller;
+
         setContentPane(contentPane);
         this.pack();
         this.setVisible(true);
@@ -33,7 +36,7 @@ public class Menu extends InterfaceView {
             @Override
             public void actionPerformed(ActionEvent e) {
                 dispose();
-                new SignInView(controller).setVisible(true);
+                showSignInView();
 
             }
         });
@@ -41,7 +44,7 @@ public class Menu extends InterfaceView {
             @Override
             public void actionPerformed(ActionEvent e) {
                 dispose();
-                new SignUpView(controller).setVisible(true);
+                showSignUpView();
 
             }
         });

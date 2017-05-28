@@ -11,10 +11,9 @@ public class SignInView extends InterfaceView {
     private JPanel contentPane;
     private JButton buttonReturn;
     private JTextField emailField;
-    private JTextField passField;
     private JButton signInButton;
+    private JPasswordField passwordField;
 
-    private Client user;
     private Controller controller;
     private String email=null;
     private String password=null;
@@ -45,13 +44,13 @@ public class SignInView extends InterfaceView {
 
     public void onSignIn(){
         email = emailField.getText();
-        password = passField.getText();
-        user.signInUser();
+        password = passwordField.getText();
+        controller.getUser().signInUserView(email, password);
     }
 
     public void onReturn(){
         this.dispose();
-        new Menu(controller).setVisible(true);
+        controller.getView().showMenuWindow();
     }
 }
 

@@ -64,11 +64,6 @@ public class Client extends User {
         threadPool.submit(connection);
     }
 
-    public enum Task {
-        HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
-        WAITING_SIGNOUT, WAITING_FOR_CHAT, RECEIVING_CHAT, CHATTING, GET_CHATS, DOWNLOADING_FILE
-    }
-
     /**
      * Main
      *
@@ -410,12 +405,14 @@ public class Client extends User {
         //newConnectionAndSendMessage(message);
     }
 
+    public void signInUserView(String email, String pass){
+        actualState = WAITING_SIGNIN;
+        this.email=email;
+        Message message = new Message(SIGNIN, getClientId(), NOT_RESPONSIBLE, email, createHash(pass).toString());
+        connection.sendMessage(message);
 
-    public void viewSignIn(String email, String pass) {
-            this.email = email;
-            Message message = new Message(SIGNIN, getClientId(), email, createHash(pass).toString());
-            newConnectionAndSendMessage(message);
     }
+
 
      /**
      * Sends a sign up message throw a ssl socket
@@ -423,6 +420,14 @@ public class Client extends User {
     public void signUpUser() {
         actualState = WAITING_SIGNUP;
         String password = getCredentials();
+        Message message = new Message(SIGNUP, getClientId(), NOT_RESPONSIBLE, email, createHash(password).toString());
+        connection.sendMessage(message);
+        //newConnectionAndSendMessage(message);
+    }
+
+    public void signUpUserView(String email, String password) {
+        actualState = WAITING_SIGNUP;
+        this.email=email;
         Message message = new Message(SIGNUP, getClientId(), NOT_RESPONSIBLE, email, createHash(password).toString());
         connection.sendMessage(message);
         //newConnectionAndSendMessage(message);
@@ -518,12 +523,25 @@ public class Client extends User {
             case WAITING_SIGNIN:
                 if (message.getMessageType().equals(CLIENT_ERROR)) {
                     printError(body[0]);
-                    mainMenu();
+                    if(controller != null) {
+                        if(actualState.equals(WAITING_SIGNIN))
+                            controller.getView().showNotificationLogin("signIn");
+                        else
+                            controller.getView().showNotificationLogin("signUp");
+                    }
+                    else
+                        mainMenu();
                 } else {
+
                     Message updateServerConnection = new Message(USER_UPDATED_CONNECTION, this.getClientId(), RESPONSIBLE);
                     connection.sendMessage(updateServerConnection);
                     actualState = SIGNED_IN;
-                    signInMenu();
+                    if(controller != null){
+                        System.out.println("");
+                        //controller.getView().showSignedInView();
+                        }
+                    else
+                        signInMenu();
                 }
                 break;
             case WAITING_CREATE_CHAT:
@@ -558,7 +576,10 @@ public class Client extends User {
                 connection.closeConnection();
                 connection = null;
                 System.out.println("\nSigned out!!");
-                mainMenu();
+                if(controller != null)
+                    controller.getView().showMenuWindow();
+                else
+                    mainMenu();
                 break;
             default:
                 break;
@@ -606,11 +627,6 @@ public class Client extends User {
         Message message = new Message(SIGNOUT, clientId, RESPONSIBLE, clientId.toString());
         connection.sendMessage(message);
         connection.closeConnection();
-    }
-
-    public enum Task {
-        HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
-        WAITING_SIGNOUT, WAITING_FOR_CHAT, RECEIVING_CHAT, CHATTING, GET_CHATS, WRONG_CREDENT, BACK_TO_MENU
     }
 
     public void addChat(Chat chat){
@@ -672,6 +688,12 @@ public class Client extends User {
         }
 
         System.out.println("Receiving ........ ");
+    }
+
+
+    public enum Task {
+        HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
+        WAITING_SIGNOUT, WAITING_FOR_CHAT, RECEIVING_CHAT, CHATTING, GET_CHATS, DOWNLOADING_FILE, WRONG_CREDENT
     }
 
     public Task getActualState() {

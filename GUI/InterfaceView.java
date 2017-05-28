@@ -33,10 +33,18 @@ public class InterfaceView extends JDialog {
         window.setVisible(true);
     }
 
-    public void showNotificationLogin() {
-        //window = new NotificationWrongLogin(controller);
-        //window.pack();
+    public void showNotificationLogin(String signType) {
+        window = new NotificationWrongLogin(controller, signType);
+        window.pack();
         //window.setVisible(true);
+    }
+
+    public void showCreateMenu(){
+
+    }
+
+    public void showLoadChats(){
+
     }
 
 }
