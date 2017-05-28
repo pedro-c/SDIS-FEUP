@@ -427,6 +427,14 @@ public class Client extends User {
         connection.sendMessage(message);
 
         addChat(newChat);
+
+        try {
+            sleep(1000);
+            Message response = new Message(PUBLIC_KEY, this.getClientId(), RESPONSIBLE, newChat.getIdChat().toString(), this.getPublicKey(), this.getClientId());
+            connection.sendMessage(response);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -711,14 +719,6 @@ public class Client extends User {
     public void addChat(Chat chat) {
         System.out.println("Added new Chat with chat name: " + chat.getChatName());
         chats.put(chat.getIdChat(),chat);
-
-        try {
-            sleep(1000);
-            Message response = new Message(PUBLIC_KEY, this.getClientId(), RESPONSIBLE, chat.getIdChat().toString(), this.getPublicKey(), this.getClientId());
-            connection.sendMessage(response);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     public Chat getChat(BigInteger chatId) {

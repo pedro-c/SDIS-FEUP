@@ -10,6 +10,7 @@ import java.math.BigInteger;
 import java.io.IOException;
 
 import static Utilities.Constants.*;
+import static java.lang.Thread.sleep;
 
 public class ClientConnection extends Connection implements Runnable {
 
@@ -84,6 +85,14 @@ public class ClientConnection extends Connection implements Runnable {
                 System.out.println(" Received new chat invitation... ");
                 Chat chat = (Chat) message.getObject();
                 client.addChat(chat);
+
+                try {
+                    sleep(1000);
+                    Message response = new Message(PUBLIC_KEY, client.getClientId(), RESPONSIBLE, chat.getIdChat().toString(), client.getPublicKey(), client.getClientId());
+                    sendMessage(response);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 //TODO: Preciso??
                 //client.askForChat(chat.getIdChat());
                 break;
