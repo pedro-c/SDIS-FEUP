@@ -66,6 +66,12 @@ public class Constants {
     //ADD_USER SenderId User
     public static final String ADD_USER = "ADD_USER";
 
+    //PUBLIC_KEY SenderId, ChatId
+    public static final String PUBLIC_KEY = "PUBLIC_KEY";
+
+    //PUBLIC_KEY SenderId, ChatId
+    public static final String ADD_PUBLIC_KEY = "ADD_PUBLIC_KEY";
+
     //CREATE_CHAT_BY_INVITATION SenderId Chat
     public static final String CREATE_CHAT_BY_INVITATION = "CREATE_CHAT_BY_INVITATION";
 
@@ -105,6 +111,7 @@ public class Constants {
     public static final String SENT_MESSAGE = "5";
     public static final String SENT_CHATS = "6";
     public static final String SENT_PENDING_CHATS = "7";
+    public static final String SENT_PUB_KEYS = "8";
 
 
     public static final String IMAGE_MESSAGE = "image";

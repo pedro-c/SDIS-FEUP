@@ -24,6 +24,7 @@ public class Message implements Serializable {
     private byte[] privateKey;
     private PublicKey publicKey;
     private Object object;
+    private String chatId;
 
     /**
      * Message Constructor
@@ -64,6 +65,19 @@ public class Message implements Serializable {
         this.privateKey = privateKey;
         this.publicKey = publicKey;
     }
+
+    public Message(String messageType, BigInteger senderId, String responsible, String chatId, PublicKey publicKey, BigInteger receiver) {
+        this.messageType = messageType;
+        this.senderId = senderId;
+        this.responsible = responsible;
+        this.body = String.join(" ", body);
+        this.initialServerPort = -1;
+        this.initialServerAddress = null;
+        this.chatId = chatId;
+        this.publicKey = publicKey;
+        this.receiver = receiver;
+    }
+
 
 
     public Message(String messageType, BigInteger senderId, String responsible, Object obj) {
@@ -242,5 +256,21 @@ public class Message implements Serializable {
 
     public void setPublicKey(PublicKey publicKey) {
         this.publicKey = publicKey;
+    }
+
+    public String getChatId() {
+        return chatId;
+    }
+
+    public void setChatId(String chatId) {
+        this.chatId = chatId;
+    }
+
+    public void setReceiver(BigInteger receiver) {
+        this.receiver = receiver;
+    }
+
+    public void setMessageType(String messageType) {
+        this.messageType = messageType;
     }
 }

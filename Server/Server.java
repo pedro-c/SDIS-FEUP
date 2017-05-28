@@ -5,6 +5,7 @@ import Chat.ChatMessage;
 import Messages.Message;
 import Protocols.DistributedHashTable;
 import Protocols.ServerConnection;
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -14,8 +15,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.security.PublicKey;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -535,6 +535,82 @@ public class Server extends Node implements Serializable {
         return message;
     }
 
+
+    public Message sendPubKeyToChat(Message message){
+
+        BigInteger senderId = message.getSenderId();
+        BigInteger receiverId = message.getReceiver();
+        PublicKey pubKey = message.getPublicKey();
+        String chatId = message.getChatId();
+
+        System.out.println("RECEIVER ID: " + Integer.remainderUnsigned(receiverId.intValue(),128));
+
+        Chat chat = users.get(senderId).getChats().get(new BigInteger(chatId));
+
+        for (String participantEmail : chat.getParticipants()) {
+
+            BigInteger participantHash = createHash(participantEmail);
+
+            //if this server is responsible for this participant send client a message
+            if(users.get(participantHash)!=null){
+                users.get(participantHash).getChats().get(new BigInteger(chatId)).getUsersPubKeys().put(senderId,pubKey);
+                System.out.println("ADDING pub key");
+            }
+            else {
+                Node n = this.getDht().nodeLookUp(Integer.remainderUnsigned(participantHash.intValue(), 128));
+                ServerConnection connection = new ServerConnection(n.getNodeIp(),n.getNodePort(),this);
+                message.setSenderId(participantHash);
+                message.setMessageType(ADD_PUBLIC_KEY);
+                message.setResponsible(NOT_RESPONSIBLE);
+                message.setReceiver(senderId);
+                Runnable task = () -> { redirect(connection, message);};
+                threadPool.submit(task);
+                System.out.println("REDIRENCTING pub key");
+            }
+        }
+
+        for (HashMap.Entry<BigInteger, PublicKey> entry : chat.getUsersPubKeys().entrySet()) {
+            BigInteger key = entry.getKey();
+            PublicKey value = entry.getValue();
+            System.out.println("User: " + key);
+            System.out.println("Key: " + value);
+        }
+
+        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_PUB_KEYS);
+    }
+
+    public Message addPubKeyToChat(Message message){
+
+        BigInteger senderId = message.getSenderId();
+        BigInteger receiverId = message.getReceiver();
+        PublicKey pubKey = message.getPublicKey();
+        String chatId = message.getChatId();
+
+        System.out.println("RECEIVER ID: " + Integer.remainderUnsigned(senderId.intValue(),128));
+
+        Chat chat = users.get(senderId).getChats().get(new BigInteger(chatId));
+
+        for (String participantEmail :  chat.getParticipants()) {
+
+            BigInteger participantHash = createHash(participantEmail);
+
+            //if this server is responsible for this participant send client a message
+            if(users.get(participantHash)!=null){
+                users.get(participantHash).getChats().get(new BigInteger(chatId)).getUsersPubKeys().put(receiverId,pubKey);
+                System.out.println("ADDING pub key");
+            }
+        }
+
+        for (HashMap.Entry<BigInteger, PublicKey> entry : chat.getUsersPubKeys().entrySet()) {
+            BigInteger key = entry.getKey();
+            PublicKey value = entry.getValue();
+            System.out.println("User: " + key);
+            System.out.println("Key: " + value);
+        }
+
+        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_PUB_KEYS);
+    }
+
     /**
      * Saves client connection
      */
@@ -785,6 +861,12 @@ public class Server extends Node implements Serializable {
             case NEW_MESSAGE_TO_PARTICIPANT:
                 response = sendMessageToUser((ChatMessage) message.getObject(), message.getReceiver());
                 break;
+            case PUBLIC_KEY:
+                response = sendPubKeyToChat(message);
+                break;
+            case ADD_PUBLIC_KEY:
+                response = addPubKeyToChat(message);
+                break;
             default:
                 break;
         }
@@ -793,6 +875,8 @@ public class Server extends Node implements Serializable {
         response.setInitialServerPort(nodePort);
         connection.sendMessage(response);
     }
+
+
 
     public void redirect(ServerConnection initialConnection, Message message) {
 

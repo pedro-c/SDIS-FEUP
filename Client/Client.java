@@ -23,6 +23,7 @@ import java.util.concurrent.Executors;
 import static Client.Client.Task.*;
 import static Utilities.Constants.*;
 import static Utilities.Utilities.*;
+import static java.lang.Thread.sleep;
 
 public class Client extends User{
 
@@ -276,7 +277,7 @@ public class Client extends User{
         int count;
         String[] names = new String[iterations];
 
-        //TODO: Existe email??
+        //TODO: Existe email?
         for(count = 0; count < iterations; count ++ ){
             System.out.println("Invite user to chat with you (email) : ");
             String participantEmail = console.readLine();
@@ -295,6 +296,15 @@ public class Client extends User{
         addChat(newChat);
         Message message = new Message(CREATE_CHAT, getClientId(), RESPONSIBLE, newChat);
         connection.sendMessage(message);
+
+        try {
+            sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        Message response = new Message(PUBLIC_KEY, this.getClientId(), RESPONSIBLE, newChat.getIdChat().toString(), this.getPublicKey(), this.getClientId());
+        connection.sendMessage(response);
     }
 
     /**
@@ -580,6 +590,9 @@ public class Client extends User{
     public void addChat(Chat chat){
         System.out.println("Added new Chat with chat name: " + chat.getChatName());
         chats.put(chat.getIdChat(),chat);
+
+        Message response = new Message(PUBLIC_KEY, this.getClientId(), RESPONSIBLE, chat.getIdChat().toString(), this.getPublicKey(), this.getClientId());
+        connection.sendMessage(response);
     }
 
     public Chat getChat(BigInteger chatId){

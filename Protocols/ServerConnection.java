@@ -6,6 +6,7 @@ import Server.*;
 import javax.net.ssl.SSLSocket;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.PublicKey;
 import java.util.ArrayList;
 
 import static Utilities.Constants.*;
@@ -142,6 +143,13 @@ public class ServerConnection extends Connection implements Runnable {
                 System.out.println("Server " + body[0] + " is down.");
                 server.handleNodeFailure(Integer.parseInt(body[0]), message);
                 break;
+            case PUBLIC_KEY:
+                server.isResponsible(this,message);
+                break;
+            case ADD_PUBLIC_KEY:
+                server.isResponsible(this,message);
+                break;
+
             default:
                 break;
         }
