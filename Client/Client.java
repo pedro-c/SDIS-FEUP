@@ -122,6 +122,7 @@ public class Client extends User {
                 signUpUser();
                 break;
             case 3:
+                break;
             default:
                 mainMenu();
         }
@@ -136,8 +137,7 @@ public class Client extends User {
         String menu = "\n Menu " + "\n 1. Create a new Chat" + "\n 2. Open Chat" + "\n 3. Send Files" + "\n 4. Download Files" + "\n 5. Sign Out" + "\n";
         System.out.println(menu);
 
-
-        askForClientChats();
+        //askForClientChats();
         //askForPendingChats();
 
         int option = scannerIn.nextInt();
@@ -508,7 +508,7 @@ public class Client extends User {
 
         switch (actualState) {
             case SIGNED_IN:
-                signInMenu();
+                //signInMenu();
                 break;
             case WAITING_SIGNUP:
             case WAITING_SIGNIN:
@@ -518,8 +518,9 @@ public class Client extends User {
                 } else {
                     Message updateServerConnection = new Message(USER_UPDATED_CONNECTION, this.getClientId(), RESPONSIBLE);
                     connection.sendMessage(updateServerConnection);
-                    actualState = SIGNED_IN;
-                    signInMenu();
+                    //actualState = SIGNED_IN;
+                    //signInMenu();
+                    askForClientChats();
                 }
                 break;
             case WAITING_CREATE_CHAT:
@@ -541,12 +542,17 @@ public class Client extends User {
                 break;*/
             case GET_CHATS:
                 System.out.println("Get chats.....");
-                Chat chatTemp = (Chat) message.getObject();
-                if (chatTemp != null)
-                    chats.put(chatTemp.getIdChat(), chatTemp);
-                break;
-            case HOLDING:
-                signInMenu();
+                if(message.getBody() != null){
+                    if(body[0].equals(SENT_CHATS)) {
+                        askForPendingChats();
+                        signInMenu();
+                    }
+                }
+                else {
+                    Chat chatTemp = (Chat) message.getObject();
+                    if (chatTemp != null)
+                        chats.put(chatTemp.getIdChat(), chatTemp);
+                }
                 break;
             case WAITING_SIGNOUT:
                 actualState = HOLDING;
