@@ -56,6 +56,11 @@ public class Client extends User {
         threadPool.submit(connection);
     }
 
+    public enum Task {
+        HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
+        WAITING_SIGNOUT, WAITING_FOR_CHAT, RECEIVING_CHAT, CHATTING, GET_CHATS, DOWNLOADING_FILE
+    }
+
     /**
      * Main
      *
@@ -201,12 +206,14 @@ public class Client extends User {
             BigInteger requiredChatId = tempChats[Integer.parseInt(chatNumber) - 1];
             System.out.println("chatId " + requiredChatId);
 
-            String path = requiredChatId.intValue() + "/" + filename;
+            String path = getClientId().intValue() + "/" + requiredChatId.intValue() + "/" + filename;
             System.out.println("path: " + filename);
 
 
-            //  Message saveFile = new Message(DOWNLOAD_FILE, getClientId(), RESPONSIBLE, path, getClientId());
-           // connection.sendMessage(saveFile);
+            actualState = Task.DOWNLOADING_FILE;
+
+            Message saveFile = new Message(DOWNLOAD_FILE, getClientId(), RESPONSIBLE, path, getClientId());
+            connection.sendMessage(saveFile);
 
         }
         else signInMenu();
@@ -565,6 +572,9 @@ public class Client extends User {
             case INVALID_USER_EMAIL:
                 System.out.println("\nInvalid user email. Server couldn't find any user with that email ..");
                 break;
+            case ERROR_DOWNLOADING_FILE:
+                System.out.println("\nError Downloading file, wrong name or path ..");
+                break;
             default:
                 break;
         }
@@ -581,11 +591,6 @@ public class Client extends User {
         Message message = new Message(SIGNOUT, clientId, RESPONSIBLE, clientId.toString());
         connection.sendMessage(message);
         connection.closeConnection();
-    }
-
-    public enum Task {
-        HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
-        WAITING_SIGNOUT, WAITING_FOR_CHAT, RECEIVING_CHAT, CHATTING, GET_CHATS
     }
 
     public void addChat(Chat chat) {
@@ -624,4 +629,29 @@ public class Client extends User {
         Message message = new Message(GET_ALL_PENDING_CHATS, getClientId(), RESPONSIBLE);
         connection.sendMessage(message);
     }
+    public void storeFile(ChatMessage chatMessage){
+
+        File yourFile = new File("data/client/" + getClientId().intValue() + "/" + chatMessage.getFilename());
+        System.out.println(yourFile.getPath());
+        OutputStream outputStream = null;
+
+        if(!yourFile.exists()){
+            yourFile.getParentFile().mkdirs(); // Will create parent directories if not exists
+            try {
+                yourFile.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        try {
+            outputStream = new FileOutputStream(yourFile,true);
+            System.out.println(chatMessage.getContent().length);
+            outputStream.write(chatMessage.getContent());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Receiving ........ ");
+    }
 }
+

@@ -101,6 +101,9 @@ public class ClientConnection extends Connection implements Runnable {
                     else System.out.println("Received new file with name : " + chatMessage.getFilename());
                 }
                 break;
+            case DOWNLOADING_FILE:
+                client.storeFile((ChatMessage) message.getObject());
+                break;
             default:
                 break;
         }

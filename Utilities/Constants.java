@@ -81,6 +81,8 @@ public class Constants {
 
     public static final String NEW_MESSAGE_TO_PARTICIPANT ="NEW_MESSAGE_TO_PARTICIPANT";
 
+    public static final String DOWNLOADING_FILE="DOWNLOADING_FILE";
+
     //SERVER_DOWN ServerDownId
     public static final String SERVER_DOWN = "SERVER_DOWN";
 
@@ -105,6 +107,7 @@ public class Constants {
     public static final String WRONG_PASSWORD = "-3";
     public static final String ERROR_CREATING_CHAT = "-4";
     public static final String INVALID_USER_EMAIL = "-5";
+    public static final String ERROR_DOWNLOADING_FILE="-6";
     public static final String USER_ADDED = "1";
     public static final String SENT_INVITATIONS = "2";
     public static final String CREATED_CHAT_WITH_SUCCESS = "3";

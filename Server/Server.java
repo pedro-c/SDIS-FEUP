@@ -538,6 +538,62 @@ public class Server extends Node implements Serializable {
         return message;
     }
 
+    public Message downloadFile(ServerConnection connection, Message message, BigInteger clientId, BigInteger senderId){
+
+        //inicio + fim do ficheiro
+        //requiredChatId.intValue() + "/" + filename;
+
+        FileInputStream inputStream;
+        String filename ="data/"+ Integer.toString(getNodeId()) + "/" + message.getBody();
+        System.out.println(filename);
+
+        try {
+            inputStream = new FileInputStream(filename);
+        } catch (FileNotFoundException e) {
+            System.out.println("Could not open file to download.");
+            Message response = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId), RESPONSIBLE, ERROR_DOWNLOADING_FILE);
+            return response;
+        }
+
+        String body[] = message.getBody().split("/");
+        String requiredChatId = body[1];
+
+        try {
+
+            int bytesRead;
+            byte[] chunk = new byte[8192];
+
+            while ((bytesRead = inputStream.read(chunk)) != -1) {
+
+                byte[] chunkToSend = new byte[bytesRead];
+                System.arraycopy( chunk, 0, chunkToSend, 0, bytesRead);
+
+                Message messageToSend = null;
+                Date date = new Date();
+                ChatMessage chatMessageToSend = new ChatMessage(new BigInteger(requiredChatId), date, new BigInteger(body[1]), chunkToSend, IMAGE_MESSAGE, body[2]);
+
+                messageToSend = new Message(DOWNLOADING_FILE, BigInteger.valueOf(nodeId), RESPONSIBLE, chatMessageToSend, new BigInteger(body[1]));
+
+                System.out.println("Sending file...........");
+
+                connection.sendMessage(messageToSend);
+
+                  /*  Message response = connection.receiveMessage();
+
+                    if (!response.getMessageType().equals(CLIENT_SUCCESS)) {
+                        System.out.println("ERROR SENDING FILE...");
+                        return;
+                    }*/
+          }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Message response = new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_FILE);
+        return response;
+    }
+
     public Message loadFileOnParticipants(ServerConnection connection, Message message, BigInteger clientId, BigInteger senderId){
 
         ChatMessage chatMessage = (ChatMessage) message.getObject();
@@ -562,13 +618,11 @@ public class Server extends Node implements Serializable {
                 threadPool.submit(task);
             }
         }
-        return new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_INVITATIONS);
+        return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_FILE);
     }
 
     public Message loadingFile(ServerConnection connection, Message message, BigInteger clientId) {
 
-
-        System.out.println(222222222);
 
         System.out.println("Sender " + message.getSenderId());
         System.out.println("Receiver  " + message.getReceiver());
@@ -597,7 +651,7 @@ public class Server extends Node implements Serializable {
             e.printStackTrace();
         }
 
-        Message response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_FILE);
+        Message response = new Message(SERVER_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_FILE);
         return response;
     }
 
@@ -858,6 +912,9 @@ public class Server extends Node implements Serializable {
                 break;
             case STORE_FILE_MESSAGE:
                 response = storeFileMessage(connection, (ChatMessage) message.getObject(), message.getReceiver(), message.getSenderId());
+                break;
+            case DOWNLOAD_FILE:
+                response = downloadFile(connection, message, message.getReceiver(), message.getSenderId());
                 break;
             default:
                 break;

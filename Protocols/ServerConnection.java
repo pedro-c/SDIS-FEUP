@@ -152,6 +152,9 @@ public class ServerConnection extends Connection implements Runnable {
             case STORE_FILE_MESSAGE:
                 server.isResponsible(this,message);
                 break;
+            case DOWNLOAD_FILE:
+                server.isResponsible(this,message);
+                break;
             default:
                 break;
         }
