@@ -1,5 +1,6 @@
 package Protocols;
 
+import Chat.ChatMessage;
 import Messages.Message;
 import Server.*;
 
@@ -146,6 +147,18 @@ public class ServerConnection extends Connection implements Runnable {
                 body = message.getBody().split(" ");
                 System.out.println("Server " + body[0] + " is down.");
                 server.handleNodeFailure(Integer.parseInt(body[0]), message);
+                break;
+            case FILE_TRANSACTION:
+                server.isResponsible(this,message);
+                break;
+            case STORE_FILE_ON_PARTICIPANT:
+                server.isResponsible(this,message);
+                break;
+            case STORE_FILE_MESSAGE:
+                server.isResponsible(this,message);
+                break;
+            case DOWNLOAD_FILE:
+                server.isResponsible(this,message);
                 break;
             default:
                 break;

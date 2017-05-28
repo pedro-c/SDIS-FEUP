@@ -11,6 +11,7 @@ public class ChatMessage implements Serializable {
     private byte[] content;
     private String type;
     private BigInteger chatId;
+    private String filename;
 
     public ChatMessage(BigInteger chatId, Date creationDate, BigInteger userId, byte[] content, String type) {
         this.chatId = chatId;
@@ -18,6 +19,15 @@ public class ChatMessage implements Serializable {
         this.userId = userId;
         this.content = content;
         this.type = type;
+    }
+
+    public ChatMessage(BigInteger chatId, Date creationDate, BigInteger userId, byte[] content, String type, String filename) {
+        this.chatId = chatId;
+        this.creationDate = creationDate;
+        this.userId = userId;
+        this.content = content;
+        this.type = type;
+        this.filename = filename;
     }
 
     public BigInteger getUserId() {
@@ -31,5 +41,9 @@ public class ChatMessage implements Serializable {
     public byte[] getContent() {
         return content;
     }
+
+    public String getType() {return type;}
+
+    public String getFilename() {return filename;}
 
 }

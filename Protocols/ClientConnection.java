@@ -31,6 +31,7 @@ public class ClientConnection extends Connection implements Runnable {
 
     /**
      * Sends a message
+     *
      * @param message message to be sent
      */
     public void sendMessage(Message message) {
@@ -46,13 +47,14 @@ public class ClientConnection extends Connection implements Runnable {
 
     /**
      * Receives a message
+     *
      * @return message received
      */
     public Message receiveMessage() throws IOException, ClassNotFoundException {
 
         Message message = super.receiveMessage();
 
-        System.out.println("\nReceiving message - Header: " + message.getMessageType() +  " Sender: " + Integer.remainderUnsigned(message.getSenderId().intValue(),128) + " Body " + message.getBody());
+        System.out.println("\nReceiving message - Header: " + message.getMessageType() + " Sender: " + Integer.remainderUnsigned(message.getSenderId().intValue(), 128) + " Body " + message.getBody());
 
         return message;
     }
@@ -60,13 +62,14 @@ public class ClientConnection extends Connection implements Runnable {
     /**
      * Close the connection
      */
-    public void closeConnection(){
+    public void closeConnection() {
         System.out.println("Closing client connection");
         super.closeConnection();
     }
 
     /**
      * Handles clients message
+     *
      * @param message to be processed
      */
     public void handleMessage(Message message) {
@@ -85,16 +88,27 @@ public class ClientConnection extends Connection implements Runnable {
                 //client.askForChat(chat.getIdChat());
                 break;
             case NEW_MESSAGE:
-                System.out.println("Received a new message\n" );
+                //TODO: Message Type
+
                 ChatMessage chatMessage = (ChatMessage) message.getObject();
-                if(client.getCurrentChat()==NO_CHAT_OPPEN || client.getCurrentChat()!=chatMessage.getChatId().intValue()){
+                if (chatMessage.getType().equals(IMAGE_MESSAGE))
+                    System.out.println("Received a new file\n");
+                else if (chatMessage.getType().equals(TEXT_MESSAGE))
+                    System.out.println("Received a new message\n");
+
+                if (client.getCurrentChat() == NO_CHAT_OPPEN || client.getCurrentChat() != chatMessage.getChatId().intValue()) {
                     client.getChat(chatMessage.getChatId()).addPendingChatMessage(chatMessage);
                     System.out.println("Saved on pending chat messages");
-                }
-                else {
+                } else {
                     client.getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
-                    System.out.println(new String(chatMessage.getContent()));
+
+                    if(chatMessage.getType().equals(TEXT_MESSAGE))
+                        System.out.println(new String(chatMessage.getContent()));
+                    else System.out.println("Received new file with name : " + chatMessage.getFilename());
                 }
+                break;
+            case DOWNLOADING_FILE:
+                client.storeFile((ChatMessage) message.getObject());
                 break;
             case SERVER_UPDATE_CONNECTION:
                 body = message.getBody().split(" ");
@@ -110,14 +124,14 @@ public class ClientConnection extends Connection implements Runnable {
         }
     }
 
-    public void endThread(){
+    public void endThread() {
         this.listen = false;
     }
 
     @Override
     public void run() {
 
-        while(true){
+        while (true) {
 
             System.out.println("Listening...");
 
