@@ -4,9 +4,12 @@ import Utilities.Utilities;
 
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public class Chat implements Serializable {
@@ -17,6 +20,7 @@ public class Chat implements Serializable {
     private Set<String> participants;
     private ArrayList<ChatMessage> chatMessages;
     private ArrayList<ChatMessage> pendingChatMessages;
+    private ConcurrentHashMap<BigInteger, PublicKey> usersPubKeys;
 
     public Chat(String creatorEmail, String name) {
         this.idChat = Utilities.generateChatId(creatorEmail);
@@ -27,6 +31,7 @@ public class Chat implements Serializable {
         if(name==null)
             chatName = "chat default";
         else chatName = name;
+        this.usersPubKeys = new ConcurrentHashMap<>();
     }
 
     public Chat(BigInteger idChat, String chatName) {
@@ -36,6 +41,7 @@ public class Chat implements Serializable {
         this.chatMessages = new ArrayList<ChatMessage>();
         this.pendingChatMessages = new ArrayList<ChatMessage>();
         this.participants = new HashSet<>();
+        this.usersPubKeys = new ConcurrentHashMap<>();
     }
 
     public String getCreatorEmail() {
@@ -70,4 +76,7 @@ public class Chat implements Serializable {
 
     public void addPendingChatMessage(ChatMessage chatMessage){pendingChatMessages.add(chatMessage);}
 
+    public ConcurrentHashMap<BigInteger, PublicKey> getUsersPubKeys() {
+        return usersPubKeys;
+    }
 }

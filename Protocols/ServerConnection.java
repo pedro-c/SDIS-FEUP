@@ -1,11 +1,13 @@
 package Protocols;
 
+import Chat.ChatMessage;
 import Messages.Message;
 import Server.*;
 
 import javax.net.ssl.SSLSocket;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.PublicKey;
 import java.util.ArrayList;
 
 import static Utilities.Constants.*;
@@ -40,17 +42,22 @@ public class ServerConnection extends Connection implements Runnable {
      */
     public void sendMessage(Message message) {
         System.out.println("\nSending message - Header: " + message.getMessageType() + " Body " + message.getBody());
-        super.sendMessage(message);
+        try {
+            super.sendMessage(message);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.println("\nError sending message...");
+        }
     }
 
     /**
      * Receives a message
      * @return message received
      */
-    public Message receiveMessage(){
+    public Message receiveMessage() throws IOException, ClassNotFoundException {
         Message message = super.receiveMessage();
 
-        System.out.println("\nReceiving message - Header: " + message.getMessageType() + " Sender: " + message.getSenderId() + " Body " + message.getBody());
+        System.out.println("\nReceiving message - Header: " + message.getMessageType() + " Sender: " + Integer.remainderUnsigned(message.getSenderId().intValue(),128) + " Body " + message.getBody());
 
         return message;
     }
@@ -85,6 +92,11 @@ public class ServerConnection extends Connection implements Runnable {
                 break;
             case GET_ALL_CHATS:
                 server.isResponsible(this,message);
+                System.out.print("Sending chats");
+                break;
+            case GET_ALL_PENDING_CHATS:
+                System.out.println("Received Get All Pending Chats");
+                server.isResponsible(this, message);
                 break;
             case INVITE_USER:
                 if (message.getResponsible().equals(RESPONSIBLE)) {
@@ -135,9 +147,27 @@ public class ServerConnection extends Connection implements Runnable {
             case SERVER_DOWN:
                 body = message.getBody().split(" ");
                 System.out.println("Server " + body[0] + " is down.");
-                //TODO:
-                //server.handleNodeFailure(Integer.parseInt(body[0]));
+                server.handleNodeFailure(Integer.parseInt(body[0]), message);
                 break;
+            case FILE_TRANSACTION:
+                server.isResponsible(this,message);
+                break;
+            case STORE_FILE_ON_PARTICIPANT:
+                server.isResponsible(this,message);
+                break;
+            case STORE_FILE_MESSAGE:
+                server.isResponsible(this,message);
+                break;
+            case DOWNLOAD_FILE:
+                server.isResponsible(this,message);
+                break;
+            case PUBLIC_KEY:
+                server.isResponsible(this,message);
+                break;
+            case ADD_PUBLIC_KEY:
+                server.isResponsible(this,message);
+                break;
+
             default:
                 break;
         }
@@ -147,14 +177,25 @@ public class ServerConnection extends Connection implements Runnable {
     public void run() {
 
         while (true){
-            Message message = receiveMessage();
 
-            Runnable task = () -> {
-                handleMessage(message);
-            };
+            try {
+                Message message = receiveMessage();
 
-            service.execute(task);
+                Runnable task = () -> {
+                    handleMessage(message);
+                };
+
+                service.execute(task);
+            } catch (IOException e) {
+                System.out.println("Server closed Connection");
+                return;
+            } catch (ClassNotFoundException e) {
+                System.out.println("Server closed Connection");
+                return;
+            }
+
         }
+
     }
 
     public Server getServer() {

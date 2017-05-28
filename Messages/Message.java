@@ -2,6 +2,8 @@ package Messages;
 
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 
 import static Utilities.Constants.CRLF;
 
@@ -17,8 +19,12 @@ public class Message implements Serializable {
     private int initialServerPort;
     private String body;
     private String responsible;
-
+    private String email;
+    private String password;
+    private byte[] privateKey;
+    private PublicKey publicKey;
     private Object object;
+    private String chatId;
 
     /**
      * Message Constructor
@@ -35,6 +41,43 @@ public class Message implements Serializable {
         this.initialServerPort = -1;
         this.initialServerAddress = null;
     }
+
+    public Message(String messageType, BigInteger senderId, String responsible, byte[] privateKey, PublicKey publicKey) {
+        this.messageType = messageType;
+        this.senderId = senderId;
+        this.responsible = responsible;
+        this.body = String.join(" ", body);
+        this.initialServerPort = -1;
+        this.initialServerAddress = null;
+        this.privateKey = privateKey;
+        this.publicKey = publicKey;
+    }
+
+    public Message(String messageType, BigInteger senderId, String responsible, String email, String password, byte[] privateKey, PublicKey publicKey) {
+        this.messageType = messageType;
+        this.senderId = senderId;
+        this.responsible = responsible;
+        this.body = String.join(" ", body);
+        this.initialServerPort = -1;
+        this.initialServerAddress = null;
+        this.email = email;
+        this.password = password;
+        this.privateKey = privateKey;
+        this.publicKey = publicKey;
+    }
+
+    public Message(String messageType, BigInteger senderId, String responsible, String chatId, PublicKey publicKey, BigInteger receiver) {
+        this.messageType = messageType;
+        this.senderId = senderId;
+        this.responsible = responsible;
+        this.body = String.join(" ", body);
+        this.initialServerPort = -1;
+        this.initialServerAddress = null;
+        this.chatId = chatId;
+        this.publicKey = publicKey;
+        this.receiver = receiver;
+    }
+
 
 
     public Message(String messageType, BigInteger senderId, String responsible, Object obj) {
@@ -181,5 +224,53 @@ public class Message implements Serializable {
 
     public void setResponsible(String responsible) {
         this.responsible = responsible;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public byte[] getPrivateKey() {
+        return privateKey;
+    }
+
+    public void setPrivateKey(byte[] privateKey) {
+        this.privateKey = privateKey;
+    }
+
+    public PublicKey getPublicKey() {
+        return publicKey;
+    }
+
+    public void setPublicKey(PublicKey publicKey) {
+        this.publicKey = publicKey;
+    }
+
+    public String getChatId() {
+        return chatId;
+    }
+
+    public void setChatId(String chatId) {
+        this.chatId = chatId;
+    }
+
+    public void setReceiver(BigInteger receiver) {
+        this.receiver = receiver;
+    }
+
+    public void setMessageType(String messageType) {
+        this.messageType = messageType;
     }
 }

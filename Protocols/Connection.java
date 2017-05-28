@@ -63,35 +63,22 @@ public class Connection {
      * Sends a message
      * @param message message to be sent
      */
-    public void sendMessage(Message message) {
+    public void sendMessage(Message message) throws IOException {
 
-        try {
-            if (message == null)
-                throw new IOException();
-            outputStream.writeObject(message);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("\nError sending message...");
-        }
+        if (message == null)
+            throw new IOException();
+        outputStream.writeObject(message);
+
     }
 
     /**
      * Receives a message
      * @return message received
      */
-    public Message receiveMessage(){
+    public Message receiveMessage() throws IOException, ClassNotFoundException {
 
-        try {
-            return (Message) inputStream.readObject();
-        } catch (IOException e) {
-            System.out.println("\nError receiving message or connection closed");
-            closeConnection();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            System.out.println("\nError receiving message...");
-        }
+        return (Message) inputStream.readObject();
 
-        return null;
     }
 
     /**

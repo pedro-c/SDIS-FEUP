@@ -5,14 +5,12 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import java.io.*;
 import java.math.BigInteger;
-import java.security.InvalidKeyException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.security.*;
 import java.sql.Timestamp;
 
 public class Utilities {
 
-    private static final String transformation = "AES/ECB/PKCS5Padding";
+    private static final String transformation = "AES";
 
     /**
      * Returns a hexadecimal encoded SHA-256 hash for the input String.
@@ -67,7 +65,8 @@ public class Utilities {
      */
     public static void encrypt(Serializable object, OutputStream ostream, String password) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
         try {
-            byte[] key = password.getBytes();
+            byte[] key = createHash(password).toByteArray();
+
             // Length is 16 byte
             SecretKeySpec sks = new SecretKeySpec(key, transformation);
 
@@ -104,6 +103,16 @@ public class Utilities {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public static KeyPair generateUserKeys(String password) throws NoSuchProviderException, NoSuchAlgorithmException {
+
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+
+        SecureRandom random = new SecureRandom(password.getBytes());
+        keyGen.initialize(1024, random);
+
+        return keyGen.generateKeyPair();
     }
 
 
