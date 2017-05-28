@@ -429,8 +429,8 @@ public class Client extends User {
     public void signInUser() {
         actualState = WAITING_SIGNIN;
         String password = getCredentials();
-        this.password = createHash(password);
-        Message message = new Message(SIGNIN, getClientId(), NOT_RESPONSIBLE, email, createHash(password).toString());
+        this.password =createHash(password+email);
+        Message message = new Message(SIGNIN, getClientId(), NOT_RESPONSIBLE, email, createHash(password+email).toString());
         connection.sendMessage(message);
     }
 
@@ -440,6 +440,7 @@ public class Client extends User {
     public void signUpUser() {
         actualState = WAITING_SIGNUP;
         String password = getCredentials();
+        this.password = createHash(password+email);
 
         try {
             KeyPair userKeys = generateUserKeys(password);
