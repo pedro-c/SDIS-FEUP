@@ -19,7 +19,10 @@ public class Message implements Serializable {
     private int initialServerPort;
     private String body;
     private String responsible;
-
+    private String email;
+    private String password;
+    private byte[] privateKey;
+    private PublicKey publicKey;
     private Object object;
 
     /**
@@ -38,6 +41,30 @@ public class Message implements Serializable {
         this.initialServerAddress = null;
     }
 
+    public Message(String messageType, BigInteger senderId, String responsible, byte[] privateKey, PublicKey publicKey) {
+        this.messageType = messageType;
+        this.senderId = senderId;
+        this.responsible = responsible;
+        this.body = String.join(" ", body);
+        this.initialServerPort = -1;
+        this.initialServerAddress = null;
+        this.privateKey = privateKey;
+        this.publicKey = publicKey;
+    }
+
+    public Message(String messageType, BigInteger senderId, String responsible, String email, String password, byte[] privateKey, PublicKey publicKey) {
+        this.messageType = messageType;
+        this.senderId = senderId;
+        this.responsible = responsible;
+        this.body = String.join(" ", body);
+        this.initialServerPort = -1;
+        this.initialServerAddress = null;
+        this.email = email;
+        this.password = password;
+        this.privateKey = privateKey;
+        this.publicKey = publicKey;
+    }
+
 
     public Message(String messageType, BigInteger senderId, String responsible, Object obj) {
         this.messageType = messageType;
@@ -52,7 +79,7 @@ public class Message implements Serializable {
             this.object = obj;
     }
 
-    public Message(String messageType, BigInteger senderId, String responsible, Object obj, BigInteger clientId, byte[] privateKey, PublicKey publicKey) {
+    public Message(String messageType, BigInteger senderId, String responsible, Object obj, BigInteger clientId) {
         this.messageType = messageType;
         this.initialServerPort = -1;
         this.initialServerAddress = null;
@@ -183,5 +210,37 @@ public class Message implements Serializable {
 
     public void setResponsible(String responsible) {
         this.responsible = responsible;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public byte[] getPrivateKey() {
+        return privateKey;
+    }
+
+    public void setPrivateKey(byte[] privateKey) {
+        this.privateKey = privateKey;
+    }
+
+    public PublicKey getPublicKey() {
+        return publicKey;
+    }
+
+    public void setPublicKey(PublicKey publicKey) {
+        this.publicKey = publicKey;
     }
 }

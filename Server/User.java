@@ -2,6 +2,7 @@ package Server;
 
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.security.PublicKey;
 import java.util.concurrent.ConcurrentHashMap;
 
 import Chat.Chat;
@@ -14,6 +15,8 @@ public class User implements Serializable{
     protected BigInteger password;
     protected ConcurrentHashMap<BigInteger, Chat> chats;
     protected ConcurrentHashMap<BigInteger, Chat> pendingRequests;
+    protected byte[] privateKey;
+    protected PublicKey publicKey;
 
     public User(String email, BigInteger password) {
         this.email = email;
@@ -21,6 +24,16 @@ public class User implements Serializable{
         chats = new ConcurrentHashMap<BigInteger, Chat>();
         pendingRequests = new ConcurrentHashMap<BigInteger, Chat>();
 
+    }
+
+
+    public User(String email, BigInteger password, byte[] privateKey, PublicKey publicKey) {
+        this.email = email;
+        this.password = password;
+        chats = new ConcurrentHashMap<BigInteger, Chat>();
+        pendingRequests = new ConcurrentHashMap<BigInteger, Chat>();
+        this.privateKey = privateKey;
+        this.publicKey = publicKey;
     }
 
     public boolean confirmSignIn(String newEmail, BigInteger newPassword){
@@ -60,4 +73,21 @@ public class User implements Serializable{
     }
 
     public void deletePendingRequest(BigInteger chatId) {pendingRequests.remove(chatId);}
+
+
+    public byte[] getPrivateKey() {
+        return privateKey;
+    }
+
+    public void setPrivateKey(byte[] privateKey) {
+        this.privateKey = privateKey;
+    }
+
+    public PublicKey getPublicKey() {
+        return publicKey;
+    }
+
+    public void setPublicKey(PublicKey publicKey) {
+        this.publicKey = publicKey;
+    }
 }

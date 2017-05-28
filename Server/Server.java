@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.security.PublicKey;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -296,7 +297,7 @@ public class Server extends Node implements Serializable {
      * @param password user password
      * @return response message
      */
-    public Message addUser(String email, String password) {
+    public Message addUser(String email, String password, byte[] privateKey, PublicKey publicKey) {
 
         System.out.println("\nCreating account to user with email:  " + email);
 
@@ -308,7 +309,7 @@ public class Server extends Node implements Serializable {
             System.out.println("Email already exists. Try to sign in instead of sign up...");
             message = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId), RESPONSIBLE, EMAIL_ALREADY_USED);
         } else {
-            User newUser = new User(email, new BigInteger(password));
+            User newUser = new User(email, new BigInteger(password), privateKey, publicKey);
             users.put(user_email, newUser);
             message = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE);
             System.out.println("Account created with success!");
@@ -354,7 +355,7 @@ public class Server extends Node implements Serializable {
             response = new Message(CLIENT_ERROR, BigInteger.valueOf(nodeId), RESPONSIBLE, WRONG_PASSWORD);
         } else {
             System.out.println("Login with success!");
-            response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE);
+            response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, users.get(user_email).getPrivateKey(), users.get(user_email).getPublicKey());
         }
 
         return response;
@@ -758,7 +759,7 @@ public class Server extends Node implements Serializable {
                 break;
             case SIGNUP:
                 saveConnection(connection, message.getSenderId());
-                response = addUser(body[0],body[1]);
+                response = addUser(message.getEmail(), message.getPassword(), message.getPrivateKey(), message.getPublicKey());
                 break;
             case CREATE_CHAT:
                 response = createChat(connection, message.getSenderId(), (Chat) message.getObject());

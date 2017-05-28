@@ -10,7 +10,7 @@ import java.sql.Timestamp;
 
 public class Utilities {
 
-    private static final String transformation = "AES/ECB/PKCS5Padding";
+    private static final String transformation = "AES";
 
     /**
      * Returns a hexadecimal encoded SHA-256 hash for the input String.
@@ -65,7 +65,8 @@ public class Utilities {
      */
     public static void encrypt(Serializable object, OutputStream ostream, String password) throws IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException {
         try {
-            byte[] key = password.getBytes();
+            byte[] key = createHash(password).toByteArray();
+
             // Length is 16 byte
             SecretKeySpec sks = new SecretKeySpec(key, transformation);
 

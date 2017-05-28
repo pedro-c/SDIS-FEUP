@@ -303,7 +303,7 @@ public class Client extends User{
     public void signInUser() {
         actualState = WAITING_SIGNIN;
         String password = getCredentials();
-        Message message = new Message(SIGNIN, getClientId(), NOT_RESPONSIBLE, email, createHash(password).toString());
+        Message message = new Message(SIGNIN, getClientId(), NOT_RESPONSIBLE, email, createHash(password+email).toString());
 
 
         connection.sendMessage(message);
@@ -315,7 +315,6 @@ public class Client extends User{
     public void signUpUser() {
         actualState = WAITING_SIGNUP;
         String password = getCredentials();
-        Message message = new Message(SIGNUP, getClientId(), NOT_RESPONSIBLE, email, createHash(password).toString());
 
         try {
             KeyPair userKeys = generateUserKeys(password);
@@ -327,6 +326,10 @@ public class Client extends User{
         } catch (NoSuchAlgorithmException e) {
             System.out.println("Failed to generate user keys");
         }
+
+        this.setPrivateKey(privateKey.getEncoded());
+        this.setPublicKey(publicKey);
+        Message message = new Message(SIGNUP, getClientId(), NOT_RESPONSIBLE, email, createHash(password+email).toString(), privateKey.getEncoded(), publicKey);
 
         System.out.println("Public key: " + this.publicKey);
 
@@ -465,6 +468,17 @@ public class Client extends User{
                 signInMenu();
                 break;
             case WAITING_SIGNUP:
+                if(message.getMessageType().equals(CLIENT_ERROR)){
+                    printError(body[0]);
+                    mainMenu();
+                }
+                else{
+                    Message updateServerConnection = new Message(USER_UPDATED_CONNECTION, this.getClientId(), RESPONSIBLE);
+                    connection.sendMessage(updateServerConnection);
+                    actualState = SIGNED_IN;
+                    signInMenu();
+                }
+                break;
             case WAITING_SIGNIN:
                 if(message.getMessageType().equals(CLIENT_ERROR)){
                     printError(body[0]);
@@ -474,6 +488,8 @@ public class Client extends User{
                     Message updateServerConnection = new Message(USER_UPDATED_CONNECTION, this.getClientId(), RESPONSIBLE);
                     connection.sendMessage(updateServerConnection);
                     actualState = SIGNED_IN;
+                    this.setPublicKey(message.getPublicKey());
+                    this.setPrivateKey(message.getPrivateKey());
                     signInMenu();
                 }
                 break;
