@@ -137,9 +137,6 @@ public class Client extends User {
         String menu = "\n Menu " + "\n 1. Create a new Chat" + "\n 2. Open Chat" + "\n 3. Send Files" + "\n 4. Download Files" + "\n 5. Sign Out" + "\n";
         System.out.println(menu);
 
-        //askForClientChats();
-        //askForPendingChats();
-
         int option = scannerIn.nextInt();
         switch (option) {
             case 1:
@@ -423,6 +420,13 @@ public class Client extends User {
         String password = getCredentials();
         this.password = createHash(password);
         Message message = new Message(SIGNIN, getClientId(), NOT_RESPONSIBLE, email, createHash(password).toString());
+        connection = new ClientConnection(serverIp,serverPort,this);
+        try {
+            connection.connect();
+        } catch (IOException e) {
+            System.out.println("Error connecting to server");
+        }
+        threadPool.submit(connection);
         connection.sendMessage(message);
         //newConnectionAndSendMessage(message);
     }
