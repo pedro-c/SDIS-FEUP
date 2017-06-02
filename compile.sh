@@ -1,8 +1,10 @@
 function compile {
 
 	mkdir bin
-	javac $(find ./src/* | grep .java) -d bin
-	cp -r ./src/TestFiles ./bin
+	javac $(find ./* | grep .java) -d bin
+	cp ./client.keys ./bin
+	cp ./server.keys ./bin
+	cp ./truststore ./bin
 }
 
 compile
