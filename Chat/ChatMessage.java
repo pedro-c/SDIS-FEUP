@@ -42,8 +42,12 @@ public class ChatMessage implements Serializable {
         return content;
     }
 
-    public String getType() {return type;}
+    public String getType() {
+        return type;
+    }
 
-    public String getFilename() {return filename;}
+    public String getFilename() {
+        return filename;
+    }
 
 }

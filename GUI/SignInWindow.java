@@ -1,8 +1,8 @@
 package GUI;
 
-import javax.swing.*;
 import Client.Client;
 
+import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.math.BigInteger;
@@ -21,7 +21,7 @@ public class SignInWindow extends InterfaceView {
     public SignInWindow() {
         setContentPane(contentPane);
 
-       //getRootPane().setDefaultButton(buttonOK)
+        //getRootPane().setDefaultButton(buttonOK)
 
 
         this.pack();
@@ -36,9 +36,9 @@ public class SignInWindow extends InterfaceView {
     }
 
 
-    public void onSignIn(){
+    public void onSignIn() {
 
-        String email =  emailField.getText();
+        String email = emailField.getText();
         BigInteger password = new BigInteger(emailField.getText());
 
         //user.signInUser();

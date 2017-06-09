@@ -8,7 +8,7 @@ import java.io.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static Utilities.Constants.*;
+import static Utilities.Constants.MAX_NUMBER_OF_THREADS;
 
 /**
  * Handles connections
@@ -61,6 +61,7 @@ public class Connection {
 
     /**
      * Sends a message
+     *
      * @param message message to be sent
      */
     public void sendMessage(Message message) throws IOException {
@@ -73,6 +74,7 @@ public class Connection {
 
     /**
      * Receives a message
+     *
      * @return message received
      */
     public Message receiveMessage() throws IOException, ClassNotFoundException {
@@ -93,7 +95,7 @@ public class Connection {
         }
     }
 
-    public void stopTasks(){
+    public void stopTasks() {
         service.shutdownNow();
     }
 

@@ -1,13 +1,12 @@
 package Protocols;
 
-import Client.Client;
-import Messages.Message;
 import Chat.Chat;
 import Chat.ChatMessage;
-
-import java.math.BigInteger;
+import Client.Client;
+import Messages.Message;
 
 import java.io.IOException;
+import java.math.BigInteger;
 
 import static Utilities.Constants.*;
 
@@ -102,7 +101,7 @@ public class ClientConnection extends Connection implements Runnable {
                 } else {
                     client.getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
 
-                    if(chatMessage.getType().equals(TEXT_MESSAGE))
+                    if (chatMessage.getType().equals(TEXT_MESSAGE))
                         System.out.println(new String(chatMessage.getContent()));
                     else System.out.println("Received new file with name : " + chatMessage.getFilename());
                 }

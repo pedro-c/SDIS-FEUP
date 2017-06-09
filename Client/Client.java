@@ -14,10 +14,6 @@ import java.math.BigInteger;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Scanner;
@@ -69,13 +65,8 @@ public class Client extends User {
         threadPool.submit(connection);
     }
 
-    public enum Task {
-        HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
-        WAITING_SIGNOUT, WAITING_FOR_CHAT, RECEIVING_CHAT, CHATTING, GET_CHATS, DOWNLOADING_FILE
-    }
-
     public Client(String serverIp, int serverPort, String recoverServerIp, int recoverServerPort) {
-        this(serverIp,serverPort);
+        this(serverIp, serverPort);
 
         this.recoverServerIp = recoverServerIp;
         this.recoverServerPort = recoverServerPort;
@@ -101,13 +92,12 @@ public class Client extends User {
 
         Client client;
 
-        if(args.length == 4) {
+        if (args.length == 4) {
             String recoverServerIp = args[2];
             int recoverServerPort = Integer.parseInt(args[3]);
 
             client = new Client(serverIp, serverPort, recoverServerIp, recoverServerPort);
-        }
-        else {
+        } else {
             client = new Client(serverIp, serverPort, serverIp, serverPort);
         }
 
@@ -215,7 +205,7 @@ public class Client extends User {
         return tempChats;
     }
 
-    public void downloadFile(){
+    public void downloadFile() {
         Console console = System.console();
         BigInteger[] tempChats;
         tempChats = new BigInteger[chats.size()];
@@ -246,10 +236,8 @@ public class Client extends User {
             Message saveFile = new Message(DOWNLOAD_FILE, getClientId(), RESPONSIBLE, path, getClientId());
             connection.sendMessage(saveFile);
 
-        }
-        else signInMenu();
+        } else signInMenu();
     }
-
 
     public void sendFiles() {
         Console console = System.console();
@@ -285,7 +273,7 @@ public class Client extends User {
                 return;
             }
 
-            ChatMessage chatMessage = new ChatMessage(requiredChatId, date, getClientId(),null , IMAGE_MESSAGE, filename);
+            ChatMessage chatMessage = new ChatMessage(requiredChatId, date, getClientId(), null, IMAGE_MESSAGE, filename);
             Message saveFile = new Message(STORE_FILE_MESSAGE, getClientId(), RESPONSIBLE, chatMessage, getClientId());
             connection.sendMessage(saveFile);
 
@@ -297,7 +285,7 @@ public class Client extends User {
                 while ((bytesRead = inputStream.read(chunk)) != -1) {
 
                     byte[] chunkToSend = new byte[bytesRead];
-                    System.arraycopy( chunk, 0, chunkToSend, 0, bytesRead);
+                    System.arraycopy(chunk, 0, chunkToSend, 0, bytesRead);
 
                     Message messageToSend = null;
                     ChatMessage chatMessageToSend = new ChatMessage(requiredChatId, date, getClientId(), chunkToSend, IMAGE_MESSAGE, filename);
@@ -366,7 +354,7 @@ public class Client extends User {
 
     public void printChatMessages(BigInteger chatId) {
         for (ChatMessage message : chats.get(chatId).getChatMessages()) {
-            if(message.getType().equals(TEXT_MESSAGE))
+            if (message.getType().equals(TEXT_MESSAGE))
                 System.out.println(new String(message.getContent()));
             else System.out.println("Received new file with name : " + message.getFilename());
         }
@@ -378,7 +366,7 @@ public class Client extends User {
             ChatMessage message = iter.next();
             if (message.getChatId().compareTo(chatId) == 0) {
                 getChat(chatId).addChatMessage(message);
-                if(message.getType().equals(TEXT_MESSAGE))
+                if (message.getType().equals(TEXT_MESSAGE))
                     System.out.println(new String(message.getContent()));
                 else System.out.println("Received new file with name : " + message.getFilename());
                 iter.remove();
@@ -429,8 +417,8 @@ public class Client extends User {
     public void signInUser() {
         actualState = WAITING_SIGNIN;
         String password = getCredentials();
-        this.password =createHash(password+email);
-        Message message = new Message(SIGNIN, getClientId(), NOT_RESPONSIBLE, email, createHash(password+email).toString());
+        this.password = createHash(password + email);
+        Message message = new Message(SIGNIN, getClientId(), NOT_RESPONSIBLE, email, createHash(password + email).toString());
         connection.sendMessage(message);
     }
 
@@ -440,7 +428,7 @@ public class Client extends User {
     public void signUpUser() {
         actualState = WAITING_SIGNUP;
         String password = getCredentials();
-        this.password = createHash(password+email);
+        this.password = createHash(password + email);
 
         try {
             KeyPair userKeys = generateUserKeys(password);
@@ -455,14 +443,14 @@ public class Client extends User {
 
         this.setPrivateKey(privateKey.getEncoded());
         this.setPublicKey(publicKey);
-        Message message = new Message(SIGNUP, getClientId(), NOT_RESPONSIBLE, email, createHash(password+email).toString(), privateKey.getEncoded(), publicKey);
+        Message message = new Message(SIGNUP, getClientId(), NOT_RESPONSIBLE, email, createHash(password + email).toString(), privateKey.getEncoded(), publicKey);
 
         System.out.println("Public key: " + this.publicKey);
 
         connection.sendMessage(message);
     }
 
-    public void saveKeysToDisk(String password){
+    public void saveKeysToDisk(String password) {
 
 
         /* save the public key and privete key in a file */
@@ -475,8 +463,8 @@ public class Client extends User {
 
             privFile = new FileOutputStream("private.key");
             pubFile = new FileOutputStream("public.key");
-            encrypt(priv,privFile,password);
-            encrypt(pub,pubFile,password);
+            encrypt(priv, privFile, password);
+            encrypt(pub, pubFile, password);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -490,7 +478,7 @@ public class Client extends User {
 
     }
 
-    public void loadKeysFromDisk(String password){
+    public void loadKeysFromDisk(String password) {
 
         FileInputStream privFile = null;
         FileInputStream pubFile = null;
@@ -498,8 +486,8 @@ public class Client extends User {
 
             privFile = new FileInputStream("private.key");
             pubFile = new FileInputStream("public.key");
-            byte[] priv = (byte[]) decrypt(privFile,password);
-            byte[] pub = (byte []) decrypt(pubFile,password);
+            byte[] priv = (byte[]) decrypt(privFile, password);
+            byte[] pub = (byte[]) decrypt(pubFile, password);
 
             X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(pub);
             X509EncodedKeySpec privKeySpec = new X509EncodedKeySpec(priv);
@@ -522,7 +510,7 @@ public class Client extends User {
 
     }
 
-    public void newConnectionAndSendMessage(Message message){
+    public void newConnectionAndSendMessage(Message message) {
         connection = new ClientConnection(serverIp, serverPort, this);
         try {
             connection.connect();
@@ -594,11 +582,10 @@ public class Client extends User {
                 signInMenu();
                 break;
             case WAITING_SIGNUP:
-                if(message.getMessageType().equals(CLIENT_ERROR)){
+                if (message.getMessageType().equals(CLIENT_ERROR)) {
                     printError(body[0]);
                     mainMenu();
-                }
-                else{
+                } else {
                     Message updateServerConnection = new Message(USER_UPDATED_CONNECTION, this.getClientId(), RESPONSIBLE);
                     connection.sendMessage(updateServerConnection);
                     actualState = SIGNED_IN;
@@ -704,7 +691,7 @@ public class Client extends User {
 
     public void addChat(Chat chat) {
         System.out.println("Added new Chat with chat name: " + chat.getChatName());
-        chats.put(chat.getIdChat(),chat);
+        chats.put(chat.getIdChat(), chat);
 
         try {
             sleep(1000);
@@ -746,13 +733,14 @@ public class Client extends User {
         Message message = new Message(GET_ALL_PENDING_CHATS, getClientId(), RESPONSIBLE);
         connection.sendMessage(message);
     }
-    public void storeFile(ChatMessage chatMessage){
+
+    public void storeFile(ChatMessage chatMessage) {
 
         File yourFile = new File("data/client/" + getClientId().intValue() + "/" + chatMessage.getFilename());
         System.out.println(yourFile.getPath());
         OutputStream outputStream = null;
 
-        if(!yourFile.exists()){
+        if (!yourFile.exists()) {
             yourFile.getParentFile().mkdirs(); // Will create parent directories if not exists
             try {
                 yourFile.createNewFile();
@@ -761,7 +749,7 @@ public class Client extends User {
             }
         }
         try {
-            outputStream = new FileOutputStream(yourFile,true);
+            outputStream = new FileOutputStream(yourFile, true);
             System.out.println(chatMessage.getContent().length);
             outputStream.write(chatMessage.getContent());
         } catch (IOException e) {
@@ -795,13 +783,13 @@ public class Client extends User {
     public void recoverConnection() {
 
         int serverId = Integer.remainderUnsigned(createHash(serverIp + Integer.toString(serverPort)).intValue()
-                ,128);
+                , 128);
 
-        Node node = new Node(serverIp,serverPort);
+        Node node = new Node(serverIp, serverPort);
 
         System.out.println("boas: " + node.getNodeId());
 
-        if(recoverServerIp == null)
+        if (recoverServerIp == null)
             return;
 
         serverPort = recoverServerPort;
@@ -824,7 +812,7 @@ public class Client extends User {
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
-           // e.printStackTrace();
+            // e.printStackTrace();
         }
 
         threadPool.submit(connection);
@@ -834,6 +822,11 @@ public class Client extends User {
         Message message = new Message(SIGNIN, getClientId(), NOT_RESPONSIBLE, email, password.toString());
 
         connection.sendMessage(message);
+    }
+
+    public enum Task {
+        HOLDING, WAITING_SIGNIN, WAITING_SIGNUP, SIGNED_IN, CREATING_CHAT, WAITING_CREATE_CHAT,
+        WAITING_SIGNOUT, WAITING_FOR_CHAT, RECEIVING_CHAT, CHATTING, GET_CHATS, DOWNLOADING_FILE
     }
 }
 

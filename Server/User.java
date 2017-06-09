@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static Utilities.Utilities.createHash;
 
-public class User implements Serializable{
+public class User implements Serializable {
 
     protected String email;
     protected BigInteger password;
@@ -36,8 +36,8 @@ public class User implements Serializable{
         this.publicKey = publicKey;
     }
 
-    public boolean confirmSignIn(String newEmail, BigInteger newPassword){
-        if(email.equals(newEmail)){
+    public boolean confirmSignIn(String newEmail, BigInteger newPassword) {
+        if (email.equals(newEmail)) {
             if (password.equals(newPassword))
                 return true;
         }
@@ -56,10 +56,12 @@ public class User implements Serializable{
         chats.put(chat.getIdChat(), chat);
     }
 
-    public Chat getChat(BigInteger chatId){ return chats.get(chatId); }
+    public Chat getChat(BigInteger chatId) {
+        return chats.get(chatId);
+    }
 
-    public void addPendingChat(Chat chat){
-        pendingRequests.put(chat.getIdChat(),chat);
+    public void addPendingChat(Chat chat) {
+        pendingRequests.put(chat.getIdChat(), chat);
     }
 
     public BigInteger getUserId() {
@@ -74,7 +76,9 @@ public class User implements Serializable{
         return pendingRequests;
     }
 
-    public void deletePendingRequest(BigInteger chatId) {pendingRequests.remove(chatId);}
+    public void deletePendingRequest(BigInteger chatId) {
+        pendingRequests.remove(chatId);
+    }
 
 
     public byte[] getPrivateKey() {

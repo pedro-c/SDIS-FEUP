@@ -12,7 +12,7 @@ public class Controller {
     private Client client;
     private InterfaceView view;
 
-    public Controller(InterfaceView view, Client client){
+    public Controller(InterfaceView view, Client client) {
 
         this.view = view;
         this.client = client;

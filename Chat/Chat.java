@@ -6,7 +6,6 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.security.PublicKey;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,7 +27,7 @@ public class Chat implements Serializable {
         this.chatMessages = new ArrayList<ChatMessage>();
         this.pendingChatMessages = new ArrayList<ChatMessage>();
         this.participants = new HashSet<>();
-        if(name==null)
+        if (name == null)
             chatName = "chat default";
         else chatName = name;
         this.usersPubKeys = new ConcurrentHashMap<>();
@@ -68,13 +67,21 @@ public class Chat implements Serializable {
         participants.add(email);
     }
 
-    public ArrayList<ChatMessage> getChatMessages() {return chatMessages;}
+    public ArrayList<ChatMessage> getChatMessages() {
+        return chatMessages;
+    }
 
-    public ArrayList<ChatMessage> getChatPendingMessages() {return pendingChatMessages;}
+    public ArrayList<ChatMessage> getChatPendingMessages() {
+        return pendingChatMessages;
+    }
 
-    public void addChatMessage(ChatMessage chatMessage){chatMessages.add(chatMessage);}
+    public void addChatMessage(ChatMessage chatMessage) {
+        chatMessages.add(chatMessage);
+    }
 
-    public void addPendingChatMessage(ChatMessage chatMessage){pendingChatMessages.add(chatMessage);}
+    public void addPendingChatMessage(ChatMessage chatMessage) {
+        pendingChatMessages.add(chatMessage);
+    }
 
     public ConcurrentHashMap<BigInteger, PublicKey> getUsersPubKeys() {
         return usersPubKeys;

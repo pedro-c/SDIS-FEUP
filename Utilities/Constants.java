@@ -62,7 +62,7 @@ public class Constants {
     //SIGNOUT SenderId userId
     public static final String SIGNOUT = "SIGNOUT";
 
-    public static final String SENT_FILE= "SENT_FILE";
+    public static final String SENT_FILE = "SENT_FILE";
 
     //BACKUP_USER SenderId User
     public static final String BACKUP_USER = "BACKUP_USER";
@@ -85,9 +85,9 @@ public class Constants {
     //CREATE_CHAT_BY_INVITATION SenderId Chat
     public static final String CREATE_CHAT_BY_INVITATION = "CREATE_CHAT_BY_INVITATION";
 
-    public static final String NEW_MESSAGE_TO_PARTICIPANT ="NEW_MESSAGE_TO_PARTICIPANT";
+    public static final String NEW_MESSAGE_TO_PARTICIPANT = "NEW_MESSAGE_TO_PARTICIPANT";
 
-    public static final String DOWNLOADING_FILE="DOWNLOADING_FILE";
+    public static final String DOWNLOADING_FILE = "DOWNLOADING_FILE";
 
     //SERVER_DOWN ServerDownId
     public static final String SERVER_DOWN = "SERVER_DOWN";
@@ -116,7 +116,7 @@ public class Constants {
     public static final String WRONG_PASSWORD = "-3";
     public static final String ERROR_CREATING_CHAT = "-4";
     public static final String INVALID_USER_EMAIL = "-5";
-    public static final String ERROR_DOWNLOADING_FILE="-6";
+    public static final String ERROR_DOWNLOADING_FILE = "-6";
     public static final String USER_NOT_EXISTS = "-7";
     public static final String MESSAGE_NOT_SENT = "-8";
     public static final String USER_ADDED = "1";
@@ -130,8 +130,6 @@ public class Constants {
     public static final String ADDED_PUB_KEYS = "9";
 
 
-
-
     public static final String IMAGE_MESSAGE = "image";
     public static final String TEXT_MESSAGE = "text";
 
@@ -141,8 +139,6 @@ public class Constants {
 
     //SERVER_DOWN ServerDownId
     public static final String NOT_RESPONSIBLE = "NOT_RESPONSIBLE";
-
-
 
 
 }

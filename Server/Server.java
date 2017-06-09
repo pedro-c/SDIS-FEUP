@@ -5,7 +5,6 @@ import Chat.ChatMessage;
 import Messages.Message;
 import Protocols.DistributedHashTable;
 import Protocols.ServerConnection;
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -13,8 +12,8 @@ import javax.net.ssl.SSLSocket;
 import java.io.*;
 import java.math.BigInteger;
 import java.security.PublicKey;
-import java.util.*;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -159,7 +158,7 @@ public class Server extends Node implements Serializable {
             message.setResponsible(RESPONSIBLE);
         }
 
-        if(downServerSuccessor.getNodeId() == nodeId){
+        if (downServerSuccessor.getNodeId() == nodeId) {
             Node successor = dht.getSuccessor();
             if (successor == null) {
                 beginNodeFailureProtocol();
@@ -186,7 +185,7 @@ public class Server extends Node implements Serializable {
     public void beginNodeFailureProtocol() {
 
         for (ConcurrentHashMap.Entry<BigInteger, User> entry : backups.entrySet()) {
-            users.put(entry.getKey(),entry.getValue());
+            users.put(entry.getKey(), entry.getValue());
 
             sendInfoToBackup(new Message(BACKUP_USER, BigInteger.valueOf(nodeId), RESPONSIBLE, entry.getValue()));
         }
@@ -405,18 +404,16 @@ public class Server extends Node implements Serializable {
             BigInteger participantHash = createHash(participantEmail);
 
             //if this server is responsible for this participant send client a message
-            if(users.get(participantHash)!=null){
-                if(chat.getCreatorEmail().equals(participantEmail)){
+            if (users.get(participantHash) != null) {
+                if (chat.getCreatorEmail().equals(participantEmail)) {
                     users.get(participantHash).addChat(chat);
-                    Message response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, chat.getIdChat().toString(),CREATED_CHAT_WITH_SUCCESS);
+                    Message response = new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, chat.getIdChat().toString(), CREATED_CHAT_WITH_SUCCESS);
                     ServerConnection serverConnection = loggedInUsers.get(participantHash);
                     if (serverConnection != null)
                         serverConnection.sendMessage(response);
                     sendInfoToBackup(new Message(BACKUP_USER, BigInteger.valueOf(nodeId), RESPONSIBLE, users.get(participantHash)));
-                }
-                else inviteUserToChat(chat,participantHash);
-            }
-            else {
+                } else inviteUserToChat(chat, participantHash);
+            } else {
                 Message message = new Message(CREATE_CHAT_BY_INVITATION, senderId, NOT_RESPONSIBLE, chat, participantHash);
                 Runnable task = () -> {
                     redirect(connection, message);
@@ -437,7 +434,7 @@ public class Server extends Node implements Serializable {
             System.out.println("Added to pending chats");
             System.out.println("Chat name " + chat.getChatName());
             System.out.println("Client id " + clientId);
-            if(users.get(clientId) != null)
+            if (users.get(clientId) != null)
                 users.get(clientId).addPendingChat(chat);
         } else {
             users.get(clientId).addChat(chat);
@@ -467,13 +464,11 @@ public class Server extends Node implements Serializable {
 
                 if (!chatMessage.getUserId().toString().equals(participantHash.toString())) {
                     sendMessageToUser(chatMessage, participantHash);
-                }
-                else {
+                } else {
                     users.get(participantHash).getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
                     sendInfoToBackup(new Message(BACKUP_USER, BigInteger.valueOf(nodeId), RESPONSIBLE, users.get(participantHash)));
                 }
-            }
-            else {
+            } else {
                 Message message = new Message(NEW_MESSAGE_TO_PARTICIPANT, senderId, NOT_RESPONSIBLE, chatMessage, participantHash);
                 Runnable task = () -> {
                     redirect(connection, message);
@@ -490,12 +485,11 @@ public class Server extends Node implements Serializable {
 
         if (loggedInUsers.get(clientId) == null) {
             System.out.println("Added to pending messages");
-            if(users.get(clientId) != null){
+            if (users.get(clientId) != null) {
                 if (users.get(clientId).getChats().get(chatMessage.getChatId()) != null)
                     users.get(clientId).getChat(chatMessage.getChatId()).addPendingChatMessage(chatMessage);
             }
-        }
-        else {
+        } else {
             System.out.println("Sending message to logged in user");
             users.get(clientId).getChat(chatMessage.getChatId()).addChatMessage(chatMessage);
             Message response = new Message(NEW_MESSAGE, BigInteger.valueOf(nodeId), RESPONSIBLE, chatMessage, clientId);
@@ -567,13 +561,13 @@ public class Server extends Node implements Serializable {
         return message;
     }
 
-    public Message downloadFile(ServerConnection connection, Message message, BigInteger clientId, BigInteger senderId){
+    public Message downloadFile(ServerConnection connection, Message message, BigInteger clientId, BigInteger senderId) {
 
         //inicio + fim do ficheiro
         //requiredChatId.intValue() + "/" + filename;
 
         FileInputStream inputStream;
-        String filename ="data/"+ Integer.toString(getNodeId()) + "/" + message.getBody();
+        String filename = "data/" + Integer.toString(getNodeId()) + "/" + message.getBody();
         System.out.println(filename);
 
         try {
@@ -595,7 +589,7 @@ public class Server extends Node implements Serializable {
             while ((bytesRead = inputStream.read(chunk)) != -1) {
 
                 byte[] chunkToSend = new byte[bytesRead];
-                System.arraycopy( chunk, 0, chunkToSend, 0, bytesRead);
+                System.arraycopy(chunk, 0, chunkToSend, 0, bytesRead);
 
                 Message messageToSend = null;
                 Date date = new Date();
@@ -613,7 +607,7 @@ public class Server extends Node implements Serializable {
                         System.out.println("ERROR SENDING FILE...");
                         return;
                     }*/
-          }
+            }
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -623,7 +617,7 @@ public class Server extends Node implements Serializable {
         return response;
     }
 
-    public Message loadFileOnParticipants(ServerConnection connection, Message message, BigInteger clientId, BigInteger senderId){
+    public Message loadFileOnParticipants(ServerConnection connection, Message message, BigInteger clientId, BigInteger senderId) {
 
         ChatMessage chatMessage = (ChatMessage) message.getObject();
 
@@ -637,8 +631,7 @@ public class Server extends Node implements Serializable {
 
             if (users.get(participantHash) != null) {
                 loadingFile(connection, message, participantHash);
-            }
-            else {
+            } else {
 
                 Message messageParticipant = new Message(STORE_FILE_ON_PARTICIPANT, participantHash, NOT_RESPONSIBLE, chatMessage, participantHash);
                 Runnable task = () -> {
@@ -664,7 +657,7 @@ public class Server extends Node implements Serializable {
         File yourFile = new File("data/" + Integer.toString(getNodeId()) + "/" + clientId.intValue() + "/" + chatMessage.getChatId().intValue() + "/" + filename);
         System.out.println(yourFile.getPath());
 
-        if(!yourFile.exists()){
+        if (!yourFile.exists()) {
             yourFile.getParentFile().mkdirs(); // Will create parent directories if not exists
             try {
                 yourFile.createNewFile();
@@ -673,7 +666,7 @@ public class Server extends Node implements Serializable {
             }
         }
         try {
-            outputStream = new FileOutputStream(yourFile,true);
+            outputStream = new FileOutputStream(yourFile, true);
             System.out.println(chatMessage.getContent().length);
             outputStream.write(chatMessage.getContent());
         } catch (IOException e) {
@@ -684,19 +677,19 @@ public class Server extends Node implements Serializable {
         return response;
     }
 
-    public Message storeFileMessage(ServerConnection connection, ChatMessage chatMessage, BigInteger clientId, BigInteger senderId){
-        return sendMessage(connection,chatMessage,clientId, senderId);
+    public Message storeFileMessage(ServerConnection connection, ChatMessage chatMessage, BigInteger clientId, BigInteger senderId) {
+        return sendMessage(connection, chatMessage, clientId, senderId);
     }
 
 
-    public Message sendPubKeyToChat(Message message){
+    public Message sendPubKeyToChat(Message message) {
 
         BigInteger senderId = message.getSenderId();
         BigInteger receiverId = message.getReceiver();
         PublicKey pubKey = message.getPublicKey();
         String chatId = message.getChatId();
 
-        System.out.println("RECEIVER ID: " + Integer.remainderUnsigned(receiverId.intValue(),128));
+        System.out.println("RECEIVER ID: " + Integer.remainderUnsigned(receiverId.intValue(), 128));
 
         Chat chat = users.get(senderId).getChats().get(new BigInteger(chatId));
 
@@ -705,18 +698,19 @@ public class Server extends Node implements Serializable {
             BigInteger participantHash = createHash(participantEmail);
 
             //if this server is responsible for this participant send client a message
-            if(users.get(participantHash)!=null){
-                users.get(participantHash).getChats().get(new BigInteger(chatId)).getUsersPubKeys().put(senderId,pubKey);
+            if (users.get(participantHash) != null) {
+                users.get(participantHash).getChats().get(new BigInteger(chatId)).getUsersPubKeys().put(senderId, pubKey);
                 System.out.println("ADDING pub key");
-            }
-            else {
+            } else {
                 Node n = this.getDht().nodeLookUp(Integer.remainderUnsigned(participantHash.intValue(), 128));
-                ServerConnection connection = new ServerConnection(n.getNodeIp(),n.getNodePort(),this);
+                ServerConnection connection = new ServerConnection(n.getNodeIp(), n.getNodePort(), this);
                 message.setSenderId(participantHash);
                 message.setMessageType(ADD_PUBLIC_KEY);
                 message.setResponsible(NOT_RESPONSIBLE);
                 message.setReceiver(senderId);
-                Runnable task = () -> { redirect(connection, message);};
+                Runnable task = () -> {
+                    redirect(connection, message);
+                };
                 threadPool.submit(task);
                 System.out.println("REDIRENCTING pub key");
             }
@@ -732,24 +726,24 @@ public class Server extends Node implements Serializable {
         return new Message(CLIENT_SUCCESS, BigInteger.valueOf(nodeId), RESPONSIBLE, SENT_PUB_KEYS);
     }
 
-    public Message addPubKeyToChat(Message message){
+    public Message addPubKeyToChat(Message message) {
 
         BigInteger senderId = message.getSenderId();
         BigInteger receiverId = message.getReceiver();
         PublicKey pubKey = message.getPublicKey();
         String chatId = message.getChatId();
 
-        System.out.println("RECEIVER ID: " + Integer.remainderUnsigned(senderId.intValue(),128));
+        System.out.println("RECEIVER ID: " + Integer.remainderUnsigned(senderId.intValue(), 128));
 
         Chat chat = users.get(senderId).getChats().get(new BigInteger(chatId));
 
-        for (String participantEmail :  chat.getParticipants()) {
+        for (String participantEmail : chat.getParticipants()) {
 
             BigInteger participantHash = createHash(participantEmail);
 
             //if this server is responsible for this participant send client a message
-            if(users.get(participantHash)!=null){
-                users.get(participantHash).getChats().get(new BigInteger(chatId)).getUsersPubKeys().put(receiverId,pubKey);
+            if (users.get(participantHash) != null) {
+                users.get(participantHash).getChats().get(new BigInteger(chatId)).getUsersPubKeys().put(receiverId, pubKey);
                 System.out.println("ADDING pub key");
                 loggedInUsers.get(participantHash).sendMessage(new Message(ADDED_PUB_KEYS, BigInteger.valueOf(nodeId), RESPONSIBLE, chatId, pubKey, receiverId));
             }
@@ -897,7 +891,7 @@ public class Server extends Node implements Serializable {
 
             int tempUserId = Integer.remainderUnsigned(userId.intValue(), 128);
 
-            if(tempUserId < newNodeId || (tempUserId > nodeId &&  tempUserId < MAX_NUMBER_OF_NODES)) {
+            if (tempUserId < newNodeId || (tempUserId > nodeId && tempUserId < MAX_NUMBER_OF_NODES)) {
                 System.out.println("VOU APAGAR USER!!! " + tempUserId);
                 newServerUsers.add(user);
                 container.remove(userId, user);
@@ -928,7 +922,7 @@ public class Server extends Node implements Serializable {
 
         for (User user : predecessorUsers) {
 
-            if(type.equals(ADD_USER) && loggedInUsers.containsKey(user.getUserId())){
+            if (type.equals(ADD_USER) && loggedInUsers.containsKey(user.getUserId())) {
                 Message warnClient = new Message(SERVER_UPDATE_CONNECTION, BigInteger.valueOf(nodeId), RESPONSIBLE, node.getNodeIp(), Integer.toString(node.getNodePort()));
                 ServerConnection connection = loggedInUsers.get(user.getUserId());
                 connection.sendMessage(warnClient);
@@ -1025,7 +1019,7 @@ public class Server extends Node implements Serializable {
                     response = new Message(SERVER_ERROR, BigInteger.valueOf(nodeId), RESPONSIBLE, MESSAGE_NOT_SENT);
                 break;
             case FILE_TRANSACTION:
-                System.out.println("CHEGUEIIII 111111" );
+                System.out.println("CHEGUEIIII 111111");
                 response = loadFileOnParticipants(connection, message, message.getReceiver(), message.getSenderId());
                 break;
             case STORE_FILE_ON_PARTICIPANT:
@@ -1052,7 +1046,6 @@ public class Server extends Node implements Serializable {
         response.setInitialServerPort(nodePort);
         connection.sendMessage(response);
     }
-
 
 
     public void redirect(ServerConnection initialConnection, Message message) {
@@ -1157,7 +1150,9 @@ public class Server extends Node implements Serializable {
         return backups;
     }
 
-    public ConcurrentHashMap<BigInteger, User> getUsers() {return users;}
+    public ConcurrentHashMap<BigInteger, User> getUsers() {
+        return users;
+    }
 
 }
 

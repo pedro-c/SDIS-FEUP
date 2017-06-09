@@ -2,7 +2,6 @@ package Messages;
 
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.security.PrivateKey;
 import java.security.PublicKey;
 
 import static Utilities.Constants.CRLF;
@@ -79,7 +78,6 @@ public class Message implements Serializable {
     }
 
 
-
     public Message(String messageType, BigInteger senderId, String responsible, Object obj) {
         this.messageType = messageType;
         this.initialServerPort = -1;
@@ -133,6 +131,10 @@ public class Message implements Serializable {
         return messageType;
     }
 
+    public void setMessageType(String messageType) {
+        this.messageType = messageType;
+    }
+
     /**
      * Returns message senderId
      *
@@ -142,6 +144,10 @@ public class Message implements Serializable {
         return senderId;
     }
 
+    public void setSenderId(BigInteger senderId) {
+        this.senderId = senderId;
+    }
+
     /**
      * Returns message body
      *
@@ -149,6 +155,10 @@ public class Message implements Serializable {
      */
     public String getBody() {
         return body;
+    }
+
+    public void setBody(String body) {
+        this.body = body;
     }
 
     /**
@@ -205,18 +215,13 @@ public class Message implements Serializable {
         this.initialServerPort = initialServerPort;
     }
 
-    public void setBody(String body) {
-        this.body = body;
-    }
-
-    public void setSenderId(BigInteger senderId) {
-        this.senderId = senderId;
-    }
-
     public BigInteger getReceiver() {
         return receiver;
     }
 
+    public void setReceiver(BigInteger receiver) {
+        this.receiver = receiver;
+    }
 
     public String getResponsible() {
         return responsible;
@@ -264,13 +269,5 @@ public class Message implements Serializable {
 
     public void setChatId(String chatId) {
         this.chatId = chatId;
-    }
-
-    public void setReceiver(BigInteger receiver) {
-        this.receiver = receiver;
-    }
-
-    public void setMessageType(String messageType) {
-        this.messageType = messageType;
     }
 }

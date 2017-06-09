@@ -1,7 +1,8 @@
 package GUI;
 
 import javax.swing.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class Menu extends InterfaceView {
     private JPanel contentPane;
@@ -14,7 +15,7 @@ public class Menu extends InterfaceView {
     public Menu() {
         setContentPane(contentPane);
         //setModal(true);
-       //getRootPane().setDefaultButton(buttonOK);
+        //getRootPane().setDefaultButton(buttonOK);
 
         exitButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
