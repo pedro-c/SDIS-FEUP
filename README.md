@@ -4,6 +4,8 @@
 ### Description
 Java messaging app with focus on concurrent multiple servers response and load distributed across server by implementing a distributed hash table using the [Chord Algorithm](https://en.wikipedia.org/wiki/Chord_(peer-to-peer)).
 
+[Report in Portuguese](https://github.com/pedro-c/SDIS-FEUP/blob/master/sdis-report.pdf)
+
 #### Run a server
 ```
 java -Djavax.net.ssl.keyStore=server.keys -Djavax.net.ssl.keyStorePassword=123456 -Djavax.net.ssl.trustStore=truststore -Djavax.net.ssl.trustStorePassword=123456 Server.Server localhost 4445
